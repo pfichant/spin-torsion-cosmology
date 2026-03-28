@@ -40,8 +40,10 @@ python run_all_simulations_F1.py
 
 ## 📂 Structure exacte
 spin-torsion-cosmology/
+
 └── Foundation_1/                    # F1 Root
-    ├── 02_Scientific_Code/
+
+	├── 02_Scientific_Code/
     │   ├── A_Core_Calculations/     # ODE, torsion, χ²
     │   └── B_Paper_Plots/           # H0/S8, JWST, 21cm
     ├── figures_output/              # Paper figures HD
