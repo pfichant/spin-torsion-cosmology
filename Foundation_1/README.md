@@ -38,7 +38,7 @@ python run_all_simulations_F1.py
 
 ---
 
-## 📂 Structure exacte
+## 📂 Structure
 spin-torsion-cosmology/
 
 └── Foundation_1/                    # F1 Root
