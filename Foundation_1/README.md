@@ -43,6 +43,7 @@ spin-torsion-cosmology/
 
 └── Foundation_1/                    # F1 Root
 
+    ├── 01_Paper_Publication/		 # Paper(s)
 	├── 02_Scientific_Code/
     │   ├── A_Core_Calculations/     # ODE, torsion, χ²
     │   └── B_Paper_Plots/           # H0/S8, JWST, 21cm
