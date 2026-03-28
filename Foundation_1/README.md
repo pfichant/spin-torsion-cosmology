@@ -72,8 +72,8 @@ spin-torsion-cosmology/
   title={Foundation I: The Metric Universe -- Geometric ECF Cosmology},
   author={Fichant, Pascal},
   year={2026},
-  note={HAL hal-xxxxxx | Code: Foundation_1/},
-  url={https://hal.science/hal-xxxxxx}
+  note={HAL hal-05571311 | Code: Foundation_1/},
+  url={https://hal.science/hal-05571311}
 }
 ```
 
