@@ -1,1 +1,11 @@
-
+Dataset,Parameter,Value,Uncertainty,Units,Redshift/Note
+Planck 2018,H0,67.4,0.5,km/s/Mpc,CMB Baseline (LCDM)
+Planck 2018,S8,0.832,0.013,-,Structure Growth (LCDM)
+SH0ES (2022),H0,73.0,1.0,km/s/Mpc,Local Cepheids-SNIa
+KiDS-1000 (DES Y3 consistent),S8,0.766,0.014,-,Weak Lensing
+BOSS DR12,DM/rs,10.23,0.17,-,z=0.38
+BOSS DR12,DM/rs,13.36,0.21,-,z=0.51
+BOSS DR12,DM/rs,15.45,0.22,-,z=0.61
+eBOSS DR16,DM/rs,30.85,0.80,-,z=1.48 (Quasars)
+JWST JADES/CEERS,Galaxy Density (>1e10 Msun),~1e-4,-,Mpc^-3,z=15 (Observed Excess)
+DESI DR1 (2025),Dark Energy Preference,3.1 sigma,-,-,Favors dynamical w0 > -1
