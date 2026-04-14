@@ -73,7 +73,7 @@ spin-torsion-cosmology/
   author={Fichant, Pascal},
   year={2026},
   note={HAL hal-05571311 | Code: Foundation_1/},
-  url={https://hal.science/hal-05571311}
+  url={}
 }
 ```
 
