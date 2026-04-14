@@ -65,17 +65,21 @@ spin-torsion-cosmology/
 
 ---
 
-## 📝 HAL Citation
+## Citation
+
+If you use this code or refer to the ECF framework, please cite the Foundation I preprint:
 
 ```bibtex
-@article{Fichant2026Foundation1,
-  title={Foundation I: The Metric Universe -- Geometric ECF Cosmology},
-  author={Fichant, Pascal},
-  year={2026},
-  note={HAL hal-05571311 | Code: Foundation_1/},
-  url={}
+@misc{fichant2026foundation1,
+  author       = {Fichant, Pascal},
+  title        = {Foundation I: The Metric Universe - Extended Version},
+  year         = 2026,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.19577448},
+  url          = {[https://doi.org/10.5281/zenodo.19577448](https://doi.org/10.5281/zenodo.19577448)}
 }
-```
+
+---
 
 **Contact**: p.fichant.research@gmail.com
 
