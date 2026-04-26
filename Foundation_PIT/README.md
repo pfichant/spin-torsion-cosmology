@@ -116,8 +116,8 @@ Requires a standard LaTeX distribution with `revtex4-2` (APS journals).
                   Einstein-Cartan Cosmology},
   year         = {2026},
   publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.XXXXXXX},
-  url          = {https://doi.org/10.5281/zenodo.XXXXXXX},
+  doi          = {10.5281/zenodo.19798923},
+  url          = {https://doi.org/10.5281/zenodo.19798923},
   note         = {Companion Letter to Foundation I (doi:10.5281/zenodo.19577447)}
 }
 ```
