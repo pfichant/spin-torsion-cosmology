@@ -3,9 +3,9 @@
 > **"The Topological Invariance Principle: Dark Energy as a Geometric  
 > Constraint of Spatial Flatness in Einstein-Cartan Cosmology"**  
 > Pascal Fichant — Independent Researcher, Montpellier, France  
-> Preprint (2026) — Zenodo: `10.5281/zenodo.XXXXXXX` *(to be updated upon deposition)*
+> Preprint (2026) — Zenodo: `10.5281/zenodo.19798923` *(to be updated upon deposition)*
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19798923.svg)](https://doi.org/10.5281/zenodo.19798923)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 ---
