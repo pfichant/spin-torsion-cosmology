@@ -1,0 +1,14 @@
+# ====================================================================
+# THE TOPOLOGICAL INVARIANCE PRINCIPLE (PIT LETTER) - REQUIREMENTS
+# ====================================================================
+# Reproduces Figure_CosmicHistory_Omegas_PIT.png via:
+#   python plot_Cosmic_History_Omegas.py
+#
+# Paper: "The Topological Invariance Principle" — Fichant (2026)
+# DOI:   10.5281/zenodo.XXXXXXX
+# ====================================================================
+
+numpy>=1.21.0
+scipy>=1.7.0
+matplotlib>=3.4.0
+astropy>=5.0.0
