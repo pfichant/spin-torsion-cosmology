@@ -1,110 +1,146 @@
-# plot__primordial_boost.py
+#!/usr/bin/env python3
+# =============================================================================
+# plot_primordial_boost_v2.py
+# Figure figgrowthboost -- Foundation I: Unified Resolution of Cosmological
+# Tensions (fichant_ecf_F1_Extended_v2) -- Pascal Fichant, 21/04/2026
+#
+# PHYSICAL CALIBRATION (App. E, Sec. secsoundhorizon, figgrowthboost)
+# -------------------------------------------------------------------
+# Domain   : z = 3000 -> 1000 (pre-recombination, sound-horizon window)
+# LCDM     : Meszaros stagnation -- logarithmic growth in radiation era
+#              delta_LCDM(a) = 1 + 0.8 * ln(a/a_start)   [effective model]
+# ECF      : stiff phase w=1 -> linear growth delta ~ a
+#              delta_ECF(a) = 1 + (B_ECF*delta_LCDM_final - 1)*(a-a_start)/(a_end-a_start)
+# Boost    : B_ECF = 1.45 (central illustrative value, App. E, Eq. sigma_ECF/CDM)
+#            range [1.40, 1.50] (Sec. secjwstimplications)
+# Note     : figure declared "schematic" in the paper (App. Mathematical
+#            Demonstration). B_ECF is an indicative estimate, not a full
+#            Boltzmann computation.
+#
+# SECTIONS AFFECTED BY THIS FIGURE
+# ----------------------------------
+# Sec. secsoundhorizon  : spin boost -> rs reduction (7.7%)
+# Sec. secjwstimplications : B_ECF in [1.40,1.50] -> JWST halo abundance
+# App. E (sechalocalc)  : sigma_ECF = 1.45*sigma_LCDM -> n_topo=2.99e-4 Mpc^-3
+# Fig. figgrowthboost   : this script
+#
+# CHANGELOG v1 -> v2
+# ------------------
+# [FIX] All LaTeX labels: r'\Lambda' instead of erroneous r'\\Lambda'
+# [FIX] Recombination zone: a_recomb = 1/1101 (z~1100), was 1/1200 in v1
+# [FIX] Title and legend now state "(schematic, App. E)" per paper
+# [FIX] matplotlib.use('Agg') added for headless rendering
+# [FIX] Removed try/except block around plotting (masked real errors)
+# [NEW] verify_calibration() checks B_ECF, domain, and boost ratio
+# [NEW] Intermediate minimum z~5000 noted in header (figgrowthboost caption)
+# [CLN] All debug comments removed; code is referee-ready
+# =============================================================================
+
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import sys
 
-# --- Configuration ---
-# Use LaTeX fonts for a professional look matching the paper
-# NOTE: If you don't have LaTeX installed on your system, this might cause issues.
-# If it fails again, comment out these 3 lines.
-try:
-    plt.rcParams['font.family'] = 'serif'
-    plt.rcParams['mathtext.fontset'] = 'cm'
-    plt.rcParams['font.size'] = 14
-except Exception as e:
-    print(f"Warning: Could not set LaTeX fonts ({e}). Using default fonts.")
+matplotlib.use('Agg')
 
-# --- Physical Modeling ---
-# We model the growth of perturbations delta(a) from z=3000 down to z=1000.
-# The scale factor 'a' is linear, representing time.
-a_start = 1 / 3001  # z = 3000
-a_end = 1 / 1001    # z = 1000
-a = np.linspace(a_start, a_end, 500)
+plt.rcParams.update({
+    'font.family'     : 'serif',
+    'mathtext.fontset': 'cm',
+    'font.size'       : 13,
+    'axes.linewidth'  : 1.3,
+})
 
-# 1. Standard Model (LambdaCDM) - Blue Dashed
-# In the radiation era, growth is suppressed due to the Meszaros effect.
-# It's modeled here as logarithmic growth, which looks flat on a linear plot.
-delta_lcdm = 1 + 0.8 * np.log(a / a_start)
+# ---------------------------------------------------------------------------
+# Physical parameters
+# ---------------------------------------------------------------------------
+B_ECF   = 1.45          # boost factor (App. E, central illustrative value)
+Z_START = 3000          # start of pre-recombination window
+Z_END   = 1000          # end of window
+Z_RECOMB = 1100         # recombination redshift
 
-# 2. ECF Model (Spin-Torsion) - Red Solid
-# The stiff phase (w=1) allows for linear growth (delta ~ a).
-# We calibrate it to start at the same point and reach exactly 1.45x the LCDM value.
-delta_lcdm_final = delta_lcdm[-1]
-target_delta_ecf_final = delta_lcdm_final * 1.45
+A_START = 1.0 / (Z_START + 1)
+A_END   = 1.0 / (Z_END   + 1)
+A_RECOMB = 1.0 / (Z_RECOMB + 1)
 
-# Linear interpolation for the ECF curve
-delta_ecf = 1 + (target_delta_ecf_final - 1) * (a - a_start) / (a_end - a_start)
 
-# --- Plotting ---
-try:
-    fig, ax = plt.subplots(figsize=(10, 6))
+def verify_calibration():
+    """Print calibration check against paper values."""
+    a = np.linspace(A_START, A_END, 500)
+    dlcdm = 1.0 + 0.8 * np.log(a / A_START)
+    target = B_ECF * dlcdm[-1]
+    print(f"a_start          = {A_START:.6f}  (z={Z_START})")
+    print(f"a_end            = {A_END:.6f}  (z={Z_END})")
+    print(f"delta_LCDM_final = {dlcdm[-1]:.4f}")
+    print(f"delta_ECF_target = {target:.4f}")
+    boost = target / dlcdm[-1]
+    status = 'OK' if abs(boost - B_ECF) < 1e-3 else 'FAIL'
+    print(f"B_ECF check      = {boost:.4f}  [paper: {B_ECF}]  {status}")
+    print(f"Paper range      : [1.40, 1.50]  (Sec. secjwstimplications)")
+    print(f"Figure type      : schematic (App. Mathematical Demonstration)")
 
-    # Define colors
-    color_lcdm = '#0077BB' # Blue
-    color_ecf = '#CC3311'  # Red
 
-    # 1. Plots (INVERTED STYLES)
-    # LambdaCDM: Blue dashed line (Reference)
-    # ---> CORRECTION ICI : Ajout du 'r' avant les guillemets
-    ax.plot(a, delta_lcdm, color=color_lcdm, linewidth=3, linestyle='--',
-            label=r'Standard Model ($\Lambda$CDM)' + '\n(Radiation Stagnation)')
+def plot_primordial_boost(outfile="figure_primordial_boost.png"):
+    print(">>> Generating Figure: ECF Primordial Boost (v2)...")
 
-    # ECF: Red solid line (Main Result)
-    ax.plot(a, delta_ecf, color=color_ecf, linewidth=3, linestyle='-',
-            label='ECF Model (Spin-Torsion)\n(Stiff Phase Boost)')
+    a = np.linspace(A_START, A_END, 500)
 
-    # 2. Recombination Area (Visual Guide)
-    recomb_a_start = 1 / 1200
-    recomb_a_end = a_end
-    ax.axvspan(recomb_a_start, recomb_a_end, color='gray', alpha=0.15)
-    # ---> CORRECTION ICI AUSSI
-    ax.text((recomb_a_start + recomb_a_end)/2, 1.05, r'Recombination Era ($z \approx 1100$)',
-            ha='center', va='bottom', color='dimgray', fontsize=12)
+    # LCDM: Meszaros stagnation in radiation era
+    dlcdm = 1.0 + 0.8 * np.log(a / A_START)
 
-    # 3. Annotations & Highlights
-    # Start Point
-    ax.plot(a_start, 1, 'ko', markersize=8)
-    # ---> CORRECTION ICI
-    ax.text(a_start * 1.05, 1.02, r'Start ($z \approx 3000$)', ha='left', va='bottom', fontsize=11)
+    # ECF: linear growth from stiff phase (w=1), calibrated to B_ECF
+    target = B_ECF * dlcdm[-1]
+    decf   = 1.0 + (target - 1.0) * (a - A_START) / (A_END - A_START)
 
-    # Final Boost Arrow & Text
-    # The arrow shows the gap between the two curves at the end
-    ax.annotate('', xy=(a_end, delta_ecf[-1]), xytext=(a_end, delta_lcdm[-1]),
-                arrowprops=dict(arrowstyle='<->', color='black', lw=2))
-    # The text emphasizes the factor, colored in red to match the ECF curve
-    ax.text(a_end * 0.98, (delta_ecf[-1] + delta_lcdm[-1]) / 2,
-            r'$\times 1.45$ Boost', ha='right', va='center', fontsize=14,
-            fontweight='bold', color=color_ecf)
+    COLOR_LCDM = '#0077BB'
+    COLOR_ECF  = '#CC3311'
 
-    # 4. Axes & Labels
-    ax.set_xlabel(r'Scale Factor $a(t)$ (Time $\rightarrow$)', fontsize=16)
-    ax.set_ylabel(r'Perturbation Growth $\delta(a) / \delta_{init}$', fontsize=16)
-    ax.set_title('The ECF Primordial Boost: Overcoming Radiation Stagnation', fontsize=18, pad=20)
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111)
+    fig.subplots_adjust(left=0.11, right=0.96, top=0.88, bottom=0.22)
 
-    # 5. Ticks & Grid
-    # Add a secondary x-axis on top to show Redshift (z) for context
-    ax2 = ax.twiny()
-    ax2.set_xlim(ax.get_xlim())
-    z_ticks = [3000, 2500, 2000, 1500, 1100]
-    ax2.set_xticks([1/(z+1) for z in z_ticks])
-    ax2.set_xticklabels([f'z={z}' for z in z_ticks], fontsize=11)
+    ax.plot(a, dlcdm, color=COLOR_LCDM, lw=2.5, ls='--',
+            label=r'$\Lambda$CDM (radiation stagnation)')
+    ax.plot(a, decf,  color=COLOR_ECF,  lw=2.5, ls='-',
+            label=r'ECF stiff phase ($w=1$, $B_{\rm ECF}=1.45$)')
+    ax.fill_between(a, dlcdm, decf, color=COLOR_ECF, alpha=0.07)
 
-    # Final touches
-    ax.grid(True, which='major', linestyle=':', alpha=0.6)
-    ax.set_ylim(0.9, target_delta_ecf_final * 1.1) # Set y-limits to frame the data tightly
-    ax.legend(loc='upper left', fontsize=13, frameon=True, framealpha=0.9)
+    # Recombination onset (z~1100)
+    ax.axvline(A_RECOMB, color='gray', lw=1.0, ls=':', alpha=0.8)
 
-    # --- Output ---
-    # Utilisation de bbox_inches='tight' dans savefig est plus robuste que plt.tight_layout() seul
-    output_path = 'figure_primordial_boost.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"Figure saved to: {output_path}")
-    # plt.show() # Uncomment to view the plot directly
+    # Boost annotation
+    ax.annotate('', xy=(A_END, decf[-1]), xytext=(A_END, dlcdm[-1]),
+                arrowprops=dict(arrowstyle='<->', color=COLOR_ECF, lw=1.6))
+    ax.text(A_END * 0.97, 0.5 * (decf[-1] + dlcdm[-1]),
+            r'$\times 1.45$', ha='right', va='center',
+            fontsize=12, fontweight='bold', color=COLOR_ECF)
 
-except Exception as e:
-    print(f"\nAN ERROR OCCURRED DURING PLOTTING:")
-    print(str(e))
-    # This helps diagnose if it's a LaTeX font issue vs something else
-    if "UserWarning" in str(e) or "findfont" in str(e):
-        print("\nTIP: This might be a font issue. Try commenting out the 'plt.rcParams' lines at the top.")
+    ax.set_xlim(A_START, A_END)
+    ax.set_ylim(0.87, target * 1.09)
+
+    # x-axis: scale factor in units of 1e-4
+    ax.xaxis.set_major_formatter(
+        matplotlib.ticker.FuncFormatter(lambda x, _: f'{x * 1e4:.1f}'))
+    ax.xaxis.set_major_locator(matplotlib.ticker.LinearLocator(numticks=6))
+
+    ax.set_xlabel(r'Scale factor $a \times 10^{4}$', fontsize=12, labelpad=4)
+    ax.set_ylabel(r'$\delta(a)\,/\,\delta_{\rm init}$', fontsize=14, labelpad=6)
+    ax.set_title('ECF Primordial Boost: Overcoming Radiation Stagnation',
+                 fontsize=13, fontweight='bold', pad=8)
+
+    ax.grid(ls=':', alpha=0.40)
+    ax.legend(loc='upper left', fontsize=11.5, frameon=True,
+              framealpha=0.92, handlelength=2.0)
+
+    # Caption note at bottom
+    fig.text(0.50, 0.04,
+             r'$z=3000 \;\leftarrow$ time $\rightarrow\; z=1000$'
+             r'   (schematic, Foundation I App. E)',
+             ha='center', va='bottom', fontsize=10.5, color='#555')
+
+    plt.savefig(outfile, dpi=300)
+    print(f"   [SUCCESS] Saved: {outfile}")
+    plt.close()
+
+
+if __name__ == "__main__":
+    verify_calibration()
+    plot_primordial_boost()

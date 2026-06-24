@@ -1,91 +1,114 @@
-# plot_desi_prediction.py
 """
-Script: DESI Y1 Consistency Check
-Author: Pascal Fichant
+plot_desi_prediction.py  --  v2  (15 Apr 2026)
+===============================================
+Figure: Dark Energy Dynamics -- ECF Prediction vs DESI DR1
+Paper: Foundation I: The Metric Universe (Extended), Section 6
+
+Physical derivation  (F1 Appendix B)
+--------------------------------------
+From the Topological Invariance Principle (TIP, rho_DE(a) = 1 - rho_torsion(a))
+and the continuity equation, the effective ECF equation of state is:
+
+    w(a) = -1 - (1/3) d(ln rho_DE)/d(ln a)
+
+Taylor-expanding around a=1 (z=0) and calibrating alpha_torsion=0.151 to
+DESI DR1 BAO contours yields the CPL parameters (App. B, Eq. B.x):
+
+    w0 = -0.904,   wa = -0.153
+
+so that  w(z) = w0 + wa * z/(1+z)  [Chevallier-Polarski-Linder parametrization]
+
+This places the ECF trajectory in the region broadly compatible with DESI DR1
+(arXiv 2404.03002) while remaining close to w = -1 for z < 1.
+
+DESI DR1 reference values (DESI+CMB, arXiv 2404.03002, Table 3)
+----------------------------------------------------------------
+    w0_DESI = -0.827 +/- 0.060
+    wa_DESI = -0.75  +/- 0.29
+    rho(w0, wa) = -0.95  (correlation coefficient)
+
+The 1-sigma band is propagated from the published covariance:
+    sigma^2(z) = sigma^2(w0) + [z/(1+z)]^2 sigma^2(wa)
+               + 2 rho [z/(1+z)] sigma(w0) sigma(wa)
+
+Output
+------
+    Figure_DESI_Prediction.png  (300 dpi)
+    Filename consistent with LaTeX reference in F1 Section 6.
 """
+
+import matplotlib
+matplotlib.use('Agg')
+
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
+from matplotlib.patches import Patch
 
-# Configuration Backend
-matplotlib.use('Agg')
-plt.rcParams.update({
-    'font.size': 12, 
-    'axes.labelsize': 14, 
-    'figure.figsize': (12, 7),
-    'font.family': 'serif'
-})
 
-def plot_desi_prediction():
-    print(">>> Generating Figure: DESI Prediction...")
-    
-    # Redshift range
-    z = np.linspace(0, 1.8, 200) # Un peu plus loin pour voir la tendance
-    
-    # --- 1. TRAJECTOIRE ECF REPRÉSENTATIVE ---
-    # Valeurs citées dans le texte corrigé
-    w0_ecf = -0.90
-    wa_ecf = -0.15
-    
-    # Chevallier-Polarski-Linder (CPL) parametrization
-    w_ecf = w0_ecf + wa_ecf * (z / (1 + z))
+# ---------------------------------------------------------------------------
+# Parameters  --  from paper Appendix B and DESI DR1 (arXiv 2404.03002)
+# ---------------------------------------------------------------------------
+W0_ECF, WA_ECF     = -0.904, -0.153   # App. B, calibrated via alpha_torsion=0.151
+W0_DESI, WA_DESI   = -0.827, -0.75    # DESI DR1 + CMB, Table 3
+SIG_W0, SIG_WA     = 0.060, 0.29      # 68% marginals, DESI+CMB
+RHO_W0_WA          = -0.95            # correlation coefficient (DESI+CMB)
+OUTPUT_FILE = 'Figure_DESI_Prediction.png'
 
-    # --- 2. LAMBDA CDM ---
-    w_lcdm = -1.0 * np.ones_like(z)
 
-    # --- 3. DESI Y1 DATA (Simulation de la bande d'erreur) ---
-    # La bande doit s'élargir avec z pour être réaliste
-    # Centre "Best fit" DESI (Dynamique)
-    w_desi_best = -0.82 + (-0.6) * (z / (1 + z))**1.5
-    
-    # Largeur de la bande (Incertitude observationnelle)
-    # Sigma grandit de 0.08 (local) à 0.25 (haut z)
-    sigma = 0.08 + 0.12 * z 
-    desi_upper = w_desi_best + sigma
-    desi_lower = w_desi_best - sigma
+# ---------------------------------------------------------------------------
+# Curves
+# ---------------------------------------------------------------------------
+z = np.linspace(0, 1.6, 400)
+a = z / (1 + z)                        # CPL pivot variable
 
-    # --- PLOT ---
-    fig, ax = plt.subplots()
+w_ecf  = W0_ECF  + WA_ECF  * a        # ECF CPL trajectory
+w_desi = W0_DESI + WA_DESI * a        # DESI DR1 best-fit CPL
+w_lcdm = np.full_like(z, -1.0)        # LCDM reference
 
-    # Zone Grise (DESI Real Data)
-    ax.fill_between(z, desi_lower, desi_upper, color='gray', alpha=0.20, 
-                    label=r'DESI Y1 Constraints ($1\sigma$)')
-    ax.plot(z, w_desi_best, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+# 1-sigma band from DESI covariance
+var_band = (SIG_W0**2
+            + a**2 * SIG_WA**2
+            + 2 * RHO_W0_WA * a * SIG_W0 * SIG_WA)
+sigma = np.sqrt(np.abs(var_band))
 
-    # Courbe ECF (Rouge)
-    ax.plot(z, w_ecf, color='#D00000', linewidth=3, 
-            label=rf'ECF Trajectory ($w_0={w0_ecf}, w_a={wa_ecf}$)')
 
-    # Courbe LCDM (Bleu pointillé)
-    ax.plot(z, w_lcdm, color='blue', linestyle=':', linewidth=2, 
-            label=r'$\Lambda$CDM ($w=-1$)')
+# ---------------------------------------------------------------------------
+# Figure
+# ---------------------------------------------------------------------------
+plt.rcParams.update({'font.family': 'serif', 'font.size': 11,
+                     'axes.linewidth': 1.3, 'text.usetex': False})
 
-    # Ligne Phantom Divide
-    ax.axhline(-1.0, color='blue', linestyle=':', alpha=0.3)
+fig, ax = plt.subplots(figsize=(9, 5.5))
+fig.subplots_adjust(left=0.12, right=0.68, top=0.90, bottom=0.13)
 
-    # --- ANNOTATIONS ---
-    ax.annotate(r'ECF consistent with data', 
-                xy=(1.0, w_ecf[111]), xycoords='data', # Index approx pour z=1
-                xytext=(0.8, -0.7), textcoords='data',
-                arrowprops=dict(facecolor='#D00000', shrink=0.05),
-                color='#800000', fontsize=11, fontweight='bold')
+ax.fill_between(z, w_desi - sigma, w_desi + sigma,
+                color='#999', alpha=0.22)
+ax.plot(z, w_desi, color='#777', ls='--', lw=1.8)
+ax.plot(z, w_ecf,  color='#C00000', lw=2.8, zorder=4)
+ax.plot(z, w_lcdm, color='steelblue', ls=':', lw=2.0, zorder=3)
+ax.axhline(-1.0, color='steelblue', ls=':', lw=0.9, alpha=0.25)
 
-    # --- MISE EN PAGE ---
-    ax.set_xlim(0, 1.6)
-    ax.set_ylim(-1.4, -0.6)
-    
-    ax.set_xlabel('Redshift $z$')
-    ax.set_ylabel(r'Equation of State $w(z)$')
-    ax.set_title(r'Dark Energy Dynamics: ECF vs DESI Y1', fontsize=16, pad=15, fontweight='bold')
-    
-    ax.grid(True, linestyle=':', alpha=0.6)
-    ax.legend(loc='lower left', frameon=True, fontsize=11)
-    
-    # Nom exact attendu par le LaTeX
-    output_filename = "Figure_DESI_Prediction.png"
-    plt.savefig(output_filename, dpi=300)
-    print(f"   [SUCCESS] Saved: {output_filename}")
-    plt.close()
+ax.set_xlabel('Redshift $z$', fontsize=12)
+ax.set_ylabel(r'Equation of state $w(z)$', fontsize=11)
+ax.set_title(r'Dark Energy Dynamics: ECF Prediction vs DESI DR1', fontsize=11, pad=6)
+ax.set_xlim(0, 1.6)
+ax.set_ylim(-1.4, -0.6)
+ax.grid(True, ls=':', alpha=0.35, color='gray')
+ax.tick_params(labelsize=10)
 
-if __name__ == "__main__":
-    plot_desi_prediction()
+handles = [
+    Patch(fc='#999', alpha=0.35, lw=0,
+          label=r'DESI DR1+CMB  $1\sigma$  [2404.03002]'),
+    plt.Line2D([0], [0], color='#777', ls='--', lw=1.8,
+               label=rf'DESI best fit  ($w_0={W0_DESI}$, $w_a={WA_DESI}$)'),
+    plt.Line2D([0], [0], color='#C00000', lw=2.8,
+               label=rf'ECF  ($w_0={W0_ECF}$, $w_a={WA_ECF}$)'),
+    plt.Line2D([0], [0], color='steelblue', ls=':', lw=2.0,
+               label=r'$\Lambda$CDM  ($w=-1$)'),
+]
+ax.legend(handles=handles, loc='upper left', bbox_to_anchor=(1.03, 1.0),
+          fontsize=9.5, framealpha=0.95, edgecolor='#ccc',
+          handlelength=2.0, labelspacing=0.9)
+
+plt.savefig(OUTPUT_FILE, dpi=300, bbox_inches='tight')
+plt.close()

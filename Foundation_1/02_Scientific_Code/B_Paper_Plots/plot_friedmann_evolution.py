@@ -1,92 +1,90 @@
 """
 ================================================================================
-SCRIPT: Cosmic Energy Density Evolution (Friedmann Equations)
-Paper: Foundation I: Unified Resolution of Cosmological Tensions
-Author: Pascal Fichant (2026)
-Description: 
-    Plots the evolution of background energy densities vs scale factor 'a'.
-    Highlights the distinct scaling behavior:
-    - Dark Energy (~ constant)
-    - Matter (~ a^-3)
-    - Radiation (~ a^-4)
-    - Primordial Spin/Torsion (~ a^-6) -> Dominates the ultra-early universe.
+SCRIPT : Cosmic Energy Density Evolution (Friedmann Equations)
+Paper  : Foundation I -- Extended Version
+Author : Pascal Fichant (2026)
+Description :
+    Plots the evolution of background energy densities vs scale factor a.
+    Planck 2018 amplitudes: Omega_Lambda=0.685, Omega_m=0.315, Omega_r=9e-5.
+    Three epoch markers (BBN, Spin-Radiation equality, Matter-Radiation equality).
 ================================================================================
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
-
-# Headless backend for server compatibility and Open Science
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
-# PRD Standard Formatting
 plt.rcParams.update({
-    'font.size': 14,
-    'axes.labelsize': 16,
-    'legend.fontsize': 13,
+    'font.size': 13,
+    'axes.labelsize': 15,
+    'legend.fontsize': 12,
     'font.family': 'serif',
     'axes.linewidth': 1.5
 })
 
+
 def plot_friedmann_densities():
-    print(">>> Generating Figure: Evolution of Energy Densities (Figure 11)...")
-    
-    # Scale factor 'a' from the deep primordial era to today (log scale)
     a = np.logspace(-10, 0, 1000)
-    
-    # --- 1. THEORETICAL DENSITIES ---
-    # Values are scaled for visual clarity (Arbitrary Units preserving the correct slopes)
-    rho_lambda = 0.7 * np.ones_like(a)                  # Dark Energy (Constant)
-    rho_matter = 0.3 * a**(-3)                          # Dust/Matter (a^-3)
-    rho_rad    = 9.0e-5 * a**(-4)                       # Radiation (a^-4)
-    
-    # ECF Spin Density: Calibrated to dominate before Big Bang Nucleosynthesis (BBN)
-    rho_spin   = 1.0e-17 * a**(-6)                      # Torsion/Spin (a^-6)
 
-    # --- 2. FIGURE SETUP ---
-    fig, ax = plt.subplots(figsize=(10, 7))
-    plt.subplots_adjust(left=0.15, right=0.95, top=0.92, bottom=0.12)
+    # Planck 2018 normalised amplitudes (arbitrary units, correct slopes)
+    rho_lambda = 0.685 * np.ones_like(a)
+    rho_matter = 0.315 * a**(-3)
+    rho_rad    = 9.0e-5 * a**(-4)
+    rho_spin   = 9.8e-18 * a**(-6)
 
-    # Plotting the densities on a log-log scale
-    ax.plot(a, rho_spin,   color='purple', linestyle='-',  linewidth=3, label=r'Spin Density ($\rho_{spin} \propto a^{-6}$)')
-    ax.plot(a, rho_rad,    color='red',    linestyle='--', linewidth=2, label=r'Radiation ($\rho_r \propto a^{-4}$)')
-    ax.plot(a, rho_matter, color='blue',   linestyle='-.', linewidth=2, label=r'Matter ($\rho_m \propto a^{-3}$)')
-    ax.plot(a, rho_lambda, color='green',  linestyle=':',  linewidth=2.5, label=r'Dark Energy ($\rho_\Lambda \approx$ const)')
+    fig, ax = plt.subplots(figsize=(11, 7))
+    plt.subplots_adjust(left=0.12, right=0.65, top=0.91, bottom=0.11)
 
-    # --- 3. ANNOTATIONS & FORMATTING ---
-    # The CRITICAL CORRECTION: Y-axis is absolute energy density, NOT Omega parameter!
+    ax.plot(a, rho_spin,   color='purple', linestyle='-',  linewidth=3,
+            label=r'Spin/Torsion  $\rho_{\rm spin} \propto a^{-6}$')
+    ax.plot(a, rho_rad,    color='red',    linestyle='--', linewidth=2,
+            label=r'Radiation  $\rho_r \propto a^{-4}$')
+    ax.plot(a, rho_matter, color='blue',   linestyle='-.', linewidth=2,
+            label=r'Matter  $\rho_m \propto a^{-3}$')
+    ax.plot(a, rho_lambda, color='green',  linestyle=':',  linewidth=2.5,
+            label=r'Dark Energy  $\rho_\Lambda \approx$ const')
+
     ax.set_xscale('log')
     ax.set_yscale('log')
-    
     ax.set_xlim(1e-10, 1)
-    ax.set_ylim(1e-2, 1e45) # Adjusted to show the a^-6 divergence clearly
-    
-    ax.set_xlabel(r'Scale Factor $a$', fontweight='bold')
-    ax.set_ylabel(r'Energy Density $\rho_i(a)$ [Arbitrary Units]', fontweight='bold')
-    ax.set_title('Dominance of Torsion in the Early Universe', fontsize=18, fontweight='bold', pad=15)
-    
-    # Add vertical lines for important epochs
-    # Equality Matter-Radiation
-    a_eq = 3.0e-4 
-    ax.axvline(a_eq, color='gray', linestyle='-', alpha=0.3)
-    ax.text(a_eq * 1.2, 1e5, 'Matter-Radiation\nEquality', color='gray', fontsize=11, rotation=90)
+    ax.set_ylim(1e-2, 1e45)
+    ax.set_xlabel(r'Scale Factor $a$', fontweight='bold', labelpad=8)
+    ax.set_ylabel(r'$\rho_i(a)$ [Arbitrary Units]', fontweight='bold', labelpad=8)
+    ax.set_title('Dominance of Torsion in the Early Universe',
+                 fontsize=15, fontweight='bold', pad=10)
 
-    # ECF Bounce / Spin Dominance epoch
-    a_spin = 1.0e-7
-    ax.axvline(a_spin, color='purple', linestyle='-', alpha=0.3)
-    ax.text(a_spin * 1.2, 1e25, 'Spin Dominance\nEpoch', color='purple', fontsize=11, rotation=90)
+    ax.grid(True, which='major', ls=':', alpha=0.35)
+    ax.grid(True, which='minor', ls=':', alpha=0.12)
 
-    # Grid and Legend
-    ax.grid(True, which="both", ls=":", alpha=0.5)
-    ax.legend(loc='upper right', framealpha=0.95, edgecolor='black')
+    # Epoch markers (analytically derived from Planck 2018 amplitudes)
+    a_bbn = 3.0e-9                          # BBN constraint
+    a_sr  = (9.8e-18 / 9.0e-5)**0.5        # Spin-Radiation equality ~ 3.3e-7
+    a_eq  = 9.0e-5 / 0.315                 # Matter-Radiation equality ~ 2.86e-4
 
-    # --- 4. OUTPUT ---
-    # Saving as JPG to perfectly match your LaTeX \includegraphics call
+    epochs = [
+        (a_bbn, 'darkorange', 'BBN',      5e41),
+        (a_sr,  'purple',     'Spin=Rad', 5e28),
+        (a_eq,  'dimgray',    'Mat=Rad',  5e6),
+    ]
+    for a_v, col, lbl, y_lbl in epochs:
+        ax.axvline(a_v, color=col, linestyle='--', alpha=0.5, linewidth=1.1)
+        ax.text(a_v * 2.5, y_lbl, lbl, color=col, fontsize=10, va='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.85, ec='none'))
+
+    # Legend placed outside the plot area (right margin)
+    ax.legend(loc='upper left', bbox_to_anchor=(1.03, 1.0),
+              framealpha=0.97, edgecolor='black', fontsize=11,
+              title='Components', title_fontsize=11)
+
     filename = 'Figure_Friedmann_Evolution.png'
     plt.savefig(filename, dpi=300, bbox_inches='tight')
-    print(f"    -> Saved successfully as {filename}")
     plt.close()
+    print(f"Saved: {filename}")
+    print(f"  a_bbn = {a_bbn:.2e}  (BBN)")
+    print(f"  a_sr  = {a_sr:.3e}  (Spin-Radiation equality)")
+    print(f"  a_eq  = {a_eq:.3e}  (Matter-Radiation equality)")
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     plot_friedmann_densities()
