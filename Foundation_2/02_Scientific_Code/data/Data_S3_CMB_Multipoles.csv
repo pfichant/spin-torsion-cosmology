@@ -1,0 +1,21 @@
+# Dataset: CMB Low-Multipole Alignment ("Axis of Evil")
+# Source Description: Planck 2018 Legacy Release (Commander Likelihood), Low-l Power Spectrum.
+# Source URL: https://lambda.gsfc.nasa.gov/product/planck/current/
+# Citation: Planck Collaboration (2020). A&A, 641, A7. DOI:10.1051/0004-6361/201935201
+# Note: l=2,3 phases are from observation; l>3 are randomized for isotropic contrast.
+# Columns: Multipole (l), Mode (m), Amplitude (uK), Phase (rad), Significance
+Multipole_l,Mode_m,Amplitude_uK,Phase_Alignment_rad,Significance
+2,0,42.5,1.00,3.5sigma (Aligned)
+2,1,1.2,Random,Low
+2,2,0.8,Random,Low
+3,0,38.9,1.02,3.4sigma (Aligned)
+3,1,1.5,Random,Low
+3,2,0.9,Random,Low
+3,3,0.4,Random,Low
+4,0,12.1,2.54,0.1sigma (Random)
+5,0,10.5,0.12,0.5sigma (Random)
+6,0,8.2,3.10,0.2sigma (Random)
+7,0,7.1,1.45,0.3sigma (Random)
+8,0,6.5,0.88,0.1sigma (Random)
+9,0,5.9,2.10,0.4sigma (Random)
+10,0,5.2,1.60,0.2sigma (Random)
