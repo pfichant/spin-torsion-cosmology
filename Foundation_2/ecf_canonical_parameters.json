@@ -1,0 +1,89 @@
+{
+  "_comment": "ECF canonical parameters — Foundation I/II/III (Fichant 2026)",
+  "_version": "F2-preprint-v2",
+  "_zenodo": {
+    "PIT":          "10.5281/zenodo.19900557",
+    "Foundation_I": "10.5281/zenodo.19577447",
+    "Foundation_II":"10.5281/zenodo.20802690"
+  },
+  "_github": "https://github.com/pfichant/spin-torsion-cosmology",
+
+  "kappa2": {
+    "value": 2.0766e-43,
+    "unit": "m/J",
+    "description": "Torsion coupling constant (Foundation I, Eq. kappa2_def)",
+    "sig_figs": 4
+  },
+  "w0": {
+    "value": -0.904,
+    "unit": "dimensionless",
+    "description": "Dark energy EOS parameter w0 (DESI+Planck MCMC, Foundation II)",
+    "source": "ecf_desi_mcmc_v2.py"
+  },
+  "wa": {
+    "value": -0.153,
+    "unit": "dimensionless",
+    "description": "Dark energy EOS parameter wa (DESI+Planck MCMC, Foundation II)",
+    "source": "ecf_desi_mcmc_v2.py"
+  },
+  "F_ion": {
+    "value": 1.2765,
+    "unit": "dimensionless",
+    "description": "Ionisation fraction factor (Foundation II, §Chiral Baryogenesis)"
+  },
+  "M_micro": {
+    "value": 6.0e24,
+    "unit": "kg",
+    "description": "Micro-Knot mass = c^3/(G*H_EW), H_EW~1e10 s^-1 (Foundation II)"
+  },
+  "xi_KZ": {
+    "value": 60.0,
+    "unit": "Mpc",
+    "range": [50.0, 80.0],
+    "description": "KZ correlation length — CALIBRATED on VSF, not derived from T_EW (PO-F3-XI)",
+    "source": "VSF SPARC+Euclid calibration (Foundation II, §VSF)"
+  },
+  "H0_DN": {
+    "value": 73.50,
+    "uncertainty": 0.81,
+    "unit": "km/s/Mpc",
+    "description": "Hubble constant (ECF Dark Network prior, Foundation II)",
+    "tension_with_Planck_sigma": 4.2
+  },
+  "S2_vol": {
+    "value": 3.88e-39,
+    "unit": "kg^2 m / s^2",
+    "description": "Spin density volume average <S^2>_vol at z=0 (Foundation I)"
+  },
+  "Pi_GW": {
+    "value_min": 0.20,
+    "unit": "dimensionless",
+    "description": "Gravitational wave chiral asymmetry (Foundation II, LISA prediction)"
+  },
+  "fNL_KZ": {
+    "value_3D": 0.2778,
+    "value_CMB": 0.093,
+    "formula": "5/18 (3D Poisson)",
+    "unit": "dimensionless",
+    "description": "Non-Gaussianity parameter (Foundation III, §fNL_KZ)",
+    "sign": "positive (discriminant vs inflation)"
+  },
+  "ns_ECF": {
+    "value": 1.000,
+    "mechanism": "Wands (1999) duality, stiff contraction w=1",
+    "tension_Planck": "+0.035 (8.4 sigma)",
+    "open_problem": "PO-F3-NS",
+    "description": "Scalar spectral index (Foundation III, §ns_KZ)"
+  },
+  "l_KZ": {
+    "value": 233,
+    "formula": "chi_star / xi_KZ = 14000 / 60",
+    "unit": "dimensionless",
+    "description": "CMB multipole of KZ suppression (Foundation III, §Cell_suppression)"
+  },
+  "z_EW": {
+    "value": 6.38e14,
+    "formula": "T_EW / T_0 = 150 GeV / (2.35e-4 eV)",
+    "description": "Redshift of EW phase transition (corrected in F3 v5.1, PO-F3-XI)"
+  }
+}

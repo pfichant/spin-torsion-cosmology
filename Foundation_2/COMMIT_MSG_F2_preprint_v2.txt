@@ -1,0 +1,144 @@
+Foundation_2: F2 v15 — PREPRINT v2 (Zenodo doi:10.5281/zenodo.20802690)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ZENODO DEPOSIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PREPRINT v1: doi:10.5281/zenodo.20629238  (v13, 10 June 2026)
+PREPRINT v2: doi:10.5281/zenodo.20802690  (v15, 22 June 2026)
+Numerical results UNCHANGED between v1 and v2.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PAPER (01_Paper/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+fichant_ecf_F2_Extended_v15.tex
+  - 9544 lines, 164 bibitems, 0 undefined refs, 0 overflows
+  - Tag: preprint-v2-zenodo
+
+Key structural fixes (v13 -> v15):
+  - "fractal" -> "hierarchical" throughout (no defined Hausdorff dimension)
+  - \naggedright -> \raggedright (broken column spec)
+  - Duplicate \end{thebibliography}\end{document} removed + bibitems reintegrated
+  - Keywords/version note moved outside \twocolumn[] (were truncated)
+  - Missing \begin{tcolorbox} (dual void mechanism) reinstated
+  - Orphan \caption (SPARC-175 mosaic) wrapped in figure*
+  - Orphan equation fragment L5104 wrapped in equation
+  - Double superscript fixed (eq:omega_H_stiff)
+
+New physics content (v13 -> v15):
+  - VSF equations (vsf_ecf_modulated, A_ecf) + Euclid Q2 tcolorbox (24 June 2026)
+  - GW: Category 1 (benchmarks) vs Category 2 (falsifiable) distinguished
+  - Cusp-core: geometric saturation Eq.(rcore_ecf) + UDG falsifiable prediction
+  - Torsion String network stability: scaling solution, rho ~ a^{-2}
+  - WIMP null result: flux Phi ~ 3e-30 m^{-2}s^{-1}, XENON/LZ predicted
+  - Magnetic fields: all 4 levels (0D dipolar / 1D solenoidal / 2D tangential / 3D SCMB)
+  - Electric fields: Q=0 exact for all defects; Hall/wall secondary
+  - Micro-Knot transit through GMC (T1-T6): synchrotron filament, CO deficit, bow shock
+    -> SMGPS Williams+2024 candidates: 77 non-thermal isolated filaments
+  - POLAR-2 |V/I| ~ 0.8 Chern-Simons annihilation channel
+  - 3 detection windows: Fermi archive / POLAR-2+Roman / LISA 4-channel
+  - ECF as 4-level topological network (d(d)=0) + 4 highway predictions:
+    H1: filament rotation (Wang+2021 3.3sigma, Jung+2025 confirmed)
+    H2: halo spin perp filament (Rong+2025 2sigma)
+    H3: asymmetric baryon flow toward high-N nodes
+    H4: no dangling filaments (DESI+Euclid testable)
+  - June 2026 observations: Abell2744-QSO1 JWST, Dark Galaxy-2 Euclid,
+    Lee+2026 QCD topological DE, ASKAP J1424 birefringence, SMGPS Mutale+2026
+
+New tables:
+  - tab:sparc_comparison  : ECF vs NFW/DC14/MOND (chi2_med comparison)
+  - tab:ecf_defect_summary: 5-level bestiary with kill-switches
+  - tab:limitations       : 16 rows D/O/P (deliberate/open/proxy)
+  - tab:roadmap           : 9 falsification milestones 2026-2037
+
+New bibitems (+19, total 164):
+  Wang2021FilamentSpin, Jung2025FilamentRot, Rong2025AngMom,
+  Williams2024SMGPS, Mutale2026, PolarTwo2025, STScI2026_119,
+  ESA_Euclid_2026, Lee2026QCD, VanWaerbeke2025, Contarini2022,
+  EuclidTimeline2026, Li2020SPARC, HurleyWalker2022, Shellard1987,
+  vanDokkum2019, Clowe2006, Porco2007Cassini, Caleb2022
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SCRIPTS (02_Scientific_Code/B_Paper_Plots/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEW SCRIPTS (added for PREPRINT v2):
+  plot_F2_magnetic_fields.py
+    B(r) profiles for 4 defect levels (0D/1D/2D/3D)
+    5-column summary table; 300 dpi; laser-print safe (alpha=0.18)
+    -> figures_output/Fig_Magnetic_Fields_ECF.png
+
+  plot_F2_vsf_prediction.py
+    VSF ECF vs LCDM: 3 panels
+      (a) dn/dlnR void size function
+      (b) ECF/LCDM ratio (peak ~2.1 at R~70 Mpc)
+      (c) z-evolution 0 -> 1
+    Kill-switch box: Euclid Q2 24 June 2026
+    -> figures_output/Fig_VSF_ECF_Prediction.png
+
+  plot_F2_sparc_model_comparison.py
+    chi2 comparison: ECF(0.80) vs NFW(1.55) / DC14(0.85) / MOND
+    3 panels: violin / CDF / summary table
+    Caveat tcolorbox: synthetic distributions, real MCMC deferred
+    -> figures_output/Fig_SPARC_Model_Comparison.png
+
+  plot_F2_topological_network.py
+    6-panel: network graph / internet analogy / dimensional hierarchy /
+    H1 filament rotation / H2 halo spin / H3+H4 forbidden structures
+    -> figures_output/Fig_ECF_Topological_Network.png
+
+  run_all_simulations_F2.py  [UPDATED]
+    Added 5 new plot scripts to PLOT_SCRIPTS list
+    Runtime: ~120s total (4 x 30s)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIMULATIONS (02_Scientific_Code/A_Simulations/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ecf_desi_mcmc_v2.py  [UPDATED]
+  - Added H0_DN = 73.50 +/- 0.81 km/s/Mpc as third prior case
+  - Three cases: H0_Planck / H0_SH0ES / H0_DN
+  - Output: mcmc_results_v2.csv (canonical ECF posteriors)
+  - ECF canonical: (w0, wa) = (-0.904, -0.153), kappa2 = 2.0766e-43 m/J
+
+fetch_euclid_void_catalogue.py  [NEW]
+  - 3-stage fetcher: ESA TAP / Zenodo / arXiv data links
+  - --watch mode: polls every 6h for Euclid DR1 (expected 21 Oct 2026)
+  - Usage: python fetch_euclid_void_catalogue.py --watch --poll-hours 6
+  - Status: TAP OK, void catalogue not yet released (as of 25 June 2026)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA (03_Data/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+mcmc_results_v2.csv           [NEW — MCMC posteriors v2]
+  Columns: w0, wa, H0, chi2, log_posterior
+  3 prior cases: Planck / SH0ES / DN
+  Canonical ECF point: w0=-0.904, wa=-0.153, H0=73.50
+
+ecf_canonical_parameters.json [NEW — machine-readable canonical values]
+  kappa2     : 2.0766e-43  m/J
+  w0         : -0.904
+  wa         : -0.153
+  F_ion      : 1.2765
+  M_micro_kg : 6.0e24
+  xi_KZ_Mpc  : 60.0        (calibrated on VSF, not derived from T_EW)
+  H0_DN      : 73.50       km/s/Mpc
+  H0_DN_err  : 0.81        km/s/Mpc
+  zenodo_F2  : "10.5281/zenodo.20802690"
+  zenodo_F1  : "10.5281/zenodo.19577447"
+  zenodo_PIT : "10.5281/zenodo.19900557"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+README (README_F2_v15_final.md)  [UPDATED]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - Zenodo PREPRINT v2 DOI added to header
+  - GitHub URL: https://github.com/pfichant/spin-torsion-cosmology
+  - New observations table: Wang+2021, Jung+2025, Rong+2025
+  - New figures table: M1 (Magnetic), M2 (VSF), M3 (SPARC), M4 (Network)
+  - Kill-switches updated: +H1 filament rotation, +H4 no dangling filaments
+  - Version history entry v15 (22 June 2026, +2672 lines, 164 bibitems)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GIT COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+git add Foundation_2/
+git commit -F COMMIT_MSG_F2_preprint_v2.txt
+git tag -a "F2-preprint-v2-zenodo" -m "Foundation II PREPRINT v2 — doi:10.5281/zenodo.20802690"
+git push origin main --tags
