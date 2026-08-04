@@ -1,16 +1,17 @@
 # The Topological Invariance Principle (TIP) — PIT Letter 🌌
 ### Dark Energy as a Geometric Constraint of Spatial Flatness in Einstein-Cartan Cosmology
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19900557.svg)](https://doi.org/10.5281/zenodo.19900557)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19798923.svg)](https://doi.org/10.5281/zenodo.19798923)
 [![License: CC-BY-4.0](https://img.shields.io/badge/License-CC--BY--4.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-PREPRINT%20v3-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-PREPRINT%20v4-blue.svg)]()
 
 **Pascal Fichant** — Independent Researcher, Montpellier, Occitanie, France  
-**PREPRINT v3** · doi: `10.5281/zenodo.19900557`
+**PREPRINT v4** · concept doi: `10.5281/zenodo.19798923` (always resolves to the latest version)
 
-> **arXiv preprint version**: v3 (current public submission)  
-> **Internal development version**: v7
+> **Zenodo version**: v4 (current public deposit)  
+> **Internal development version**: v7  
+> **arXiv**: not yet submitted (endorsement pending for gr-qc)
 
 ---
 
@@ -34,10 +35,14 @@ not a logical prerequisite of the principle.
 
 | Paper | DOI | Role |
 |---|---|---|
-| **PIT Letter** *(this)* | [10.5281/zenodo.19900557](https://doi.org/10.5281/zenodo.19900557) | TIP gauge postulate, geometric dark energy |
+| **PIT Letter** *(this)* | [10.5281/zenodo.19798923](https://doi.org/10.5281/zenodo.19798923) | TIP gauge postulate, geometric dark energy |
 | **Foundation I** | [10.5281/zenodo.19577447](https://doi.org/10.5281/zenodo.19577447) | H₀–S₈–BAO calibration, Δχ²=−39.5 |
-| **Foundation II** | [10.5281/zenodo.20629238](https://doi.org/10.5281/zenodo.20629238) | Baryogenesis, geometric dark sector, Micro-Knots |
-| **Foundation III** | In preparation | Tensor spectrum, CLASS-EC, CMB peaks |
+| **Foundation II** | [10.5281/zenodo.20629237](https://doi.org/10.5281/zenodo.20629237) | Baryogenesis, geometric dark sector, Micro-Knots |
+| **Foundation III (extended)** | In preparation (translation) | Strong gravity, wormhole, vacuum thermodynamics |
+| **Chiral-bounce paper** | Zenodo (deposit pending) | Bounce as a chiral phase transition — LG mechanism + Cartan core |
+
+> All cross-paper DOIs above are **concept DOIs**: they always resolve to
+> the most recent version of each paper, never to a frozen one.
 
 ---
 
@@ -68,14 +73,15 @@ the ECF calibration at 73.04 km/s/Mpc (0.6σ difference).
 
 ---
 
-## What's New in PREPRINT v3 (internal v7)
+## What's New in PREPRINT v4 (internal v7)
 
 | Change | Detail |
 |---|---|
 | TIP as geometric gauge postulate | Ω_spin = 0.093 is observational input from F1, not a logical prerequisite |
 | DESI comparison qualified | Consistency check only, not a parameter-free prediction |
 | H₀DN 73.50 added | arXiv:2510.23823, 7.1σ tension confirmed |
-| Foundation II DOI | doi:10.5281/zenodo.20629238 (deposited June 2026) |
+| Epoch labels clarified | The QCD transition (T~200 MeV) is stated as the *physical origin* of the spin fluid, kept distinct from its much later *observational calibration point*; no numerical value affected |
+| Cross-paper DOIs → concept DOIs | Foundation II now cited as 10.5281/zenodo.20629237 and this Letter as 10.5281/zenodo.19798923; previous entries pointed to frozen version DOIs |
 | Scope note strengthened | TIP is not calibrated to reproduce observed tensions |
 
 ---
@@ -84,9 +90,9 @@ the ECF calibration at 73.04 km/s/Mpc (0.6σ difference).
 
 ```text
 spin-torsion-cosmology/
-├── Fondation_PIT/
+├── Foundation_PIT/
 │   ├── 01_Paper_Publication/
-│   │   └── fichant_ecf_PIT_Letter_v7.pdf     ← internal v7 = PREPRINT v3
+│   │   └── fichant_ecf_PIT_Letter_v7.pdf     ← internal v7 = PREPRINT v4
 │   └── 02_Scientific_Code/
 │       └── B_Paper_Plots/
 │           ├── Figure_CosmicHistory_Omegas_PIT.png
@@ -101,7 +107,7 @@ spin-torsion-cosmology/
 
 ```bash
 pip install -r requirements.txt
-cd Fondation_PIT/02_Scientific_Code/B_Paper_Plots/
+cd Foundation_PIT/02_Scientific_Code/B_Paper_Plots/
 python plot_Cosmic_History_Omegas.py
 ```
 
@@ -114,7 +120,7 @@ Output: `Figure_CosmicHistory_Omegas_PIT.png`
 ## Compile
 
 ```bash
-cd Fondation_PIT/01_Paper_Publication/
+cd Foundation_PIT/01_Paper_Publication/
 pdflatex fichant_ecf_PIT_Letter_v7.tex
 bibtex   fichant_ecf_PIT_Letter_v7
 pdflatex fichant_ecf_PIT_Letter_v7.tex
@@ -135,12 +141,13 @@ Requires `revtex4-2` (standard APS distribution).
                Einstein-Cartan Cosmology},
   year      = {2026},
   publisher = {Zenodo},
-  version   = {v3},
-  doi       = {10.5281/zenodo.19900557},
-  url       = {https://doi.org/10.5281/zenodo.19900557},
-  note      = {Companion papers:
+  version   = {v4},
+  doi       = {10.5281/zenodo.19798923},
+  url       = {https://doi.org/10.5281/zenodo.19798923},
+  note      = {Concept DOI, resolves to the latest version.
+               Companion papers:
                Foundation I doi:10.5281/zenodo.19577447;
-               Foundation II doi:10.5281/zenodo.20629238.
+               Foundation II doi:10.5281/zenodo.20629237.
                Code: https://github.com/pfichant/spin-torsion-cosmology}
 }
 ```
@@ -149,6 +156,6 @@ Requires `revtex4-2` (standard APS distribution).
 
 **Contact**: p.fichant.research@gmail.com  
 **GitHub**: https://github.com/pfichant/spin-torsion-cosmology  
-**CC-BY-4.0** | Montpellier, Occitanie | June 2026
+**CC-BY-4.0** | Montpellier, Occitanie | July 2026
 
 > *"Spatial flatness is not a coincidence — it is a law."*
