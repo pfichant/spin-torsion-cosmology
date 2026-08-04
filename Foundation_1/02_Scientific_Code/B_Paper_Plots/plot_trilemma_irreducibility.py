@@ -2,6 +2,7 @@
 """
 Script 08 — H0–Age–BAO Trilemma: Numerical Irreducibility Proof
 Foundation I Extended v2 — Sec. 5 (sec:age_trilemma) and Appendix L
+Dernière modification : 20/07/2026, 16:45 (ajout note de limitation)
 Figure: fig_trilemma_irreducibility_contours.png
 
 Scans the (w_0, z_t) parameter space of a tanh-crossing dark-energy model
@@ -20,6 +21,22 @@ References:
     Hou et al. (2021) arXiv:2007.08998  [eBOSS DR16, z=1.48]
     Valcin et al. (2021) JCAP 08, 017  [globular cluster age prior]
     Chevallier & Polarski (2001); Linder (2003)  [CPL/tanh DE models]
+
+LIMITATION NOTED 20/07/2026 (does not change the conclusion, refines it):
+    This scan fixes Omega_m = 0.315 (the Planck-h value) throughout and
+    never varies it. Omega_m depends on H0 (Omega_m = omega_m/h^2 for
+    fixed physical density omega_m), so at H0=73.04 the physically
+    consistent value is Omega_m ~ 0.268, not 0.315. A follow-up joint
+    scan over (Omega_m, w0, wa) -- see joint_fit_trilemma.py -- shows
+    the best compromise reaches t0~13.0-13.2 Gyr at Omega_m~0.28-0.29
+    (omega_m shifted ~5-7% from Planck), better than the 12.74 Gyr
+    found here but still short of 13.32 Gyr. Adding the CMB acoustic
+    scale theta_* as a third constraint reveals a genuine quadrilemma:
+    at fixed (w0,wa), raising Omega_m improves theta_* but worsens the
+    age. The conclusion that this w(z) family does not fully resolve
+    the trilemma stands; the reason is now better characterized.
+    See Foundation I footnote (b) to the trilemma table, and
+    Foundation II PO-F2-5, for the full discussion.
 """
 
 import numpy as np
