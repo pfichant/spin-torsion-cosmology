@@ -12,9 +12,11 @@
 #
 #  The figure shows the temporal evolution of fractional energy densities
 #  Omega_i(a) in the ECF (Einstein-Cartan Framework), including the transient
-#  primordial torsion/spin component. The bottom panel verifies numerically
-#  that the Topological Invariance Principle (TIP, Omega_total = 1) holds
-#  at all times, i.e. Omega_k = 0 throughout cosmic history.
+#  primordial torsion/spin component. The bottom panel displays Omega_k, which
+#  is identically zero once k = 0: this is the postulate of exact spatial
+#  flatness (TIP), i.e. an identity of the closure relation, not a verified
+#  prediction. See the v8 Letter: once k = 0, sum_i Omega_i = 1 holds for any
+#  matter content whatsoever.
 #
 #  USAGE
 #  -----
@@ -170,12 +172,15 @@ def build_density_params(Om0, Or0, OL0, Os0, a):
     number density. This is geometrically distinct from scalar-field kination
     (which requires a free initial condition) -- see F1 Sec. 2.
 
-    TIP VERIFICATION
-    ----------------
-    The Topological Invariance Principle (PIT Letter, Sec. II) postulates
-    that Omega_total = 1 at all times, i.e. Omega_k = 0.
-    This is verified numerically as:
-        Omega_k = 1 - (Omega_r + Omega_m + Omega_L + Omega_s)  ~  0
+    FLATNESS IDENTITY (not a verified prediction)
+    ---------------------------------------------
+    The v8 Letter states exact spatial flatness as a POSTULATE: Omega_k = 0.
+    Once k = 0, the closure relation
+        Omega_k = 1 - (Omega_r + Omega_m + Omega_L + Omega_s)  =  0
+    is an IDENTITY that holds for any matter content -- adding the spin
+    component changes H, and rho_crit = 3H^2/8piG is recomputed with it.
+    The bottom panel therefore illustrates this identity; it does not verify
+    a compensation mechanism (that claim, present in v4-v7, is withdrawn in v8).
 
     Parameters
     ----------
@@ -200,7 +205,7 @@ def build_density_params(Om0, Or0, OL0, Os0, a):
     Omm  = rhom  / rhotot
     OmL  = rhoL  / rhotot
     Oms  = rhos  / rhotot
-    Omk  = 1.0 - Omr - Omm - OmL - Oms  # TIP: should be identically 0
+    Omk  = 1.0 - Omr - Omm - OmL - Oms  # identically 0 once k=0 (identity, not a test)
 
     return Omr, Omm, OmL, Oms, Omk
 
@@ -241,7 +246,7 @@ idx_p = np.argmin(np.abs(a_check - ap))
 print(f"[SANITY] Omega_spin at z={zpeak}: {Oms_c[idx_p]:.4f}  "
       f"(target alpha_spin = {alphaspin})")
 print(f"[SANITY] Omega_k max deviation:   {np.abs(Omk_c).max():.2e}  "
-      f"(TIP requires Omega_k = 0 throughout)")
+      f"(closure identity: Omega_k = 0 once k=0, to machine precision)")
 print(f"[SANITY] Os0 (corrected) = {Os0:.4e}   "
       f"Os0 (naive) = {alphaspin * Or0 * ap**2:.4e}  "
       f"(ratio = {Os0 / (alphaspin * Or0 * ap**2):.2f})")
