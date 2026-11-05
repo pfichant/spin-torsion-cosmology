@@ -1,6 +1,16 @@
 """
 Script: Cosmic Birefringence Check  (Foundation I)
-Paper:  Foundation I: Unified Resolution of Cosmological Tensions
+
+⚠️ WHAT ITS Delta chi2 = -6.25 IS, AND IS NOT (audit of 23/08/2026).
+   That figure is the improvement in the BIREFRINGENCE SECTOR ALONE. It does
+   NOT appear in Foundation I, and that is CORRECT: the paper treats cosmic
+   birefringence as a PREDICTION (beta != 0, to be tested by LiteBIRD), not
+   as a fitted sector. ⭐ Accordingly, target_reference_budget.py -- which
+   assembles the published Delta chi2 = -39.5 -- contains no beta term at all.
+   ⇒ Do not add this -6.25 to the budget: the two quantities live in
+   different accounts. The sector value is a consistency check, the budget is
+   a fit summary.
+Paper:  Foundation I
         (Einstein-Cartan-Friedmann framework)
 Author: Pascal Fichant
 Date:   13/04/2026  (v2 — revised for PRL submission)
@@ -39,9 +49,10 @@ Description:
         The physical validation is NOT that beta_th == beta_obs (this is
         trivially true by construction). The validation is twofold:
 
-        (A) The value k ~ 0.274 deg/unit is consistent with the ECKS
-            theoretical estimate k_ECKS ~ 0.27 deg/unit (Hehl et al. 1976),
-            providing an independent cross-check of the coupling magnitude.
+        (A) [16/10/2026] The comparison value k_ECKS ~ 0.27 deg/unit is
+            hard-coded and has NO traceable source (it is not in Hehl et al.
+            1976). It is printed for traceability only and is NOT a check
+            (F1 Sec. 7 and Data Availability).
 
         (B) The same F_ION = 1.2765 that resolves the H0 tension (Section 3)
             also predicts the correct birefringence signal, demonstrating
@@ -50,7 +61,13 @@ Description:
     Chi2 contribution:
         chi2_LCDM  = (0.35 / 0.14)^2 = 6.25  (GR predicts beta=0 — tension)
         chi2_ECF   = 0.00                      (ECF fits by construction)
-        Delta chi2 = -6.25   (16% of the global Delta chi2 = -39.5)
+        Delta chi2 = -6.25   for the birefringence sector TAKEN ALONE.
+        [17/08/2026 audit] This line previously read "16% of the global
+        Delta chi2 = -39.4". That was wrong: Table 4 of F1 contains NO
+        birefringence row — its budget is Planck, two BAO rows, H0 and S8.
+        beta is a consistency check calibrated on the Minami-Komatsu anchor,
+        not a dataset entering the global fit, so this -6.25 is NOT part of
+        the -39.4 and must not be quoted as a fraction of it.
 
     Observation:
         Minami & Komatsu 2020:  beta = 0.35 +/- 0.14 deg  (2.5 sigma from 0)
@@ -61,6 +78,15 @@ References:
     Eskilt & Komatsu 2022, arXiv:2201.13433
     Hehl et al. 1976, Rev. Mod. Phys. 48, 393  (ECKS torsion-photon coupling)
 """
+# Last modified: 25/08/2026, 21:49 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 
@@ -80,10 +106,11 @@ beta_eskilt_err = 0.094
 beta_LCDM = 0.0
 
 # Spin-injection stiffness parameter
-# Independently fixed by sound-horizon calibration: r_s = 135.8 Mpc (script01)
+# Independently fixed by sound-horizon calibration: r_s = 135.65 Mpc (script01; A-6)
 F_ION = 1.2765
 
-# ECKS theoretical coupling estimate (Hehl et al. 1976, Rev. Mod. Phys. 48, 393)
+# Comparison value k_ECKS: hard-coded, NO traceable source (not in Hehl et al. 1976);
+# kept for traceability only, not used as a check (corrected 16/10/2026).
 k_ECKS_theory = 0.27   # deg/unit
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -144,15 +171,14 @@ if __name__ == "__main__":
 
     print("\n>>> TORSION-PHOTON COUPLING")
     print(f"    k = beta_obs / F_ION = {beta_obs:.3f} / {F_ION:.4f} = {k:.4f} deg/unit")
-    print(f"    k_ECKS (Hehl 1976)   = {k_ECKS_theory:.4f} deg/unit  [theoretical]")
+    print(f"    k_ECKS (no source)   = {k_ECKS_theory:.4f} deg/unit  [hard-coded, not a check]")
     print(f"    Agreement            = {abs(k - k_ECKS_theory)/k_ECKS_theory*100:.1f}%")
-    print(f"    => k consistent with ECKS torsion-photon coupling estimate")
+    print(f"    => no independent check: k_ECKS has no traceable source")
 
     print("\n>>> ECF BIREFRINGENCE PREDICTION")
     print(f"    beta_ECF = k * F_ION = {k:.4f} * {F_ION:.4f} = {beta_ecf:.4f} deg")
     print(f"    Note: beta_ECF == beta_obs by calibration construction.")
-    print(f"    Physical test: F_ION from script01 (H0 sector) + k from Hehl")
-    print(f"    => independently predicts the correct birefringence order.")
+    print(f"    k is calibrated on beta_obs: this is not an independent prediction.")
 
     print("\n>>> DETECTION SIGNIFICANCE  (vs LCDM null beta=0)")
     sig_minami = significance(beta_obs,     beta_LCDM, beta_obs_err)
@@ -161,7 +187,8 @@ if __name__ == "__main__":
     print(f"    Eskilt 2022 : {sig_eskilt:.2f} sigma  (excludes GR null at 3.6 sigma)")
     print(f"    Combined trend: significance increasing with data quality.")
 
-    print("\n>>> CHI2 CONTRIBUTION TO GLOBAL BUDGET")
+    print("\n>>> CHI2 OF THE BIREFRINGENCE SECTOR TAKEN ALONE")
+    print("    (not part of the Table 4 global budget — see header note)")
     chi2_lcdm = chi2_contribution(beta_obs, beta_LCDM, beta_obs_err)
     chi2_ecf  = chi2_contribution(beta_obs, beta_ecf,  beta_obs_err)
     delta_c2  = chi2_ecf - chi2_lcdm
@@ -169,7 +196,7 @@ if __name__ == "__main__":
     print(f"    chi2 LCDM  = ({beta_obs:.2f} - {beta_LCDM:.2f})^2 / {beta_obs_err:.2f}^2 = {chi2_lcdm:.2f}")
     print(f"    chi2 ECF   = ({beta_obs:.2f} - {beta_ecf:.3f})^2 / {beta_obs_err:.2f}^2 = {chi2_ecf:.4f}")
     print(f"    Delta chi2 = {delta_c2:.2f}  "
-          f"({abs(delta_c2/delta_chi2_global)*100:.1f}% of global Delta chi2 = {delta_chi2_global})")
+          f"    Delta chi2 (birefringence sector alone) = {delta_c2:+.2f}")
 
     print("\n>>> INTERNAL CONSISTENCY CHECKS")
     assert F_ION > 1.0,              "F_ION must be > 1 (torsion enhancement)"
@@ -178,6 +205,6 @@ if __name__ == "__main__":
     assert abs(beta_ecf - beta_obs) < 1e-9, "Calibration identity must hold"
     print(f"    F_ION > 1                        : {F_ION:.4f}  OK")
     print(f"    k > 0                            : {k:.4f}  OK")
-    print(f"    |k - k_ECKS| / k_ECKS < 5%       : {abs(k-k_ECKS_theory)/k_ECKS_theory*100:.1f}%  OK")
+    print(f"    |k - k_ECKS| / k_ECKS < 5%       : {abs(k-k_ECKS_theory)/k_ECKS_theory*100:.1f}%  (k_ECKS unsourced)")
     print(f"    F_ION consistent with script01   : same value used in H0 sector  OK")
     print(SEP)

@@ -4,20 +4,37 @@ joint_fit_trilemma.py -- ECF Foundation I/II
 Last modified: 24/07/2026, 13:20 (sigma theta_* corrected + sensitivity scan)
 Joint H0-Age-BAO-CMB fit (the omega_m lead, 20/07/2026)
 
+⚠️ STATUS, established during the audit of 23/08/2026: NONE OF THE NUMBERS
+BELOW APPEARS IN ANY PAPER. omega_m = 0.1029, the -27.7% deviation and the
+19-46% range (20-47% after A-6/A-7, printed dynamically since D3) are not in Foundation I or II. ⭐ That is consistent with what
+the script itself concludes -- it states that the range "is NOT robust: it
+depends on the weight given to theta_*", and that only the SIGN and ORDER OF
+MAGNITUDE hold, the precise quantification awaiting a CLASS-EC calculation.
+⇒ Read this as EXPLORATORY EVIDENCE FOR AN OPEN PROBLEM (the H0-age-BAO-theta*
+quadrilemma, PO-F2-5), not as a result. The script is unusually honest about
+its own limits; this header only makes that status explicit for a reader who
+runs it without reading it.
+
 CONTEXT
 -------
 The existing scripts (script_01_solve_sound_horizon.py,
-plot_trilemma_irreducibility.py) treat Om_m=0.315 (the Planck value at
-h=0.6736) as fixed, without recomputing it for H0_ECF=73.04. This script
+plot_trilemma_irreducibility.py) treated, until A-7 (22/09/2026),
+Om_m=0.315 (the Planck value at h=0.6736) as fixed, without recomputing it
+for H0_ECF=73.04. This script
 corrects that: omega_m = omega_b + omega_c (PHYSICAL densities, fixed by
 CMB measurements independently of H0) is the fundamental parameter, and
 Om_m = omega_m / h_ECF^2 follows from it. r_s is recomputed
 self-consistently for every omega_m tested, instead of being frozen at
-135.8 Mpc.
+the calibrated value (135.8 Mpc before A-6; 135.65 Mpc since).
 
 CONSTRAINTS FITTED JOINTLY (at fixed H0 = 73.04):
-  1. BAO  : D_M(z=1.48)/r_s = 30.21 +/- 0.79        (Hou+2021, eBOSS DR16)
-  2. Age  : t0 = 13.32 +/- 0.08 Gyr                 (Valcin+2021)
+  1. BAO  : D_M(z=1.48)/r_s = 30.21 +/- 0.79        (Hou+2021, eBOSS DR16, consensus;
+            the ECF scale is used as the ruler of a measurement published in r_drag:
+            CALCULATED-CONDITIONAL, see PO-ECF-BAO-RDRAG)
+  2. Age  : t_GC = 13.32 +/- 0.10 stat Gyr          (Valcin+2020, arXiv:2007.06594;
+            systematic +/- 0.5 Gyr carried separately, not propagated here.
+            The former +/- 0.08 had no retrievable source. t_GC is the age of the
+            oldest globular clusters, used as a chronometric bound on t0.)
   3. CMB  : 100*theta_* -- see the dedicated block below for the target
             and, importantly, for the uncertainty actually used.
 
@@ -38,6 +55,15 @@ to theta_*. The script therefore prints a sensitivity scan rather than a
 single figure. Definitive quantification requires a Boltzmann-code
 treatment (CLASS-EC), not the approximate theta_* integral used here.
 """
+# Last modified: 25/08/2026, 21:49 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy import integrate, optimize
@@ -51,7 +77,7 @@ h_ecf = H0/100.0
 
 omega_b  = 0.02237            # Densite baryonique physique (Planck 2018 + BBN)
 omega_g  = 2.4728e-5
-omega_n  = 1.6918e-5
+omega_n  = (7.0/8.0)*(4.0/11.0)**(4.0/3.0)*3.046*omega_g   # [A-6, 22/09/2026] = 1.7106e-5 ; was 1.6918e-5 (= 1+0.2271*N_eff, a factor, not a density)
 omega_r_fixed = omega_g + omega_n
 
 SPIN_RAD_RATIO = 0.093
@@ -63,8 +89,8 @@ Z_TRANS        = 5600.0
 z_bao          = 1.48
 
 # Cibles observationnelles + incertitudes (1 sigma)
-TARGET_BAO_RATIO, SIG_BAO   = 30.21, 0.79        # Hou+2021 eBOSS DR16
-TARGET_AGE, SIG_AGE          = 13.32, 0.08        # Valcin+2021
+TARGET_BAO_RATIO, SIG_BAO   = 30.21, 0.79        # Hou+2021 eBOSS DR16 consensus (eq. 49); 30.22 used 22/09-12/10/2026 by mistake
+TARGET_AGE, SIG_AGE          = 13.32, 0.10        # t_GC, Valcin+2020 (stat. only)
 # --- theta_*: BOTH the target and the uncertainty are specific to THIS model -
 # Target: the self-consistent LCDM value of the simplified integral used here
 #   (1.03116), and NOT the literature Planck value (1.04109). Comparing this
@@ -192,6 +218,7 @@ if __name__ == "__main__":
     print("  theta_* by a factor ~30 and exaggerates the omega_m shift required.\n")
     print(f"  {'sigma':>9} | {'omega_m':>8} | {'vs Planck':>12} | {'BAO err':>8} | {'Age':>6}")
     print("  " + "-"*56)
+    _devs = []   # [D3, 22/09/2026] collected so that the range printed below is computed
     for sig, lab in [(0.00030, "Planck obs."), (0.0103, "1% model syst."), (0.0206, "2% conservative")]:
         def _c2(prm):
             oc, w0_, wa_ = prm
@@ -206,10 +233,11 @@ if __name__ == "__main__":
         dev = (o['omega_m']-0.14237)/0.14237*100
         bao = abs(o['bao_ratio']-TARGET_BAO_RATIO)/TARGET_BAO_RATIO*100
         print(f"  {sig:9.5f} | {o['omega_m']:8.5f} | {dev:+11.1f}% | {bao:7.2f}% | {o['age']:6.2f}   [{lab}]")
+        _devs.append(abs(dev))
 
-    print("""
+    print(f"""
   HOW TO READ THIS. The numerical size of the required omega_m shift
-  (19% to 46%) is NOT robust: it depends on the weight given to theta_*.
+  ({min(_devs):.0f}% to {max(_devs):.0f}%) is NOT robust: it depends on the weight given to theta_*.
   What IS robust is its SIGN and order of magnitude -- omega_m must be
   lowered by several tens of percent, whereas the CMB constrains it to
   ~1%, independently of the late-time expansion history. The quadrilemma

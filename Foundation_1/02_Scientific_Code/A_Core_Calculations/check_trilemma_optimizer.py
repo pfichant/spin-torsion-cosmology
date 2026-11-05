@@ -7,8 +7,9 @@ Author : P. Fichant
 Numerical diagnostic for the mathematical irreducibility of the H0-Age-BAO
 trilemma (Foundation I, Sec. 3.4).  A three-parameter tanh dark-energy model
 w(z) is fitted via L-BFGS-B to simultaneously satisfy:
-  (i)  D_M(z=1.48)/r_s = 30.21  [eBOSS DR16, Hou et al. 2021]
-  (ii) t_0 > 13.32 Gyr           [globular-cluster bound, Valcin et al. 2021]
+  (i)  D_M(z=1.48)/r_s = 30.21  [eBOSS DR16 QSO consensus, Hou et al. 2021;
+       ECF scale used as the ruler: CALCULATED-CONDITIONAL, PO-ECF-BAO-RDRAG]
+  (ii) t_0 > t_GC = 13.32 Gyr    [globular-cluster chronometry, Valcin et al. 2020]
 with H_0 = 73.04 km/s/Mpc fixed (SH0ES, Riess et al. 2021).
 
 The optimizer converges but cannot satisfy both constraints simultaneously,
@@ -18,6 +19,15 @@ A geometric resolution via the ECKS action is developed in Foundation II.
 Dependencies : numpy, scipy
 Runtime      : < 0.5 s
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy.integrate import cumulative_trapezoid, trapezoid
@@ -27,7 +37,7 @@ from scipy.optimize import minimize
 # Cosmological constants  (Foundation I Table 2)
 # ---------------------------------------------------------------------------
 H0       = 73.04           # [km/s/Mpc]  SH0ES (Riess et al. 2021)
-Omega_m  = 0.315           # Planck 2018
+Omega_m  = (0.02237 + 0.1200)/0.7304**2   # [A-7, 22/09/2026] Omega_m = omega_m/h_ECF^2 = 0.266868 ; was 0.315 (Planck-h value)
 Omega_de = 1.0 - Omega_m   # Flat FLRW
 c        = 299792.458       # [km/s]
 T_H      = 977.79222168     # (km/s/Mpc)^{-1} -> Gyr
@@ -36,9 +46,9 @@ T_H      = 977.79222168     # (km/s/Mpc)^{-1} -> Gyr
 # Observational targets
 # ---------------------------------------------------------------------------
 z_bao     = 1.48         # eBOSS DR16 QSO effective redshift
-r_s       = 135.8        # Sound horizon, Foundation I Sec. 3 [Mpc]
-DM_target = 30.21 * r_s  # = 4102.52 Mpc
-t0_min    = 13.32        # Globular-cluster lower bound [Gyr]
+r_s       = 135.65       # [A-6] was 135.8. Sound horizon, Foundation I Sec. 3 [Mpc]
+DM_target = 30.21 * r_s  # = 4098.0 Mpc with r_s = 135.65 [A-6]; 4102.52 was 30.21 x 135.8 (former r_s); 30.22 used 22/09-12/10/2026 by mistake
+t0_min    = 13.32        # t_GC, Valcin+2020: chronometric lower bound on t0 [Gyr]
 
 # ---------------------------------------------------------------------------
 # Redshift grids  (pre-built for vectorised integration)

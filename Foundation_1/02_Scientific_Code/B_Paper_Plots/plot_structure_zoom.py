@@ -5,8 +5,8 @@ Author: Pascal Fichant (2026)
 Late-time cosmic chronology: structure formation and dark energy onset.
 Compares scale factor a(t) and CMB temperature T(t) for LCDM and ECF.
 
-Key ECF signature: t0 = 12.74 Gyr vs LCDM t0 = 13.81 Gyr,
-arising from the H0-Age-BAO trilemma (F1 extended v2, Sec. 5, Tab. 2).
+ECF t0 = 13.33 Gyr (Omega_m = omega_m/h^2 = 0.267, A-7) vs LCDM t0 = 13.81 Gyr
+(H0-Age-BAO trilemma, F1 Sec. 5). [02/10/2026; was 12.74 Gyr at Omega_m = 0.315]
 
 The primordial stiff phase a~t^(1/3) is not visible on this timescale
 (t_bounce ~ 1e-35 s); see plot_Cosmic_History_Omegas.py for full history.
@@ -16,10 +16,19 @@ Pivot redshifts calibrated via matter-dominated Friedmann:
 
 Physical inputs:
     T0_CMB  = 2.725 K              (Planck 2018)
-    t_eq    = 1.48e12 s            (z_eq ~ 3500, Planck 2018)
+    t_eq    = 1.609e12 s           (z_eq = 3402; [02/10/2026] was 1.48e12 s -> z = 3562)
     t0_LCDM = 4.358e17 s = 13.81 Gyr
-    t0_ECF  = 4.020e17 s = 12.74 Gyr  (F1 extended v2, Tab. 2)
+    t0_ECF  = 4.206e17 s = 13.33 Gyr  (script_09, A-7)
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 import matplotlib
@@ -29,9 +38,9 @@ from matplotlib.ticker import FixedFormatter
 
 # --- Physical parameters ---
 T0_CMB  = 2.725        # K, CMB temperature today (Planck 2018)
-t_eq    = 1.48e12      # s, matter-radiation equality (Planck 2018, z_eq ~ 3500)
+t_eq    = 1.609e12     # s, matter-radiation equality, z_eq = 3402 [02/10/2026: was 1.48e12]
 t0_LCDM = 4.358e17     # s, 13.81 Gyr
-t0_ECF  = 4.020e17     # s, 12.74 Gyr (H0-Age-BAO trilemma, Tab. 2)
+t0_ECF  = 4.206e17     # s, 13.33 Gyr (13.327 Gyr x 3.156e7; script_09, A-7)
 
 def get_a(t_arr, t0):
     """
@@ -63,7 +72,13 @@ eras = [
 # --- Calibrated pivot lines ---
 pivots = {
     r'Recombination ($z=1100$)':   t_of_z(1100),
-    r'Cosmic Dawn ($z\sim20$)':    t_of_z(20),
+    # [18/08/2026 audit] This marker is the LCDM Cosmic Dawn. F1 Table 10
+    # gives z ~ 27-29 for the ECF (earlier onset, derived from B_ECF = 1.45
+    # via (1+z_ECF) = B (1+z_LCDM)); both are now shown, since drawing only
+    # the LCDM one while the caption claimed an 'earlier onset' was the
+    # mismatch reported on 17/08/2026.
+    r'Cosmic Dawn $\Lambda$CDM ($z\sim20$)':  t_of_z(20),
+    r'Cosmic Dawn ECF ($z\sim28$)':           t_of_z(28),
     r'Galaxy Assembly ($z\sim3$)': t_of_z(3),
 }
 
@@ -90,7 +105,10 @@ for era in eras:
 ax1.loglog(time, a_lcdm, color='royalblue', ls='--', lw=2.5, alpha=0.75,
            label=r'Standard $\Lambda$CDM ($t_0=13.81\,\mathrm{Gyr}$)')
 ax1.loglog(time, a_ecf,  color='crimson',   ls='-',  lw=2.0,
-           label=r'ECF ($t_0=12.74\,\mathrm{Gyr},\;H_0=73.0\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$)')
+           # 17/08/2026 audit: the label read H_0 = 73.0, the rounded value,
+           # while the canonical figure is 73.04 (same defect corrected in
+           # plot_cosmic_age_cpl.py on 15/08).
+           label=r'ECF ($t_0=13.33\,\mathrm{Gyr},\;H_0=73.04\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$)')
 
 ax2.loglog(time, T_lcdm, color='royalblue', ls='--', lw=2.5, alpha=0.75)
 ax2.loglog(time, T_ecf,  color='crimson',   ls='-',  lw=2.0)

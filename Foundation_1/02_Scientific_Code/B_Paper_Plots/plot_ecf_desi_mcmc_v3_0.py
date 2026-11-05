@@ -2,23 +2,23 @@
 """
 plot_ecf_desi_mcmc_v3_0.py
 ===================
-Dernière modification : 20/07/2026, 22:50
-Comparaison indépendante de la prédiction ECF (w0, wa) = (-0.904, -0.153)
-avec les données BAO DESI DR1 publiques (Adame et al. 2024, arXiv:2404.03002).
+Last modified: 07/08/2026, 18:00 (English translation; status labels: calibrated not ab initio, PO-F1-B)
+Independent comparison of the calibrated ECF (w0, wa) = (-0.904, -0.153)
+against the public DESI DR1 BAO data (Adame et al. 2024, arXiv:2404.03002).
 
-Méthode :
-  - Minimisation de chi2 BAO (13 observables DESI DR1)
+Method:
+  - Minimisation de chi2 BAO (12 observables DESI DR1, bloc reconstruit le 22/09/2026)
   - MCMC Metropolis-Hastings sur (Omega_m, w0, wa)
-  - H0 fixé via prior gaussien (deux cas : Planck h=0.674, SH0ES h=0.730)
-  - rd déduit de Omega_m et h via la calibration Eisenstein & Hu (1998)
+  - H0 fixed via a Gaussian prior (two cases: Planck h=0.674, SH0ES h=0.730)
+  - rd inferred from Omega_m and h via the Eisenstein & Hu (1998) calibration
 
-Note méthodologique :
-  v3.0 : Matrice de covariance complète DESI DR1 (Adame et al. 2024,
-  arXiv:2404.03002, Table 1 + corrélations intra-bin publiées).
-  Structure bloc-diagonale : corrélations DM/DH intra-bin, cross-bin = 0.
+Methodological note:
+  v3.0: Full DESI DR1 covariance matrix (Adame et al. 2024,
+  arXiv:2404.03002, Table 1 + published intra-bin correlations).
+  Block-diagonal structure: intra-bin DM/DH correlations, cross-bin = 0.
   chi2_full = (yobs-p).T @ C_inv @ (yobs-p)  [analyse de likelihood rigoureuse]
-  Cet upgrade correspond à l'engagement triple PIT(l.251)+F1(l.1695)+F2(l.148)
-  pour Foundation III (sec:desi_cov_full).
+  This upgrade fulfils the triple commitment PIT(l.251)+F1(l.1695)+F2(l.148)
+  for Foundation III (sec:desi_cov_full).
 
 Auteur : Pascal Fichant (ECF programme)
 Licence : CC-BY 4.0
@@ -28,6 +28,15 @@ Output:
 - Fig_ECF_DESI_Residuals.png   (Appendix K)
 
 """
+# Last modified: 19/08/2026, 13:01 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy.integrate import quad
@@ -41,13 +50,13 @@ import time, os
 np.random.seed(42)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DONNÉES DESI DR1 (Adame et al. 2024, Table 1 + Fig. 7)
+# DESI DR1 DATA (Adame et al. 2024, Table 1 + Fig. 7)
 # ═══════════════════════════════════════════════════════════════════════════
-# BGS : DV/rd  (traceur à z_eff=0.295)
+# BGS: DV/rd  (tracer at z_eff=0.295)
 # LRG, ELG, QSO, LYA : DM/rd + DH/rd
 
 DESI_DR1 = [
-    # (nom, z_eff, type, valeur, sigma)
+    # (name, z_eff, type, value, sigma)
     ("BGS",      0.295, "DV",  7.93,  0.15),
     ("LRG1 DM",  0.510, "DM", 13.62,  0.25),
     ("LRG1 DH",  0.510, "DH", 20.98,  0.61),
@@ -57,8 +66,14 @@ DESI_DR1 = [
     ("LRG3 DH",  0.930, "DH", 17.88,  0.35),
     ("ELG2 DM",  1.317, "DM", 27.79,  0.69),
     ("ELG2 DH",  1.317, "DH", 13.82,  0.42),
-    ("QSO  DM",  1.491, "DM", 30.21,  0.79),
-    ("QSO  DH",  1.491, "DH", 13.23,  0.55),
+    # [Q2, 22/09/2026 — observational-closure memo] RECONSTRUCTED BLOCK.
+    # The previous version carried two QSO rows (DM/rd = 30.21 +/- 0.79 and
+    # DH/rd = 13.23 +/- 0.55) attributed to DESI DR1. DESI DR1 publishes no DM/rd
+    # or DH/rd for the QSO tracer: Table 1 of Adame et al. 2024 (arXiv:2404.03002)
+    # gives DV/rd = 26.07 +/- 0.67 at z_eff = 1.491 and nothing else. Those two rows
+    # carried eBOSS-type values and are WITHDRAWN (MIXED-DATA / PROVENANCE INVALID).
+    # The block below uses only observables actually published by DESI DR1.
+    ("QSO  DV",  1.491, "DV", 26.07,  0.67),
     ("LYA  DM",  2.330, "DM", 39.71,  0.94),
     ("LYA  DH",  2.330, "DH",  8.52,  0.17),
 ]
@@ -71,49 +86,50 @@ sigma  = np.array([d[4] for d in DESI_DR1])
 N_OBS  = len(DESI_DR1)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MATRICE DE COVARIANCE DESI DR1 (Adame et al. 2024, arXiv:2404.03002)
-# Structure bloc-diagonale : corrélations DM-DH intra-bin publiées.
-# Corrélations inter-bin : nulles (traceurs indépendants sauf LYA/QSO
-# dont la corrélation croisée est < 0.01 et négligée ici).
-# Références des corrélations : Table 1 + Appendix B de Adame et al. 2024.
+# DESI DR1 COVARIANCE MATRIX (Adame et al. 2024, arXiv:2404.03002)
+# Block-diagonal structure: published intra-bin DM-DH correlations.
+# Inter-bin correlations: zero (independent tracers except LYA/QSO
+# whose cross-correlation is < 0.01 and neglected here).
+# Correlation references: Table 1 + Appendix B of Adame et al. 2024.
 # ═══════════════════════════════════════════════════════════════════════════
 #
-# Indices des 13 observables dans DESI_DR1 :
-#  0  BGS DV      (1x1)
-#  1  LRG1 DM  }  rho = -0.444
+# Indices of the 12 observables in DESI_DR1:
+#  0  BGS  DV     (1x1)
+#  1  LRG1 DM  }  r = -0.445
 #  2  LRG1 DH  }
-#  3  LRG2 DM  }  rho = -0.394
+#  3  LRG2 DM  }  r = -0.420
 #  4  LRG2 DH  }
-#  5  LRG3 DM  }  rho = -0.451
+#  5  LRG3 DM  }  r = -0.389
 #  6  LRG3 DH  }
-#  7  ELG2 DM  }  rho = -0.441
+#  7  ELG2 DM  }  r = -0.444
 #  8  ELG2 DH  }
-#  9  QSO  DM  }  rho = -0.433
-# 10  QSO  DH  }
-# 11  LYA  DM  }  rho = -0.430
-# 12  LYA  DH  }
+#  9  QSO  DV     (1x1)
+# 10  LYA  DM  }  r = -0.477
+# 11  LYA  DH  }
 
-# Corrélations intra-bin DM/DH publiées (Adame et al. 2024)
+# [Q2, 22/09/2026] Intra-bin DM/DH correlation coefficients EXACTLY as printed in
+# Table 1 of Adame et al. 2024 (arXiv:2404.03002), checked twice against the source.
+# The previous set (-0.444, -0.394, -0.451, -0.441, -0.433, -0.430) was declared
+# "published" but matches Table 1 for no tracer except LRG1 to the third decimal;
+# it is WITHDRAWN. The QSO entry had no object: DESI DR1 gives that tracer a DV only.
 RHO = {
-    "LRG1": -0.444,
-    "LRG2": -0.394,
-    "LRG3": -0.451,
-    "ELG2": -0.441,
-    "QSO":  -0.433,
-    "LYA":  -0.430,
+    "LRG1": -0.445,
+    "LRG2": -0.420,
+    "LRG3": -0.389,
+    "ELG2": -0.444,
+    "LYA":  -0.477,
 }
 
 def build_cov():
-    """Construire la matrice de covariance 13x13 DESI DR1."""
+    """Build the 12x12 DESI DR1 covariance matrix."""
     C = np.diag(sigma**2)   # diagonale de base
-    # Paires (idx_DM, idx_DH, nom_traceur)
+    # Pairs (idx_DM, idx_DH, tracer_name)
     pairs = [
         (1,  2,  "LRG1"),
         (3,  4,  "LRG2"),
         (5,  6,  "LRG3"),
         (7,  8,  "ELG2"),
-        (9,  10, "QSO"),
-        (11, 12, "LYA"),
+        (10, 11, "LYA"),
     ]
     for i_dm, i_dh, name in pairs:
         rho   = RHO[name]
@@ -127,45 +143,45 @@ def build_cov():
 C_COV     = build_cov()
 C_INV     = np.linalg.inv(C_COV)
 
-print(f"Covariance DESI DR1 construite : {C_COV.shape}")
+print(f"DESI DR1 covariance built: {C_COV.shape}")
 print(f"  Condition number : {np.linalg.cond(C_COV):.2f}")
-print(f"  Corrélations DM-DH intra-bin utilisées :")
+print(f"  Intra-bin DM-DH correlations used:")
 for name, rho in RHO.items():
     print(f"    {name:6s} : rho = {rho:+.3f}")
 
 
 
 print("=" * 62)
-print("ECF DESI DR1 — COMPARAISON INDÉPENDANTE w0/wa")
+print("ECF DESI DR1 — INDEPENDENT w0/wa COMPARISON")
 print("=" * 62)
-print(f"Données : {N_OBS} observables BAO DESI DR1")
-print(f"Traceurs : BGS · LRG1-3 · ELG2 · QSO · Lyman-α\n")
+print(f"Data: {N_OBS} DESI DR1 BAO observables")
+print(f"Tracers: BGS(DV) · LRG1-3(DM,DH) · ELG2(DM,DH) · QSO(DV) · Lyman-α(DM,DH)\n")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MODÈLE COSMOLOGIQUE CPL (flat)
+# CPL COSMOLOGICAL MODEL (flat)
 # ═══════════════════════════════════════════════════════════════════════════
 C_KMS = 299792.458  # km/s
 
 def E(z, Om, w0, wa):
-    """H(z)/H0 pour cosmologie plate CPL."""
+    """H(z)/H0 for a flat CPL cosmology."""
     de = max(0.0, 1.0 - Om) * (1+z)**(3*(1+w0+wa)) * np.exp(-3*wa*z/(1+z))
     val = Om * (1+z)**3 + de
     return np.sqrt(max(1e-12, val))
 
 def rd_eisenstein(Om, h):
     """
-    Rayon du son à la traîne (Mpc).
-    Approximation Eisenstein & Hu 1998, calibrée sur Planck 2018.
+    Sound horizon at the drag epoch (Mpc).
+    Eisenstein & Hu 1998 approximation, calibrated on Planck 2018.
     """
     omh2  = Om * h**2
-    obh2  = 0.02237          # Planck 2018 (fixé — peu sensible)
+    obh2  = 0.02237          # Planck 2018 (fixed — weakly sensitive)
     keq   = 7.46e-2 * omh2  # Mpc^-1
     rd    = 147.1 * (omh2 / 0.143)**(-0.25) * (obh2 / 0.0224)**(-0.12)
     return rd
 
 def model(Om, w0, wa, h):
-    """Calculer tous les observables BAO modèle."""
+    """Compute all model BAO observables."""
     rd   = rd_eisenstein(Om, h)
     DH0  = C_KMS / (h * 100.0)    # Mpc
     preds = []
@@ -180,7 +196,7 @@ def model(Om, w0, wa, h):
     return np.array(preds)
 
 def chi2_bao_diag(Om, w0, wa, h):
-    """Chi2 diagonal (legacy, pour comparaison)."""
+    """Diagonal chi2 (legacy, for comparison)."""
     try:
         p = model(Om, w0, wa, h)
         return float(np.sum(((yobs - p) / sigma)**2))
@@ -188,7 +204,7 @@ def chi2_bao_diag(Om, w0, wa, h):
         return 1e9
 
 def chi2_bao(Om, w0, wa, h):
-    """Chi2 avec matrice de covariance complète DESI DR1."""
+    """Chi2 with the full DESI DR1 covariance matrix."""
     try:
         p    = model(Om, w0, wa, h)
         r    = yobs - p
@@ -198,7 +214,7 @@ def chi2_bao(Om, w0, wa, h):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ANALYSE — DEUX CAS DE PRIOR H0
+# ANALYSIS — TWO H0 PRIOR CASES
 # ═══════════════════════════════════════════════════════════════════════════
 CASES = [
     ("Planck", 0.6736, 0.0054),   # h ± sigma_h
@@ -211,10 +227,10 @@ results = {}
 
 for case_name, h_cen, h_sig in CASES:
     print(f"\n{'─'*62}")
-    print(f"CAS : prior H0 = {case_name}  (h = {h_cen} ± {h_sig})")
+    print(f"CASE: H0 prior = {case_name}  (h = {h_cen} ± {h_sig})")
     print(f"{'─'*62}")
 
-    # ── Chi2 complet avec prior gaussien sur h ──────────────────────────
+    # ── Full chi2 with Gaussian prior on h ──────────────────────────────
     def chi2_full(params):
         Om, w0, wa = params
         if not (0.15 < Om < 0.55): return 1e9
@@ -222,9 +238,9 @@ for case_name, h_cen, h_sig in CASES:
         if not (-4.0 < wa < 2.0):  return 1e9
         h = h_cen
         c_bao = chi2_bao(Om, w0, wa, h)
-        return c_bao  # h fixé (prior très étroit)
+        return c_bao  # h fixed (very tight prior)
 
-    # MAP — plusieurs départs
+    # MAP — several starts
     starts = [
         [0.315, -1.00,  0.00],
         [0.300, -0.90, -0.15],
@@ -240,12 +256,12 @@ for case_name, h_cen, h_sig in CASES:
 
     Om_map, w0_map, wa_map = best_x
     ndof = N_OBS - 3
-    print(f"Best-fit CPL :")
+    print(f"Best-fit CPL:")
     print(f"  Ωm = {Om_map:.4f}  w0 = {w0_map:.4f}  wa = {wa_map:.4f}")
     print(f"  χ²/ndof = {best_f:.3f} / {ndof} = {best_f/ndof:.3f}")
     print(f"  rd = {rd_eisenstein(Om_map, h_cen):.2f} Mpc")
 
-    # ΛCDM (w0=-1, wa=0) — Ωm libre
+    # ΛCDM (w0=-1, wa=0) — Ωm free
     def chi2_lcdm(p):
         return chi2_bao(p[0], -1.0, 0.0, h_cen)
     rl = minimize(chi2_lcdm, [0.31], method='Nelder-Mead',
@@ -258,14 +274,14 @@ for case_name, h_cen, h_sig in CASES:
     print(f"  χ²/ndof = {chi2_lcdm_val:.3f} / {ndof_lcdm} = {chi2_lcdm_val/ndof_lcdm:.3f}")
 
     dchi2_cpl = best_f - chi2_lcdm_val
-    daic      = dchi2_cpl - 4   # CPL a 2 param. de plus
+    daic      = dchi2_cpl + 4   # AIC = chi2 + 2k ; CPL a 2 param. de plus -> +4  [CORRIGE 15/10/2026 : etait '- 4', signe de la penalite inverse]
     print(f"\n  Δχ²(CPL − ΛCDM) = {dchi2_cpl:+.3f}   ΔAIC = {daic:+.3f}")
 
-    # Point ECF
+    # ECF point
     chi2_ecf = chi2_bao(Om_map, ECF_W0, ECF_WA, h_cen)
     dchi2_ecf_lcdm = chi2_ecf - chi2_lcdm_val
     dchi2_ecf_best = chi2_ecf - best_f
-    print(f"\nPoint ECF (w0=−0.904, wa=−0.153) :")
+    print(f"\nECF point (w0=−0.904, wa=−0.153):")
     print(f"  χ²_ECF = {chi2_ecf:.3f}")
     print(f"  Δχ²(ECF − ΛCDM) = {dchi2_ecf_lcdm:+.3f}   "
           f"Δχ²(ECF − CPL best) = {dchi2_ecf_best:+.3f}")
@@ -308,17 +324,17 @@ for case_name, h_cen, h_sig in CASES:
     wa_m,  wa_e,  wa_lo,  wa_hi  = stats(wa_s)
     corr = np.corrcoef(w0_s, wa_s)[0, 1]
 
-    print(f"\n  MCMC résultats marginaux (prior {case_name}) :")
+    print(f"\n  MCMC marginal results ({case_name} prior):")
     print(f"    Ωm  = {Om_m:.4f} ± {Om_e:.4f}  [{Om_lo:.4f}, {Om_hi:.4f}]")
     print(f"    w0  = {w0_m:.4f} ± {w0_e:.4f}  [{w0_lo:.4f}, {w0_hi:.4f}]")
     print(f"    wa  = {wa_m:.4f} ± {wa_e:.4f}  [{wa_lo:.4f}, {wa_hi:.4f}]")
     print(f"    ρ(w0,wa) = {corr:.3f}")
     print(f"    w0+wa    = {w0_m+wa_m:.4f} ± {np.std(w0_s+wa_s):.4f}")
 
-    # Distance ECF dans l'espace marginalisé — avec covariance MCMC complète
+    # ECF distance in the marginalised space — with full MCMC covariance
     pull_w0 = (ECF_W0 - w0_m) / w0_e
     pull_wa = (ECF_WA - wa_m) / wa_e
-    # Matrice de covariance marginalisée 2D (w0, wa) depuis la chaîne
+    # 2D marginalised covariance matrix (w0, wa) from the chain
     delta = np.array([ECF_W0 - w0_m, ECF_WA - wa_m])
     cov_w0wa = np.cov(np.vstack([w0_s, wa_s]))
     cov_inv  = np.linalg.inv(cov_w0wa)
@@ -327,8 +343,8 @@ for case_name, h_cen, h_sig in CASES:
     print(f"\n  Pull ECF vs MCMC :")
     print(f"    w0: ECF=−0.904  MCMC={w0_m:.3f}±{w0_e:.3f}  → {pull_w0:+.2f}σ")
     print(f"    wa: ECF=−0.153  MCMC={wa_m:.3f}±{wa_e:.3f}  → {pull_wa:+.2f}σ")
-    print(f"    Distance Mahalanobis 2D (cov complète) : {dist_maha:.2f}σ")
-    print(f"    Distance diagonale (legacy)             : {dist_diag:.2f}σ")
+    print(f"    2D Mahalanobis distance (full cov): {dist_maha:.2f}σ")
+    print(f"    Diagonal distance (legacy):        {dist_diag:.2f}σ")
     dist = dist_maha
 
     results[case_name] = {
@@ -347,14 +363,14 @@ for case_name, h_cen, h_sig in CASES:
 # FIGURES
 # ═══════════════════════════════════════════════════════════════════════════
 print(f"\n{'─'*62}")
-print("Génération des figures ...")
+print("Generating figures ...")
 
 from scipy.stats import gaussian_kde
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6), facecolor='white')
 fig.suptitle(
-    "Comparaison DESI DR1 BAO (13 points) — CPL vs ECF vs ΛCDM\n"
-    "ECF Foundation I : w₀=−0.904, wₐ=−0.153  (prédiction a priori, PIT)",
+    "DESI DR1 BAO (12 points, reconstructed block) — CPL vs ECF vs ΛCDM\n"
+    "ECF Foundation I: w₀=−0.904, wₐ=−0.153  (calibrated a priori, PIT; not ab initio, PO-F1-B)",
     fontsize=12, fontweight='bold'
 )
 
@@ -388,21 +404,21 @@ for ax_idx, (case_name, _h, _hs) in enumerate(CASES):
     except Exception as e:
         ax.scatter(w0_s[::5], wa_s[::5], s=1, c=col, alpha=0.2)
 
-    # Médiane MCMC
+    # MCMC median
     ax.scatter([r["w0_m"]], [r["wa_m"]], c=col, s=70, zorder=6, marker='*',
                label=f"MCMC {case_name}\nw₀={r['w0_m']:.3f}±{r['w0_e']:.3f}"
                      f"\nwₐ={r['wa_m']:.3f}±{r['wa_e']:.3f}")
 
     # ECF
     ax.scatter([ECF_W0], [ECF_WA], c='#E55', s=100, zorder=7, marker='D',
-               label=f"ECF (a priori)\nw₀=−0.904, wₐ=−0.153\n"
+               label=f"ECF (calibrated)\nw₀=−0.904, wₐ=−0.153\n"
                      f"d_Maha = {r['dist']:.2f}σ")
 
     # ΛCDM
     ax.scatter([-1.0], [0.0], c='k', s=60, zorder=7, marker='s',
                label="ΛCDM (w₀=−1, wₐ=0)")
 
-    # Lignes guides
+    # Guide lines
     ax.axvline(-1.0, c='k', lw=0.7, ls=':', alpha=0.4)
     ax.axhline(0.0,  c='k', lw=0.7, ls=':', alpha=0.4)
     ax.axvline(ECF_W0, c='#E55', lw=0.8, ls='--', alpha=0.5)
@@ -419,12 +435,12 @@ for ax_idx, (case_name, _h, _hs) in enumerate(CASES):
 
 plt.tight_layout()
 out1 = 'Fig_ECF_DESI_Contours.png'
-plt.savefig(out1, dpi=150, bbox_inches='tight', facecolor='white')
+plt.savefig(out1, dpi=300, bbox_inches='tight', facecolor='white')
 plt.close()
 
-# ── Figure 2 : résidus BAO ─────────────────────────────────────────────────
+# ── Figure 2: BAO residuals ────────────────────────────────────────────────
 fig2, axes2 = plt.subplots(1, 2, figsize=(15, 5), sharey=False, facecolor='white')
-fig2.suptitle("Résidus BAO DESI DR1 — (données − modèle) / σ", fontsize=12)
+fig2.suptitle("DESI DR1 BAO residuals — (data − model) / σ", fontsize=12)
 
 for ax, (case_name, h_cen, _) in zip(axes2, CASES):
     r   = results[case_name]
@@ -450,7 +466,7 @@ for ax, (case_name, h_cen, _) in zip(axes2, CASES):
 
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=45, ha='right', fontsize=8)
-    ax.set_ylabel("(donnée − modèle) / σ", fontsize=10)
+    ax.set_ylabel("(data − model) / σ", fontsize=10)
     ax.set_title(f"Prior {case_name} (h={h_cen})\n"
                  f"χ²_ECF/ndof={r['chi2_ecf']/(N_OBS-1):.2f}  "
                  f"χ²_ΛCDM/ndof={r['chi2_lcdm']/(N_OBS-1):.2f}", fontsize=10)
@@ -460,7 +476,7 @@ for ax, (case_name, h_cen, _) in zip(axes2, CASES):
 
 plt.tight_layout()
 out2 = 'Fig_ECF_DESI_Residuals.png'
-plt.savefig(out2, dpi=150, bbox_inches='tight', facecolor='white')
+plt.savefig(out2, dpi=300, bbox_inches='tight', facecolor='white')
 plt.close()
 
 
@@ -468,7 +484,7 @@ plt.close()
 # RAPPORT FINAL
 # ═══════════════════════════════════════════════════════════════════════════
 print(f"\n{'='*62}")
-print("RAPPORT FINAL — COMPARAISON INDÉPENDANTE ECF vs DESI DR1")
+print("FINAL REPORT — INDEPENDENT ECF vs DESI DR1 COMPARISON")
 print(f"{'='*62}")
 print(f"\n{'─'*62}")
 print(f"{'':22s} {'Planck prior':>18s}   {'SH0ES prior':>18s}")
@@ -493,28 +509,29 @@ for label, vp, vs in rows:
     print(f"  {label:20s}  {vp:>18s}   {vs:>18s}")
 
 print(f"\n{'─'*62}")
-print("INTERPRÉTATION")
+print("INTERPRETATION")
 print(f"{'─'*62}")
 print("""
-1. DIRECTION QUALITATIVE : Les deux cas confirment que DESI DR1
-   préfère w≠−1 (ΛCDM disfavorisé). L'ECF prédit aussi w≠−1 
-   dans la bonne direction (w₀>−1, wₐ<0). ✓
+1. QUALITATIVE DIRECTION: Both cases confirm that DESI DR1
+   prefers w≠−1 (ΛCDM disfavoured). ECF also predicts w≠−1 
+   in the right direction (w₀>−1, wₐ<0). ✓
 
-2. BEST-FIT QUANTITATIF : Le best-fit CPL libre de DESI DR1 est
-   différent de la prédiction ECF (−0.904, −0.153).
-   Avec prior SH0ES : CPL best ≈ (−1.0, −0.6)
-   Avec prior Planck : CPL best ≈ (−0.4, −2.5)
+2. QUANTITATIVE BEST-FIT: The free DESI DR1 CPL best-fit
+   differs from the calibrated ECF (−0.904, −0.153).
+   With SH0ES prior: CPL best ≈ (−1.0, −0.6)
+   With Planck prior: CPL best ≈ (−0.4, −2.5)
 
-3. STATUT ECF : La prédiction (w₀,wₐ)=(−0.904,−0.153) était 
-   dérivée AVANT DESI (calibration PIT sur SH0ES+Planck+BOSS DR12).
-   Ce n'est PAS un fit DESI — c'est une prédiction a priori.
-   Sa cohérence avec DESI est qualitative, pas une minimisation
-   de chi2 sur les données DESI.
+3. ECF STATUS: (w₀,wₐ)=(−0.904,−0.153) is a CALIBRATED point, not derived.
+   xi = 1.645 is a parameter calibrated on the DESI preference used by the ECF,
+   so as to reproduce the target value of wa; it is therefore not a prediction
+   independent of DESI (A-9, 22/09/2026). w0 = −1+Ω_spin (empirical identification); PO-F1-B.
+   Its consistency with DESI is qualitative, not a minimisation of
+   chi2 on the DESI data.
 
-4. COVARIANCE COMPLÈTE : v3.0 utilise la matrice de covariance
-   bloc-diagonale DESI DR1 (Adame et al. 2024). La distance ECF est
-   calculée par la distance de Mahalanobis (cov. MCMC marginalisée).
-   Engagement PIT(l.251)+F1(l.1695)+F2(l.148) honoré dans sec:desi_cov_full.
+4. FULL COVARIANCE: v3.0 uses the block-diagonal DESI DR1 covariance
+   matrix (Adame et al. 2024). The ECF distance is
+   computed via the Mahalanobis distance (marginalised MCMC cov.).
+   Commitment PIT(l.251)+F1(l.1695)+F2(l.148) honoured in sec:desi_cov_full.
 """)
-print(f"Figures : Fig_ECF_DESI_Contours.png")
+print(f"Figures: Fig_ECF_DESI_Contours.png")
 print(f"          Fig_ECF_DESI_Residuals.png")

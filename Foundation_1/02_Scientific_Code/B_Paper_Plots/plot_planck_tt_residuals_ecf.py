@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
 # plot_planck_tt_residuals_ecf_v2.py
 # =============================================================================
 # Script  : CMB High-l Damping-Tail Residuals ECF vs LCDM (Figure fighighldamping)
-# Paper   : Foundation I: Unified Resolution of Cosmological Tensions
+# Paper   : Foundation I
 #           (fichant_ecf_F1_Extended_v2)
 # Author  : Pascal Fichant  |  Date: 21/04/2026
 #
@@ -12,9 +14,9 @@
 # ------------------
 # [FIX] Titre fichier: "plank" -> "planck"
 #
-# [FIX] Residual formula: remplace le modele quadratique ad hoc
+# [FIX] Residual formula: replaces the ad hoc quadratic model
 #         ecf_residuals = -5.0 * ((ell-1500)/1500)^2  [v1, non physique]
-#       par interpolation PCHIP sur les 4 points calibres Table tabforecastk :
+#       with PCHIP interpolation over the 4 calibrated points of Table tabforecastk:
 #         l=1500 -> -5.2%  |  l=2000 -> -6.5%  |  l=2500 -> -3.0%  |  l=3000 -> -2.5%
 #       NB: profil NON-MONOTONE -- maximum du deficit a l~2000 (-6.5%),
 #       remontee partielle a l=2500-3000 (physique: d_silk=1320 vs 1400 Mpc,
@@ -25,14 +27,14 @@
 #
 # [NEW] Zone optimale de discrimination l=2000-2500 (App. K, Table tabforecastk)
 #
-# [NEW] Ligne CMB-S4 1-sigma (sigma=1.5%, App. K, Fig. figk3prediction)
+# [NEW] CMB-S4 1-sigma line (sigma=1.5%, App. K, Fig. figk3prediction)
 #
-# [NEW] 4 points Table tabforecastk annotes avec valeurs numeriques
+# [NEW] 4 points of Table tabforecastk annotated with numerical values
 #
-# [NEW] Labels directs sur chaque element (pas de legende-boite)
+# [NEW] Direct labels on each element (no legend box)
 #       -> courbe ECF entierement visible
 #
-# [NEW] verify_calibration(): verifie les 4 points Table tabforecastk
+# [NEW] verify_calibration(): checks the 4 points of Table tabforecastk
 #
 # [CLN] Doubles backslashes LaTeX corriges, commentaires ad hoc supprimes,
 #       referee-ready
@@ -40,7 +42,7 @@
 # CALIBRATION PHYSIQUE (Sec. sechighldamping, App. K, Table tabforecastk)
 # -----------------------------------------------------------------------
 #
-# Deficits de la queue d'amortissement (Table tabforecastk):
+# Damping-tail deficits (Table tabforecastk):
 #   l=1500  D_ECF=273.6  D_LCDM=288.6  delta=-15.0  delta%=-5.2%
 #   l=2000  D_ECF=217.6  D_LCDM=232.7  delta=-15.1  delta%=-6.5%
 #   l=2500  D_ECF= 68.9  D_LCDM= 71.0  delta= -2.1  delta%=-3.0%
@@ -52,7 +54,7 @@
 #   Recombination shift: Delta z_rec = -22
 #
 # CMB-S4 sensitivity: sigma_S4 = 1.5% (Fig. figk3prediction)
-#   -> deficit 3.0-6.5% dans la fenetre 2000-2500 >> sigma_S4 -> p < 0.05 (App. K)
+#   -> deficit 3.0-6.5% in the 2000-2500 window >> sigma_S4 -> p < 0.05 (App. K)
 #
 # Sections impactees:
 #   Abstract          : "residual CMB damping-tail deficit at l>2000"
@@ -60,6 +62,12 @@
 #   App. K            : Table tabforecastk, Fig. figk3prediction
 # =============================================================================
 
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -159,7 +167,7 @@ def plot_residuals(outfile="planck_tt_residuals_ecf.png"):
     ax.scatter(ELL_K, DPCT_K, color='#c0392b', s=70, zorder=5,
                edgecolors='black', linewidths=0.8)
 
-    # Annotations numeriques des 4 points
+    # Numerical annotations for the 4 points
     ax.annotate('-5.2%', xy=(1500, -5.2), xytext=(1510, -4.4),
                 fontsize=10.5, color='#c0392b', ha='left',
                 arrowprops=dict(arrowstyle='-', color='#c0392b', lw=0.8))

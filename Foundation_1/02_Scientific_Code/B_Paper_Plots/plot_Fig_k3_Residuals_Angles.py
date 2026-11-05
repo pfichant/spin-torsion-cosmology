@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 """
 plot_Fig_k3_Residuals_Angles.py  --  v2  (17 Apr 2026)
 =======================================================
@@ -26,9 +34,7 @@ Phenomenological CMB power spectrum (two-panel figure):
     ell=1500: paper -5.2%  / script -5.2%  -> consistent
     ell=2000: paper -6.5%  / script -6.5%  -> consistent
     ell=2500: paper -3.0%  / script -3.2%  -> consistent (model approximation)
-    ell=3000: paper -2.5%  / script -2.4%  -> consistent
-
-  CMB-S4 sensitivity (F1 Appendix K): sigma_S4 ~ 1.5 muK^2
+    ell=3000: paper -2.5%  / script -2.4%  -> consistent  CMB-S4 sensitivity (F1 Appendix K): sigma_S4 ~ 1.5 % (RELATIVE, cf. F1 App. K text)
   Discrimination window (F1 §6, Appendix K): ell in [2200, 3000]
 
   Angular scale conversion (upper x-axis):
@@ -42,8 +48,11 @@ Output
 
 Corrections v1 -> v2
 --------------------
-  [1] ylim panel top: [0,1000] -> [0,600]  (signal visible at high-ell)
-  [2] CMB-S4 band: +-1 -> +-1.5 muK^2     (F1 Appendix K Table K)
+  [1] ylim panel top: [0,1000] -> [0,600]  (signal visible at high-ell)  [2] CMB-S4 band: +-1 -> +-1.5 muK^2     (F1 Appendix K Table K)
+  [3] 15/08/2026 audit: the CMB-S4 band was drawn as an ABSOLUTE +-1.5 muK^2.
+      F1 Appendix K states sigma_S4 ~ 1.5 PERCENT, so the band is now computed
+      as a fraction of D_l(ECF). Damping-tail parameters (d_ECF = 1320,
+      floor = 50) are unchanged: they reproduce Table K to within 0.1 point.
   [3] phase_shift_ECF = 0.02*pi            (Delta_z_rec ~ 22, F1 §6)
   [4] l2theta: safe division via np.where  (avoids 1e-10 non-standard)
   [5] Legend moved outside plot area       (legibility for referee)
@@ -66,7 +75,7 @@ L_PEAK          = 220
 D_SCALE_LCDM    = 1400
 D_SCALE_ECF     = 1320
 PHASE_SHIFT_ECF = 0.02 * np.pi
-SIGMA_S4        = 1.5        # muK^2 (F1 Appendix K)
+SIGMA_S4_REL    = 0.015      # relative, 1.5 % (F1 Appendix K)
 L_DISC_LO       = 2200
 L_DISC_HI       = 3000
 L_MASK_MIN      = 1200
@@ -140,9 +149,10 @@ ax2.fill_between(ell[mask], res[mask], 0,
                  where=(res[mask] < 0), color='firebrick', alpha=0.20)
 ax2.axhline(0, color='royalblue', ls='--', lw=1.2)
 ax2.axvspan(L_DISC_LO, L_DISC_HI, color='gold', alpha=0.18)
-ax2.fill_between(ell[mask], -SIGMA_S4, SIGMA_S4,
+band = SIGMA_S4_REL * dl_e[mask]
+ax2.fill_between(ell[mask], -band, band,
                  color='green', alpha=0.18,
-                 label=r'CMB-S4 sensitivity  $\pm1.5\,\mu{\rm K}^2$  (F1 App. K)')
+                 label=r'CMB-S4 sensitivity  $\pm1.5\%$ of $\mathcal{D}_\ell^{\rm ECF}$  (F1 App. K)')
 ax2.text(2600, -20, 'Discrimination\nwindow', ha='center',
          fontsize=8.5, color='#9B6F00', style='italic')
 ax2.set_ylim(-25, 10)

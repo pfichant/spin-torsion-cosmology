@@ -13,8 +13,9 @@ Physical derivation
 Panel A — LISA band (10^-5 -- 10^-1 Hz)
   ECF stiff-era (w=1) bounce enhancement (Giovannini 1999):
       Omega_ECF(f) = A_ecf * (f/f_peak)^1.5 * exp[-0.5*(f/f_peak)^2]
-  A_ecf = 1e-12  (F1 §7 order-of-magnitude estimate),
-  f_peak = 4 mHz (illustrative, LISA band).
+  A_ecf = 1e-12  (F1 §7 order-of-magnitude estimate),  f_peak = 4 mHz (illustrative template placed in the LISA band; NOT the
+  bounce peak: the bounce cutoff lies near 1e11-1e12 Hz, Foundation III,
+  corrected 14/10/2026; the LISA-band amplitude is not computed).
   Peak amplitude ~6.4e-13 < LISA_min ~1.2e-12 (factor ~2 below threshold).
   Detectability depends on spectral tilt n_T; first-principles
   derivation deferred to Foundation III.
@@ -25,7 +26,7 @@ Panel A — LISA band (10^-5 -- 10^-1 Hz)
       P_L = Omega_ECF * (1 - Pi_GW) / 2
   Parity-violating TB/EB cross-correlations measurable by LISA
   independently of absolute amplitude (LISAChiral).
-  Kill-switch: null chiral detection Pi_GW < 0.02 (95% CL) => ECF falsified.
+  Kill-switch: null chiral detection Pi_GW < 0.02 (95% CL) => ECF chiral sector falsified (A-11).
 
   BBN constraint: int Omega d(ln f) ~ 1e-12 << 5.6e-6  (satisfied).
 
@@ -36,11 +37,20 @@ Panel B — PTA nano-Hz band (10^-10 -- 10^-6 Hz)
   Spectral index n_h = -1/2  =>  Omega_GW ∝ f^1
   Shallower than standard BBH background (Omega_GW ∝ f^{2/3}):
   discriminating spectral handle for future PTA releases.
-  Consistent with NANOGrav 15yr excess (F2 §6).
+  Lies some nine to twelve orders of magnitude BELOW the NANOGrav 15yr
+  sensitivity region over 1e-9 -- 1e-7 Hz (6e-21 vs 2.3e-8 at 1e-9 Hz,
+  6e-19 vs 1.1e-9 at 1e-7 Hz). Corrected 16/10/2026 (F1-A2): this line
+  formerly said the signal 'falls within' that region.
+  ⚠️ Wording aligned on the paper (22/08/2026): Foundation II writes
+  "NANOGrav 15yr region" and "contributing to the nano-Hz stochastic
+  background" -- it does NOT claim consistency with the observed excess.
+  The earlier caption said "Consistent with NANOGrav 15yr excess", which
+  asserted more than the paper does.
 
 Output
-------
-  figure_ecf_gw_spectrum.png  (300 dpi)
+------  figure_ecf_gw_spectrum_F2.png  (300 dpi)
+  [16/10/2026] Foundation I includes this same figure under the name figure_ecf_gw_spectrum.png
+  (renamed copy; content identical).
   LaTeX: \\includegraphics{figureecfgwspectrum}
 """
 
@@ -52,16 +62,22 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 # ---------------------------------------------------------------------------
-# Parameters — anchored to F1 v2-150426 §7 and F2 v1-150426 §6
+# Parameters — anchored to F1 v2-150426 §7 and Foundation II-150426 §6
 # ---------------------------------------------------------------------------
-F_PEAK    = 4e-3       # Hz  — illustrative LISA-band peak (F1 §7)
+F_PEAK    = 4e-3       # Hz  — illustrative template in the LISA band (F1 §7); not the bounce peak (~1e11-1e12 Hz)
 A_ECF     = 1e-12      # Omega_GW h^2 amplitude (F1 §7: ~10^-12)
 LISA_F0   = 3e-3       # Hz  — LISA best sensitivity
-PI_GW     = 0.20       # chiral asymmetry Pi_GW (F2 §6)
+PI_GW     = 0.20       # chiral asymmetry Pi_GW: CALIBRATED TEMPLATE input (A-11), not computed here
 H_C_AMP   = 1e-23      # strain amplitude at H_C_FREF (F2 §6 Eq. lisastrain)
 H_C_FREF  = 0.1        # Hz  — reference frequency for strain
 H0_NORM   = 3.241e-18  # s^-1  (H0/h, h=1)
-OUTPUT    = 'figure_ecf_gw_spectrum.png'
+# ⚠️ RENAMED 24/08/2026. Scripts_F1/plot_ecf_gw_spectrum.py bears the SAME
+# FILENAME and wrote the SAME output, while producing a DIFFERENT figure:
+# F1 shows the Foundation I stiff-phase spectrum, F2 the LISA+PTA bands,
+# and the two papers carry different captions for them. Compiled in one
+# directory, one silently overwrote the other -- the PDF would then show
+# the wrong figure under the right caption, with nothing to signal it.
+OUTPUT    = 'figure_ecf_gw_spectrum_F2.png'
 
 # ---------------------------------------------------------------------------
 # Frequency grids
@@ -133,7 +149,7 @@ ax2.plot(f_pta, Omega_pta,      color='#C00000', ls='-',  lw=2.4, zorder=3,
          label=(r'ECF Macro-Knot erosion SGWB' '\n'
                 r'$h_c\!=\!10^{-23}(f/0.1\,{\rm Hz})^{-1/2}$  (F2 §6)'))
 ax2.text(0.05, 0.07,
-         'Consistent with\nNANOGrav 15yr excess\n(F2 §6)',
+         'NANOGrav 15yr\nsensitivity region\n(F2 §6)',
          transform=ax2.transAxes, fontsize=8.5, color='#7a5fb5',
          bbox=dict(facecolor='white', edgecolor='#7a5fb5', alpha=0.78, pad=2.5))
 ax2.text(0.05, 0.38,
@@ -143,7 +159,16 @@ ax2.text(0.05, 0.38,
          bbox=dict(facecolor='white', edgecolor='#C00000', alpha=0.78, pad=2.5))
 
 ax2.set_xscale('log'); ax2.set_yscale('log')
-ax2.set_xlim(1e-10, 1e-6); ax2.set_ylim(1e-16, 1e-6)
+# [18/08/2026 audit] Lower bound extended from 1e-16 to 1e-22: with
+# h_c = 1e-23 (f/0.1 Hz)^-1/2 the ECF curve sits between 2.8e-21 and
+# 2.8e-19 over this band, i.e. ~350x below the previous floor. The curve
+# was plotted but invisible, while the legend and two annotations
+# described it. It is now shown -- far below current PTA sensitivity,
+# which is the honest reading.
+# [PROPAGE A F2 le 12/09/2026] Correction presente dans le jumeau F1
+# depuis le 18/08 et jamais repercutee ici. Ecart signale par le banc
+# de test apres le cas BBN de plot_Cosmic_History_Omegas.
+ax2.set_xlim(1e-10, 1e-6); ax2.set_ylim(1e-22, 1e-6)
 ax2.set_xlabel(r'Frequency  $f$  [Hz]', fontsize=11)
 ax2.set_ylabel(r'$\Omega_{\rm GW}\,h^2$', fontsize=11)
 ax2.set_title('Panel B — PTA nano-Hz band', fontsize=11, fontweight='bold')

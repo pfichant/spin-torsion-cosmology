@@ -1,7 +1,7 @@
 """
 ================================================================================
 SCRIPT: table_echelles_bounce.py — v2
-Paper: Foundation I: The Metric Universe (Extended), Appendix H & I
+Paper: Foundation I (Extended), Appendix H & I
 Author: Pascal Fichant (2026)
 ================================================================================
 DESCRIPTION:
@@ -37,6 +37,15 @@ KEY PHYSICAL INTERPRETATION:
   This is a geometric bounce at the Planck DENSITY, not Planck LENGTH.
 ================================================================================
 """
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import math
 

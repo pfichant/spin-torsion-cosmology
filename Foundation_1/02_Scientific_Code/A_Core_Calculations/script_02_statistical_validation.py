@@ -25,17 +25,30 @@ VALIDATION STATUS (independent audit, 2026-04-14):
 
 INPUTS (traceable to literature):
   H0_obs  = 73.04 ± 1.04  km/s/Mpc   SH0ES 2022 (Riess et al. 2022, ApJ 934 L7)
-  S8_obs  = 0.766 ± 0.019            KiDS-1000 / DES Y3 (Heymans+2021; DES 2022)
+  S8_obs  = 0.766 ± 0.019            KiDS-1000 3x2pt (Heymans+2021)
                                       sigma = combined obs+theory
   H0_LCDM = 67.4  km/s/Mpc           Planck 2018 (Planck Collaboration 2020)
   S8_LCDM = 0.832                     Planck 2018 (Planck Collaboration 2020)
-  F_ion   = 1.2765                    ECF torsion stiffness, calibrated on rs (Sec. 3)
-  gamma   = 0.3116 ± 0.04            Spin-growth coupling, MCMC Table 2 (Sec. 5)
+  F_ion   = 1.2765                    ECF effective amplitude, calibrated on rs (Sec. 3)
+  gamma   = 0.3116 +0.073/-0.100     Spin-growth coupling, calibrated on S8 = 0.766 (KiDS-1000 3x2pt);
+                                      interval propagates S8_obs only (gamma_spin_calibration.py). No MCMC.
+                                      HISTORICAL CALIBRATION (S8_LCDM = 0.832, former Planck background,
+                                      Omega_m = 0.315): withdrawn as canonical post-A-7 (DEC-A7-POST-07A).
+                                      The proxy below therefore belongs to the historical chain.
 
 FORMULA (Eq. 11, Sec. 4):
   S8_ECF = S8_LCDM / [1 + (F_ion - 1) * gamma_spin]
 ================================================================================
 """
+# Last modified: 25/08/2026, 21:49 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy import stats
@@ -47,7 +60,7 @@ from scipy import stats
 H0_OBS     = 73.04   # km/s/Mpc  — SH0ES 2022 (Riess et al. 2022)
 H0_OBS_SIG = 1.04    # 1-sigma
 
-S8_OBS     = 0.766   # KiDS-1000 / DES Y3
+S8_OBS     = 0.766   # KiDS-1000 3x2pt
 S8_OBS_SIG = 0.019   # combined obs+theory sigma (consistent with paper Table 6)
 
 
@@ -60,9 +73,16 @@ S8_LCDM = 0.832
 
 # ECF model
 H0_ECF     = 73.04
-F_ION      = 1.2765   # Torsion stiffness — single dof governing both H0 and S8
-GAMMA_SPIN = 0.3116   # Spin-growth coupling — MCMC posterior (Table 2)
-GAMMA_SIG  = 0.04     # 1-sigma on gamma_spin (Table 2)
+F_ION      = 1.2765   # effective amplitude, fixed on r_s (H0 sector). [E2, 22/09/2026] The former
+                      # "single dof for H0 and S8" reading is withdrawn (DEC-A7-POST-07)
+GAMMA_SPIN = 0.3116   # Spin-growth coupling -- calibrated by inversion on S8 = 0.766 (KiDS-1000 3x2pt); no MCMC;
+                      # HISTORICAL CALIBRATION, withdrawn as canonical post-A-7 (DEC-A7-POST-07A)
+# [D3, 22/09/2026 -- DEC-A7-POST-05] Was GAMMA_SIG = 0.04 ("Table 2"), a value no
+# producer supports. The producer (Audit_v2/lot_SPARC_22-09/gamma_spin/
+# gamma_spin_calibration.py) gives +0.073/-0.100, propagating S8_obs only.
+GAMMA_SIG_PLUS  = 0.073
+GAMMA_SIG_MINUS = 0.100
+GAMMA_SIG  = GAMMA_SIG_MINUS   # symmetric bound = widest side (linear propagation below)
 
 
 # =============================================================================
@@ -73,9 +93,12 @@ def compute_s8_suppression(s8_ref, f_ion, gamma):
     S8_ECF = S8_LCDM / [1 + (F_ion - 1) * gamma_spin]
 
     The residual torsion-matter coupling induces a scale-dependent suppression
-    of structure growth via Geff(k) < GN for k > k_cut. The amplitude is
-    controlled by F_ion — the same parameter that governs the sound-horizon
-    reduction — ensuring H0 and S8 share a single common degree of freedom.
+    of structure growth via Geff(k) < GN for k > k_cut. In this historical
+    calibration F_ion (fixed on the sound horizon) and gamma_spin (calibrated
+    on S8) enter the same denominator, which ties the two sectors at the
+    calibration stage only. It does not establish that one parameter treats
+    H0 and S8 (withdrawn under A-7, DEC-A7-POST-07); the role of the spin
+    sector in growth is OPEN.
     """
     denom = 1.0 + (f_ion - 1.0) * gamma
     return s8_ref / denom
@@ -86,6 +109,9 @@ s8_ecf = compute_s8_suppression(S8_LCDM, F_ION, GAMMA_SPIN)
 # First-order Gaussian uncertainty propagation
 dS8_dgamma  = -S8_LCDM * (F_ION - 1.0) / (1.0 + (F_ION - 1.0) * GAMMA_SPIN) ** 2
 sigma_s8_ecf = abs(dS8_dgamma) * GAMMA_SIG
+# [D3] exact asymmetric propagation (S8 decreases when gamma_spin increases)
+s8_up   = compute_s8_suppression(S8_LCDM, F_ION, GAMMA_SPIN - GAMMA_SIG_MINUS) - s8_ecf
+s8_down = s8_ecf - compute_s8_suppression(S8_LCDM, F_ION, GAMMA_SPIN + GAMMA_SIG_PLUS)
 
 
 # =============================================================================
@@ -141,9 +167,10 @@ if __name__ == "__main__":
 
     print("\n[1] Structure Growth S8:")
     print(f"   Planck ΛCDM prediction  : {S8_LCDM:.3f}"
-          f"   (tension: {lcdm_tension:.1f}σ vs KiDS-1000/DES Y3)")
-    print(f"   ECF  prediction         : {r['s8_ecf']:.4f} ± {r['sigma_s8']:.4f}")
-    print(f"   ECF  residual tension   : {ecf_tension:.2f}σ  (< 0.1σ — fully resolved)")
+          f"   (tension: {lcdm_tension:.1f}σ vs KiDS-1000 3x2pt)")
+    print(f"   ECF  (historical calib.): {r['s8_ecf']:.4f} +{s8_up:.4f}/-{s8_down:.4f}"
+          f"  (gamma_spin +{GAMMA_SIG_PLUS}/-{GAMMA_SIG_MINUS}; linear bound ± {r['sigma_s8']:.4f})")
+    print(f"   ECF  residual tension   : {ecf_tension:.2f}σ  (by construction: gamma_spin is calibrated on S8_obs -- not a test)")
 
     print("\n[2] Two-dataset Chi-square proxy {H0, S8}:")
     print(f"   chi2_H0  (ΛCDM)   : {r['chi2_h0_lcdm']:.2f}")
@@ -151,11 +178,19 @@ if __name__ == "__main__":
     print(f"   Total chi2 (ΛCDM) : {r['total_lcdm']:.2f}")
     print(f"   Total chi2 (ECF)  : {r['total_ecf']:.4f}")
     print(f"   Delta chi2 (proxy): -{r['delta_chi2']:.2f}")
-    print(f"   [Full multi-dataset budget Delta-chi2 = -39.5 → see chicarre.py]")
+    print(f"   [Full multi-dataset budget Delta-chi2 = -39.5: historical (Omega_m = 0.315), NOT RECOMPUTED -- PO-F3-9; see chi_carre.py]")
 
     print("\n[3] Model preference (ndof=2):")
-    print(f"   ECF favored at    : {r['sigma_pref']:.1f}σ")
+    print(f"   ECF favored at    : {r['sigma_pref']:.1f}σ  (historical proxy)")
+
+    # [E2, 22/09/2026 -- DEC-A7-POST-07A] status of gamma_spin in this proxy
+    print("\n[4] Status (DEC-A7-POST-07A):")
+    print(f"   gamma_spin = {GAMMA_SPIN} is a HISTORICAL CALIBRATION (inversion on S8 = {S8_OBS}")
+    print(f"   from S8_LCDM = {S8_LCDM}, former Planck background, Omega_m = 0.315); withdrawn as")
+    print("   canonical post-A-7. Physical gamma_spin: OPEN. The proxy above and the")
+    print("   AIC/BIC built on it are HISTORICAL (no recount by removing a parameter).")
+    print("   A-7 diagnostic (CAMB LCDM reference, CALCULATED-CONDITIONAL): script_06 [F].")
 
     print("-" * 70)
-    print("NOTE: 2-observable proxy only. Full budget in chicarre.py.")
+    print("NOTE: 2-observable proxy only; the S8 term is zero by calibration. Full budget in chi_carre.py.")
     print("-" * 70)

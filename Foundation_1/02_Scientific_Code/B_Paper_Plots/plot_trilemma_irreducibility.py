@@ -2,18 +2,20 @@
 """
 Script 08 — H0–Age–BAO Trilemma: Numerical Irreducibility Proof
 Foundation I Extended v2 — Sec. 5 (sec:age_trilemma) and Appendix L
-Dernière modification : 20/07/2026, 16:45 (ajout note de limitation)
+Last modified: 20/07/2026, 16:45 (limitation note added)
 Figure: fig_trilemma_irreducibility_contours.png
 
 Scans the (w_0, z_t) parameter space of a tanh-crossing dark-energy model
 and shows that no point simultaneously satisfies:
-  (i)  BAO: D_M(z=1.48)/r_s within 1.5% of eBOSS DR16 (Hou+2021)
-  (ii) Age: t_0 > 13.32 Gyr (Valcin+2021 globular cluster prior)
+  (i)  BAO: D_M(z=1.48)/r_s within 1.5% of the eBOSS DR16 QSO consensus 30.21 (Hou+2021)
+  (ii) Age: t_0 > t_GC = 13.32 Gyr (Valcin+2020 globular cluster chronometry)
 for H0 = 73.04 km/s/Mpc — proving the trilemma is irreducible.
 
 BAO target convention:
-    Hou+2021 reports D_M(z=1.48)/r_s = 30.21 +/- 0.79.
-    Target D_M = 30.21 * r_s_ECF = 30.21 * 135.8 = 4102.5 Mpc.
+    Hou+2021 reports the consensus D_M/r_d(z=1.48) = 30.21 +/- 0.79 (eq. 49).
+    Target D_M = 30.21 * r_s_ECF = 30.21 * 135.65 = 4098.0 Mpc (A-6; 4102.5 was 30.21 x 135.8 with the former r_s; 30.22 used 22/09-12/10/2026 by mistake).
+    The ECF scale is used as the ruler of a measurement published in r_drag: the relation
+    is not established (PO-ECF-BAO-RDRAG, OPEN), so this scan is CALCULATED-CONDITIONAL.
     This uses the ECF sound horizon as the BAO ruler, which is the
     internally consistent choice when testing ECF cosmology.
 
@@ -23,8 +25,8 @@ References:
     Chevallier & Polarski (2001); Linder (2003)  [CPL/tanh DE models]
 
 LIMITATION NOTED 20/07/2026 (does not change the conclusion, refines it):
-    This scan fixes Omega_m = 0.315 (the Planck-h value) throughout and
-    never varies it. Omega_m depends on H0 (Omega_m = omega_m/h^2 for
+    Until A-7 (22/09/2026) this scan fixed Omega_m = 0.315 (the Planck-h
+    value) throughout and never varied it; it now uses omega_m/h^2 = 0.2669. Omega_m depends on H0 (Omega_m = omega_m/h^2 for
     fixed physical density omega_m), so at H0=73.04 the physically
     consistent value is Omega_m ~ 0.268, not 0.315. A follow-up joint
     scan over (Omega_m, w0, wa) -- see joint_fit_trilemma.py -- shows
@@ -38,6 +40,15 @@ LIMITATION NOTED 20/07/2026 (does not change the conclusion, refines it):
     See Foundation I footnote (b) to the trilemma table, and
     Foundation II PO-F2-5, for the full discussion.
 """
+# Last modified: 19/08/2026, 13:01 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 import matplotlib
@@ -55,14 +66,14 @@ except AttributeError:
 # 1. PARAMETERS
 # ---------------------------------------------------------------------------
 H0_local      = 73.04          # km/s/Mpc (SH0ES 2022)
-Omega_m       = 0.315          # Planck 2018
+Omega_m       = (0.02237 + 0.1200)/0.7304**2   # [A-7, 22/09/2026] Omega_m = omega_m/h_ECF^2 = 0.266868 ; was 0.315 (Planck-h value)
 Omega_de      = 1.0 - Omega_m  # = 0.685 (flat universe)
 c_light       = 299792.458     # km/s
 conv_gyr      = 977.79222168   # (km/s/Mpc)^-1 in Gyr  [Julian year]
 
 z_bao         = 1.48
-Target_DM_Mpc = 30.21 * 135.8  # = 4102.5 Mpc  (Hou+2021 * r_s_ECF)
-Target_Age    = 13.32           # Gyr (Valcin+2021)
+Target_DM_Mpc = 30.21 * 135.65 # [Q1] consensus Hou+2021 (eq. 49); 30.22 used 22/09-12/10/2026 by mistake; before 30.21*135.8
+Target_Age    = 13.32           # Gyr, t_GC (Valcin+2020)
 w_inf_fixed   = -1.0            # high-z asymptote
 
 # ---------------------------------------------------------------------------
@@ -105,14 +116,23 @@ n_both = int(np.sum((BAO_ERR < 0.015) & (AGE > Target_Age)))
 print("=" * 65)
 print("  SCRIPT 08 — H0-AGE-BAO TRILEMMA  (Foundation I Sec. 5)")
 print("=" * 65)
-print(f"  Target D_M         = {Target_DM_Mpc:.1f} Mpc  (30.21 * 135.8)")
-print(f"  Target age         = {Target_Age} Gyr  (Valcin+2021)")
+print(f"  Target D_M         = {Target_DM_Mpc:.1f} Mpc  (30.21 * 135.65)")
+print(f"  Target age         = {Target_Age} Gyr  (t_GC, Valcin+2020)")
 print(f"  BAO viable points  = {int(np.sum(BAO_ERR < 0.015))}/2500")
 print(f"  Age viable points  = {int(np.sum(AGE > Target_Age))}/2500")
 print(f"  Both satisfied     = {n_both}/2500")
 print(f"  Trilemma: {'IRREDUCIBLE (confirmed)' if n_both==0 else 'VIOLATED -- check inputs'}")
-dm_bf, age_bf = fast_observables(-1.565, 0.20)
-print(f"\n  Best-fit (w0=-1.565, z_t=0.20):")
+# [D3, 22/09/2026 -- DEC-A7-POST-05] The "best fit" was hard-coded (w0 = -1.565,
+# z_t = 0.20; t0 = 13.13 Gyr, dBAO = 4.1 % at Omega_m = 0.315). After A-7 that
+# point gives t0 = 13.81 Gyr, dBAO = 8.8 %: no longer a compromise. It is now
+# the grid point minimising the same joint chi2 as check_trilemma_optimizer.py
+# (BAO at 1.5 %, age at 0.1 Gyr), restricted to this w_inf = -1 family.
+CHI2_GRID = (BAO_ERR/0.015)**2 + ((AGE - Target_Age)/0.1)**2
+_ib = np.unravel_index(np.argmin(CHI2_GRID), CHI2_GRID.shape)
+W0_BF, ZT_BF = float(W0[_ib]), float(ZT[_ib])
+dm_bf, age_bf = fast_observables(W0_BF, ZT_BF)
+BAO_BF = abs(dm_bf-Target_DM_Mpc)/Target_DM_Mpc*100
+print(f"\n  Best grid point (min joint chi2 = {CHI2_GRID[_ib]:.2f}; w0={W0_BF:.3f}, z_t={ZT_BF:.3f}):")
 print(f"    D_M = {dm_bf:.1f} Mpc,  BAO err = {abs(dm_bf-Target_DM_Mpc)/Target_DM_Mpc*100:.2f}%")
 print(f"    t0  = {age_bf:.4f} Gyr")
 print("=" * 65)
@@ -134,14 +154,14 @@ plt.contourf(ZT, W0, AGE, levels=[13.32, 15.0],
 plt.contour(ZT, W0, AGE, levels=[13.32],
             colors=['#d62728'], linewidths=2)
 plt.plot([], [], color='#d62728', alpha=0.5, linewidth=8,
-         label=r'Age viable ($t_0 > 13.32$ Gyr, Valcin 2021)')
+         label=r'Age viable ($t_0 > t_{GC} = 13.32$ Gyr, Valcin 2020)')
 
-plt.plot(0.20, -1.565, 'k*', markersize=15,
-         label=r'Best fit ($t_0=13.13$ Gyr, $\Delta$BAO $=4.1\%$)')
+plt.plot(ZT_BF, W0_BF, 'k*', markersize=15,
+         label=rf'Best grid point ($t_0={age_bf:.2f}$ Gyr, $\Delta$BAO $={BAO_BF:.1f}\%$)')
 
-plt.annotate(
-    'Irreducible Gap\n' + r'($\Delta t_0 \approx 0.20$ Gyr)',
-    xy=(0.35, -1.65), xytext=(0.55, -2.0),
+plt.annotate(   # [D3] computed gap at the best grid point (was hard-coded 0.20 Gyr)
+    'Irreducible Gap\n' + rf'($\Delta t_0 \approx {Target_Age-age_bf:.2f}$ Gyr, $\Delta$BAO $\approx {BAO_BF:.1f}\%$)',
+    xy=(ZT_BF, W0_BF), xytext=(min(ZT_BF+0.2, 1.1), W0_BF-0.45),
     arrowprops=dict(facecolor='black', shrink=0.05, width=1.5, headwidth=8),
     fontsize=12, fontweight='bold')
 

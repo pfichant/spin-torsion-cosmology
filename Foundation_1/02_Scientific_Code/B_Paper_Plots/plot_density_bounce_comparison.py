@@ -2,7 +2,7 @@
 plot_density_bounce_comparison.py  --  v2  (15 Apr 2026)
 =========================================================
 Figure: Density Saturation at the Primordial Spin Bounce
-Paper: Foundation I: The Metric Universe (Extended), Section 2
+Paper: Foundation I (Extended), Section 2
 
 Physical derivation  (F1 §2 and App. G)
 -----------------------------------------
@@ -69,6 +69,15 @@ Output
   figure_densiste_bounce_comparison.jpg  (300 dpi)
   Filename consistent with LaTeX reference in F1 §2.
 """
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import matplotlib
 matplotlib.use('Agg')
@@ -112,7 +121,10 @@ ax.plot(t, rho_ecf, color='#C00000',   ls='-',  lw=2.8, zorder=4)
 ax.annotate('', xy=(0.0, 29.4), xytext=(0.0, 23),
             arrowprops=dict(arrowstyle='->', color='steelblue', lw=1.8))
 
-ax.annotate('Singularity\nresolved',
+# 17/08/2026 audit: this annotation read 'Singularity resolved'. The F1
+# caption (fig:bouncedensity, l.3353) says 'saturating at the Cartan
+# critical density', with no claim of resolution. Wording aligned.
+ax.annotate('Density\nsaturates',
             xy=(0.06, RHO_C), xytext=(0.9, RHO_C + 5.5),
             arrowprops=dict(arrowstyle='->', color='#900000', lw=1.4),
             fontsize=10.5, color='#900000', fontweight='bold', ha='center')

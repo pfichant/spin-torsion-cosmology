@@ -19,6 +19,15 @@ theta_* has a known ~1% systematic offset vs. the literature Planck
 value (see that script's docstring) and should not be over-interpreted
 at the percent level.
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy import integrate
@@ -32,7 +41,7 @@ h_ecf = H0/100.0
 
 omega_b = 0.02237
 omega_g = 2.4728e-5
-omega_n = 1.6918e-5
+omega_n = (7.0/8.0)*(4.0/11.0)**(4.0/3.0)*3.046*omega_g   # [A-6, 22/09/2026] = 1.7106e-5 ; was 1.6918e-5 (= 1+0.2271*N_eff, a factor, not a density)
 omega_r_fixed = omega_g + omega_n
 
 SPIN_RAD_RATIO = 0.093
@@ -43,8 +52,8 @@ Z_TRANS = 5600.0
 z_bao = 1.48
 w0, wa = -0.904, -0.153   # calibrated ECF values (PIT/Foundation II)
 
-TARGET_BAO, SIG_BAO = 30.21, 0.79
-TARGET_AGE, SIG_AGE = 13.32, 0.08
+TARGET_BAO, SIG_BAO = 30.21, 0.79   # eBOSS DR16 QSO consensus (Hou+2021, eq. 49); 30.22 used 22/09-12/10/2026 by mistake
+TARGET_AGE, SIG_AGE = 13.32, 0.10   # t_GC, Valcin+2020 (stat. only; +/- 0.5 sys. separate)
 TARGET_THETA_SELFCONSISTENT = 1.03116   # this model's own LCDM value (see joint_fit_trilemma.py)
 Gyr_conv = 977.79222168
 
@@ -96,14 +105,22 @@ if __name__ == "__main__":
     ax.axvline(0.315, color='steelblue', ls=':', lw=1.3, label=r'$\Omega_m$ at Planck-$h$ (0.315)')
     ax.axvline(0.268, color='darkorange', ls=':', lw=1.3, label=r'$\Omega_m$ corrected ($H_0$=73.04, 0.268)')
     ax.set_xlabel(r'$\Omega_m$'); ax.set_ylabel(r'$t_0$ [Gyr]')
-    ax.set_title('Age vs $\\Omega_m$\n(target: Valcin+2021)')
+    ax.set_title('Age vs $\\Omega_m$\n(target: t_GC, Valcin+2020)')
     ax.legend(fontsize=8)
     ax.grid(alpha=0.2)
 
     ax = axes[1]
     ax.plot(Om_m_arr, bao_arr, '-', color='#2c7a2c', lw=2.2)
     ax.axhline(TARGET_BAO, color='gray', ls='--', lw=1)
-    ax.axhspan(TARGET_BAO-1.5*SIG_BAO, TARGET_BAO+1.5*SIG_BAO, color='gray', alpha=0.2, label='1.5% tolerance')
+    # 17/08/2026 audit: the band was TARGET_BAO +/- 1.5*SIG_BAO, i.e. +/-1.185
+    # or +/-3.9 %, while its label read '1.5% tolerance' — 1.5 SIGMA had been
+    # labelled as 1.5 PERCENT. The criterion used throughout F1 (Fig. 15,
+    # plot_trilemma_irreducibility.py, Sec. 8) is Delta D_M/r_s < 1.5 %, which
+    # is +/-0.453 here. With the wider band the BAO panel looked unconstrained
+    # over the whole range, weakening the very point the figure makes.
+    BAO_TOL = 0.015 * TARGET_BAO   # 1.5 % of D_M/r_s, the F1 criterion
+    ax.axhspan(TARGET_BAO-BAO_TOL, TARGET_BAO+BAO_TOL, color='gray', alpha=0.2,
+               label='1.5% tolerance (F1 criterion)')
     ax.axvline(0.315, color='steelblue', ls=':', lw=1.3)
     ax.axvline(0.268, color='darkorange', ls=':', lw=1.3)
     ax.set_xlabel(r'$\Omega_m$'); ax.set_ylabel(r'$D_M(z=1.48)/r_s$')

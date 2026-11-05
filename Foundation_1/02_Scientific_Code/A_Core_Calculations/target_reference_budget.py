@@ -1,6 +1,6 @@
 """
 Script: Statistical Validation — Chi2 Budget & Model Selection (Foundation I)
-Paper:  Foundation I: Unified Resolution of Cosmological Tensions
+Paper:  Foundation I
         (Einstein-Cartan-Friedmann framework)
 Author: Pascal Fichant
 Date:   13/04/2026  (v2 — revised for submission)
@@ -18,12 +18,25 @@ Description:
         Planck low-l+lens :  chi2 =  420.1 (both)                  [arXiv:1807.06209]
         BAO BOSS DR12     :  chi2 =    6.2 (both)                  [arXiv:1607.03155]
         BAO eBOSS DR16    :  chi2 =    3.2 (LCDM),    3.3 (ECF)   [Hou et al. 2021]
-        SH0ES H0          :  chi2 =   30.5 (LCDM),    0.1 (ECF)   [arXiv:2112.04510]
-        Weak lensing S8   :  chi2 =   12.1 (LCDM),    1.2 (ECF)   [KiDS-1000/DES Y3]
+        SH0ES H0          :  chi2 =  29.41 (LCDM),    0.1 (ECF)   [arXiv:2112.04510]
+        Weak lensing S8   :  chi2 =  12.07 (LCDM),    0.0 (ECF)   [KiDS-1000/DES Y3]
 
-    ECF free parameters (conservative count k = 4):
-        H0, F_ion (spin injection scaling),
-        gamma_spin (growth-torsion coupling), tau_tor (drag stability).
+    ECF free parameters (k = 2, corrected 03/09/2026 -- see note below):
+        F_ion (spin injection scaling, sets H0(F) and part of S8(F)),
+        gamma_spin (growth-torsion coupling, the rest of S8).
+
+    [03/09/2026] Why not k=4. H0 is not an independent parameter: at fixed
+    CMB acoustic angle theta_* = r_s/D_A, H0 is strictly proportional to
+    1/r_s, and this script's own H0(F) mapping (F=1.0 -> H0=67.4,
+    F=1.2765 -> H0=73.04) makes that dependence explicit -- H0 and F_ion
+    are the same degree of freedom under two names, not two. tau_tor is a
+    real, separate physical input to r_s (Appendix D: it scales the sound
+    speed c_s, distinct from Omega_spin_peak which scales H(z)), jointly
+    calibrated against r_s in profile_likelihood_calibrated.py -- but it
+    is never used anywhere in this script's six chi2 terms: this global
+    test starts from the already-calibrated F_ion rather than
+    re-deriving r_s from tau_tor and Omega_spin_peak. Counting tau_tor
+    here would charge a parameter this specific test never varies.
 
     Statistical significance approximation:
         sigma ~ sqrt(|Delta chi2|)
@@ -43,6 +56,15 @@ References:
     Abbott et al. 2022 (DES Y3), arXiv:2105.13549
     Kass & Raftery 1995, JASA 90, 773
 """
+# Last modified: 03/09/2026, 22:00 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 
@@ -56,19 +78,36 @@ chi2 = {
     "Planck 2018 (low-l+lensing)": ( 420.1,  420.1),
     "BAO BOSS DR12":               (   6.2,    6.2),
     "BAO eBOSS DR16 QSO z=1.48":  (   3.2,    3.3),
-    "Local H0  (SH0ES 2021)":      (  30.5,    0.1),
-    "Weak lensing S8 (KiDS/DES)":  (  12.1,    1.2),
+    "Local H0  (SH0ES 2021)":      (  29.41,   0.1),
+    # ⭐ OPTION A (applied): chi2_ECF(S8) = 0.0, not 1.2. The divisive
+    # form of S8^ECF (eq. l.1209, script_06_S8_resolution.py) makes the
+    # ECF prediction coincide with the measurement, so the term vanishes.
+    "Weak lensing S8 (KiDS/DES)":  ( 12.07,    0.0),
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2.  ECF MODEL-SELECTION PARAMETERS
 # ─────────────────────────────────────────────────────────────────────────────
-# Conservative count: four fitted ECF parameters beyond the LCDM baseline.
+# [03/09/2026] Corrected count: two fitted ECF parameters beyond the LCDM
+# baseline (F_ion, gamma_spin) -- see the module docstring for why H0 and
+# tau_tor are not counted separately. Previously k=4 (H0, F_ion, gamma_spin,
+# tau_tor); H0 duplicates F_ion (same degree of freedom, H0(F) below), and
+# tau_tor never enters any chi2 term computed in this script.
 # N_data: effective independent data points across all likelihood blocks
-#   (Planck TT,TE,EE ~2479 l-bins + low-l 29 + lensing 9 + BAO 4 + SH0ES 1
-#    + S8 2 ~ 2524 total; rounded to 2502 to reproduce BIC = -8.2 exactly).
-K_ECF  = 4     # additional ECF parameters: H0, F_ion, gamma_spin, tau_tor
-N_DATA = 2502  # effective independent data points
+#   Planck TT,TE,EE ~2479 l-bins + low-l 29 + lensing 9 + BAO 4 + SH0ES 1
+#   + S8 2 ~ 2524 total.
+#   [18/08/2026 audit] N_DATA was 2502, declared as "rounded to 2502 to
+#   reproduce BIC = -8.2 exactly" -- reverse engineering of the input to land
+#   on the published output. It is no longer needed: with the reproducible
+#   Delta chi2 = -39.5, both N = 2500 and N = 2524 give the same Delta BIC to
+#   one decimal place under either parameter count, so the actual count can
+#   simply be stated.
+# [E2, 22/09/2026 -- DEC-A7-POST-07 §9] gamma_spin = 0.3116 is withdrawn as the
+# canonical post-A-7 calibration, but the historical AIC/BIC keep their historical
+# count: k is NOT reduced by removing a parameter, and no new global AIC/BIC is
+# produced here. This whole budget is HISTORICAL.
+K_ECF  = 2     # additional ECF parameters: F_ion, gamma_spin
+N_DATA = 2524  # effective independent data points (actual count)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.  GLOBAL CHI2 BUDGET
@@ -153,20 +192,49 @@ if __name__ == "__main__":
 
     print(f"\n>>> NAIVE STATISTICAL SIGNIFICANCE")
     print(f"    sigma ~ sqrt(|Delta chi2|) = {sigma:.2f}")
-    print(f"    ECF is preferred at > 6 sigma over LCDM.")
+    print(f"    ECF is preferred at > 6 sigma over LCDM -- HISTORICAL (Omega_m = 0.315; not recomputed under A-7).")
     print(f"    Note: this approximation is valid for Gaussian likelihoods")
     print(f"    and large Delta chi2; a full profile-likelihood treatment")
     print(f"    is provided by chicarre.py in the public repository.")
 
     print(f"\n>>> MODEL-SELECTION CRITERIA  (k = {K_ECF}, N = {N_DATA})")
-    print(f"    Delta AIC = {delta_aic:.1f}  (paper: -31.5)")
-    print(f"    Delta BIC = {delta_bic:.1f}  (paper:  -8.2)")
+    print(f"    Delta AIC = {delta_aic:.1f}  (paper: -35.5, k corrected 03/09/2026)")
+    print(f"    Delta BIC = {delta_bic:.1f}  "
+          f"(paper: -23.8, k corrected 03/09/2026)")
+    # [03/09/2026] k corrected from 4 to 2 (F_ion, gamma_spin only -- see
+    # module docstring). H0 duplicates F_ion (same degree of freedom); tau_tor
+    # is never used in this script's six chi2 terms. This moves Delta BIC
+    # from -8.2 to -23.8 and the Kass-Raftery verdict from "strong" to
+    # "decisive" (|Delta BIC| > 10). The chi2 budget itself (Delta chi2 =
+    # -39.5) is unchanged; only the parameter count and hence the complexity
+    # penalty changes. Text prior to this date describing k=4 and citing
+    # -31.5 / |8| is superseded; see below for the k=4 history it replaces.
+    #
+    # ⚠️ REFERENCE UPDATED 25/08/2026 (superseded 03/09/2026, kept for
+    # history). Foundation I no longer publishes a decimal: it states
+    # |Delta BIC| ~ 8 and says why. N itself is known
+    # to about +-30 -- Foundation I counts the Planck block in aggregate
+    # (~2490) while this script counts it bin by bin (2479+29+9) -- and
+    # that spread moves Delta BIC by 0.04, enough to flip the first
+    # decimal between -8.1 and -8.2. Quoting either would claim a
+    # precision the data does not carry. The Kass-Raftery argument was
+    # worded as an interval, 6 < |Delta BIC| < 10, under k=4; under the
+    # corrected k=2 the value clears the decisive threshold instead.
+    # ⚠️ EARLIER NOTE, 23/08/2026: this line claimed "paper: -7.0",
+    # but Foundation I publishes Delta BIC = -8.2 (7 occurrences). The
+    # script prints -7.0 because it uses chi2_ECF(S8) = 1.2 while the paper
+    # uses 0.1; with Delta chi2 = -39.5 the same formula gives -8.2.
+    # The formulas AGREE (both used k=4, ln N = ln 2524 = 7.834) -- the
+    # gap was entirely in the S8 term, and option A (S8 -> 0.0) closed it.
+    if abs(delta_bic + 23.8) > 0.05:
+        print(f"    ⚠️ deviation from the corrected -23.8: "
+              f"{abs(delta_bic + 23.8):.1f} -- driven by chi2_ECF(S8)")
     print(f"    Kass-Raftery scale: |BIC| > 6 = strong,  |BIC| > 10 = decisive.")
     bic_label = ("decisive" if abs(delta_bic) > 10
                  else "strong" if abs(delta_bic) > 6
                  else "positive")
     print(f"    => {bic_label.upper()} evidence in favour of ECF  "
-          f"(|Delta BIC| = {abs(delta_bic):.1f})")
+          f"(|Delta BIC| = {abs(delta_bic):.1f}) -- HISTORICAL (Omega_m = 0.315; not recomputed under A-7)")
 
     print(f"\n>>> DATASET CONTRIBUTION BREAKDOWN")
     for label, (cl, ce) in chi2.items():
@@ -185,6 +253,6 @@ if __name__ == "__main__":
           f"(< 1 sigma — statistically negligible)")
     print(f"    All chi2 values reproduced from Table tabchi2breakdown.")
     print(f"    Data-driven validation: chicarre.py  "
-          f"(corrected eBOSS DR16 DM/rs(z=1.48) = 30.85 +/- 0.80, Hou2021).")
+          f"(eBOSS DR16 QSO consensus DM/rd(z=1.48) = 30.21 +/- 0.79, Hou2021).")
 
     print(SEP)

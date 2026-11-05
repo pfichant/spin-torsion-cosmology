@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 # Script      : plot_jwst_comparison.py  [v2 - referee]
-# Paper       : Foundation I: The Metric Universe (Fichant 2026)
+# Paper       : Foundation I (Fichant 2026)
 # Figure      : fig:jwstcomparison  (Section 6)
 # Corrections : JADES-z14-0 z=14.178/M_UV=-20.3 (Carniani+2024);
 #               ECF limit = mag_lcdm - 1.5 (B_ECF=1.45, App. E);
 #               LaTeX escapes fixed; matplotlib.use('Agg') before pyplot.
 # Output      : Figure_JWST_ECF_comparison.png
 
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import matplotlib
 matplotlib.use('Agg')
 
@@ -25,7 +33,15 @@ def plot_jwst_comparison():
     z = np.linspace(8, 15, 200)
 
     mag_lcdm = -22.0 + 0.8 * (z - 8)
-    mag_ecf  = mag_lcdm - 1.5          # B_ECF=1.45 -> ~1.5 mag boost (App. E)
+    # [18/08/2026 audit] These two lines are SCHEMATIC reference slopes,
+    # not luminosity ceilings computed from a mass function. Neither the
+    # normalisation (-22.0), the slope (0.8/unit z), nor the -1.5 offset is
+    # derived: in particular -1.5 mag does NOT follow from B_ECF = 1.45,
+    # since -2.5*log10(1.45) = -0.40 mag. The proximity of "1.45" and
+    # "1.5 mag" appears to be a coincidence between two unrelated
+    # quantities. F1 was requalified accordingly on 18/08/2026; a genuine
+    # UV luminosity function is deferred to Foundation II.
+    mag_ecf  = mag_lcdm - 1.5          # illustrative offset (see note above)
 
     jwst_jades = [
         (10.603, -21.5, 'GN-z11'),
@@ -68,7 +84,10 @@ def plot_jwst_comparison():
 
     ax.set_xlabel(r'Redshift $z$', fontweight='bold')
     ax.set_ylabel(r'$M_\mathrm{UV}$ [mag]', fontweight='bold')
-    ax.set_title(r'JWST High-$z$ Galaxies vs. ECF Prediction (F1 Sec.6)',
+    # Title aligned on the F1 Extended caption (fig:jwstcomparison) — 17/08/2026
+    # audit. The caption reads "Illustrative comparison"; "Prediction" in the
+    # graven title overstated it.
+    ax.set_title(r'High-Redshift Halo Abundance in the ECF (F1 Sec. 6)',
                  fontsize=13, fontweight='bold', pad=10)
     ax.invert_yaxis()
     ax.set_xlim(8.5, 15.0)
@@ -78,10 +97,10 @@ def plot_jwst_comparison():
 
     legend_elements = [
         Line2D([0],[0], color='royalblue', lw=2, linestyle='--',
-               label=r'$\Lambda$CDM limit (hierarchical)'),
+               label=r'Hierarchical reference (schematic)'),
         Line2D([0],[0], color='crimson', lw=2.5,
-               label=r'ECF limit ($B_\mathrm{ECF}=1.45$, App. E)'),
-        Patch(facecolor='crimson', alpha=0.20, label='ECF structural advantage'),
+               label=r'ECF reference (schematic offset)'),
+        Patch(facecolor='crimson', alpha=0.20, label='Displaced range (illustrative)'),
         Line2D([0],[0], marker='o', color='w', markerfacecolor='black',
                markersize=8, label='JADES (Carniani+2024, Robertson+2023)'),
         Line2D([0],[0], marker='s', color='w', markerfacecolor='darkorange',

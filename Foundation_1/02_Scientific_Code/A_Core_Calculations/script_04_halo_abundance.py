@@ -2,6 +2,8 @@
 ================================================================================
 SCRIPT 04 v2: JWST HIGH-REDSHIFT HALO ABUNDANCE CHECK
 Paper: Foundation I — The Metric Universe (Extended), Appendix E
+STATUS (17/10/2026): No longer used by Foundation I (Appendix E withdrawn; the
+  abundance target has no traceable source, PO-F1-JWST-SRC). Output unchanged.
 Author: Pascal Fichant (2026)
 ================================================================================
 DESCRIPTION:
@@ -10,7 +12,14 @@ DESCRIPTION:
     Stage 1 — ΛCDM PS baseline         → n ~ 10^-29 Mpc^-3
     Stage 2 — ECF linear growth boost  → n ~ 3.5×10^-14 Mpc^-3
     Stage 3 — Topological macro-knot   → n ~ 2.99×10^-4 Mpc^-3
-  Compares with JWST-inferred range 2–4×10^-4 Mpc^-3 (Labbe et al. 2023).
+  Compares with an ASSUMED target range 2–4×10^-4 Mpc^-3. [16/10/2026, F1-A4]
+  This range is NOT in Labbe et al. 2023 (stellar-mass densities, 7.4 <= z <= 9.1,
+  no number density, nothing at z = 15); no JWST source identified (PO-F1-JWST-SRC).
+  [16/10/2026, F1-A7] KNOWN ERROR, NOT FIXED HERE (PO-F1-SIGMA-M): the power-law
+  sigma(M) below (alpha_eff = 0.108, D(15) = 1/16) reproduces the paper's 0.150, which
+  is too low by a factor ~2 (linear P(k), Planck 2018: sigma(1e10 Msun, z=15) ~ 0.31).
+  With the computed variance, PS gives ~1.8e-7 Mpc^-3 (LCDM) and ~4.6e-4 Mpc^-3 with
+  B_ECF = 1.45 alone. The outputs of this script are kept for traceability only.
 
 VALIDATION STATUS (independent audit, 2026-04-14):
   v1 → v2 corrections:
@@ -31,7 +40,7 @@ INPUTS (traceable to literature):
   nu_ECF       = 7.75                delta_c / sigma_ECF(1e10, z=15) — paper App. E
   DELTA_C      = 1.686               Linear collapse threshold (Press & Schechter 1974)
   H0           = 73.04 km/s/Mpc      ECF calibrated value — Script 02
-  OMEGA_M      = 0.315               Planck 2018
+  OMEGA_M      = omega_m/h_ECF^2 = 0.2669   (A-7, 22/09/2026; was 0.315, Planck 2018)
   NS           = 0.965               Spectral index — Planck 2018 (informational)
   alpha_eff    = 0.108               Effective sigma(M) slope — back-calculated from
                                      paper sigma_CDM(1e10, z=15) = 0.150, Appendix E
@@ -43,12 +52,21 @@ NOTE ON SIGMA SLOPE (alpha_eff):
   v1 used alpha=0.28 for galaxy scales → sigma inflated by ×5.3. FIXED.
 
 NOTE ON PHYSICAL CHAIN (Appendix E):
-  The JWST-inferred density 2–4×10^-4 Mpc^-3 CANNOT be reproduced by standard PS
+  The assumed target density 2–4×10^-4 Mpc^-3 CANNOT be reproduced by standard PS
   alone, even with the ECF linear boost. The non-Gaussian topological tail from
   Macro-Knot seeding (f_NL_eff=0.295) is the physical mechanism required.
   n_topo = n_PS_ECF × exp(nu_ECF³ × f_NL_eff / 6)           [Appendix E, Eq. n_topo]
 ================================================================================
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy.special import erfc
@@ -58,11 +76,13 @@ from scipy.special import erfc
 # =============================================================================
 H0          = 73.04
 h           = H0 / 100.0
-OMEGA_M     = 0.315
+OMEGA_M     = (0.02237 + 0.1200)/0.7304**2   # [A-7, 22/09/2026] Omega_m = omega_m/h_ECF^2 = 0.266868 ; was 0.315 (Planck-h value)
 NS          = 0.965        # Planck 2018 spectral index (informational — not used in PS)
 DELTA_C     = 1.686        # Linear collapse threshold
 SIGMA_8_LCDM = 0.832       # Planck 2018 baseline for PS
 SIGMA_8_ECF  = 0.766       # ECF late-time S8 (suppression, NOT used in PS chain)
+                           # [E2, 22/09/2026 -- DEC-A7-POST-07] 0.766 is the KiDS-1000
+                           # target, not an ECF prediction (informational here)
 B_ECF        = 1.45        # Early-growth boost factor — paper App. E, Fig. 17
 F_NL_EFF     = 0.295       # Topological f_NL — paper App. E, Eq. f_NL_eff
 NU_ECF       = 7.75        # nu = delta_c / sigma_ECF(1e10, z=15) — paper App. E
@@ -131,8 +151,11 @@ n_ecf_linear = n_PS_cumulative(M_ref, sig_ecf_z15)
 
 # Stage 3: Topological non-Gaussian macro-knot seeding
 # n_topo = n_PS_ECF × exp(nu_ECF³ × f_NL_eff / 6)       [App. E, Eq. n_topo]
-topo_exponent = NU_ECF**3 * F_NL_EFF / 6.0
+nu_ecf_calc   = DELTA_C / sig_ecf_z15      # 7.727 (NU_ECF = 7.75 is the rounded paper value)
+topo_exponent = nu_ecf_calc**3 * F_NL_EFF / 6.0
 n_topo        = n_ecf_linear * np.exp(topo_exponent)
+N_TARGET      = 2.99e-4                    # Mpc^-3, central value of the ASSUMED target (calibration input; no JWST source, PO-F1-JWST-SRC)
+f_NL_eff_req  = 6.0 * np.log(N_TARGET / n_ecf_linear) / nu_ecf_calc**3   # calibrated value (App. E, Eq. fnl_eff)
 
 
 # =============================================================================
@@ -143,36 +166,42 @@ if __name__ == "__main__":
     print(f">>> SCRIPT 04 v2 — JWST HALO ABUNDANCE CHECK (z={TARGET_Z:.0f})")
     print(f"{'='*65}")
     print(f"   M_ref = {M_ref:.1e} h^-1 M_sun   H0={H0}   OMEGA_M={OMEGA_M}")
-    print(f"   JWST target range: 2–4×10^-4 Mpc^-3 (Labbe et al. 2023)")
+    print(f"   Assumed target range: 2–4×10^-4 Mpc^-3 (no traceable JWST source; not in Labbe et al. 2023)")
     print(f"{'-'*65}")
+
+    def _vs(val, ref):
+        """[D3, 22/09/2026] Computed comparison with the rounded App. E value
+        (replaces a hard-coded "(paper: ... ✓)", which stayed ticked whatever the
+        computed value)."""
+        return f"(App. E: {ref:g}; ratio {val/ref:.3g})"
 
     print(f"\n[1] VARIANCE AT z=15  (sigma slope alpha_eff={ALPHA_EFF})")
     print(f"   sigma_ΛCDM(M_ref, z=0)   : {sig_lcdm_z0:.4f}")
     print(f"   D(z=15) = 1/(1+15)       : {D_z15:.5f}")
-    print(f"   sigma_ΛCDM(M_ref, z=15)  : {sig_lcdm_z15:.4f}  (paper: 0.150  ✓)")
-    print(f"   sigma_ECF = ×B_ECF={B_ECF}: {sig_ecf_z15:.4f}  (paper: 0.217  ✓)")
-    print(f"   nu_ECF = δ_c/σ_ECF       : {DELTA_C/sig_ecf_z15:.3f}   (paper: 7.75   ✓)")
+    print(f"   sigma_ΛCDM(M_ref, z=15)  : {sig_lcdm_z15:.4f}  {_vs(sig_lcdm_z15, 0.150)}")
+    print(f"   sigma_ECF = ×B_ECF={B_ECF}: {sig_ecf_z15:.4f}  {_vs(sig_ecf_z15, 0.217)}")
+    print(f"   nu_ECF = δ_c/σ_ECF       : {DELTA_C/sig_ecf_z15:.3f}   {_vs(DELTA_C/sig_ecf_z15, 7.75)}")
 
     print(f"\n[2] THREE-STAGE HALO NUMBER DENSITY")
     print(f"   Stage 1 — ΛCDM baseline:")
-    print(f"            n_PS_CDM          = {n_lcdm:.2e} Mpc^-3  (paper: 9.9e-29  ✓)")
+    print(f"            n_PS_CDM          = {n_lcdm:.2e} Mpc^-3  {_vs(n_lcdm, 9.9e-29)}")
     print(f"   Stage 2 — ECF linear boost (B_ECF={B_ECF}):")
-    print(f"            n_PS_ECF_linear   = {n_ecf_linear:.2e} Mpc^-3  (paper: 3.5e-14  ✓)")
+    print(f"            n_PS_ECF_linear   = {n_ecf_linear:.2e} Mpc^-3  {_vs(n_ecf_linear, 3.5e-14)}")
     print(f"   Stage 3 — Topological Macro-Knot (f_NL_eff={F_NL_EFF}):")
     print(f"            exponent = nu³×f_NL/6 = {topo_exponent:.2f}")
-    print(f"            n_topo            = {n_topo:.2e} Mpc^-3  (paper: 2.99e-4  ✓)")
+    print(f"            n_topo            = {n_topo:.2e} Mpc^-3  {_vs(n_topo, 2.99e-4)}")
 
     jwst_lo, jwst_hi = 2e-4, 4e-4
     in_range = jwst_lo <= n_topo <= jwst_hi
-    flag = "✓ WITHIN JWST RANGE" if in_range else "⚠ OUTSIDE RANGE"
-    print(f"\n[3] CONFRONTATION WITH JWST (Labbe et al. 2023)")
+    flag = "✓ WITHIN ASSUMED TARGET RANGE" if in_range else "⚠ OUTSIDE RANGE"
+    print(f"\n[3] CONFRONTATION WITH THE ASSUMED TARGET (no traceable JWST source)")
     print(f"   n_topo = {n_topo:.2e} Mpc^-3")
-    print(f"   JWST   = 2–4 × 10^-4 Mpc^-3")
+    print(f"   Target = 2–4 × 10^-4 Mpc^-3 (assumed)")
     print(f"   Status : {flag}")
     print(f"\n   Physical interpretation:")
-    print(f"   Standard PS (even with ECF boost) gives n~10^-14 — far below JWST.")
+    print(f"   Standard PS (even with ECF boost) gives n~10^-14 — far below the target.")
     print(f"   Topological macro-knot seeding (f_NL_eff={F_NL_EFF} < 1, perturbative)")
-    print(f"   bridges the gap and enters the JWST-inferred window.")
+    print(f"   bridges the gap and enters the assumed target window.")
 
     print(f"\n{'='*65}")
     print(f"   NOTE: order-of-magnitude estimate only.")

@@ -15,6 +15,15 @@ Physical content (F1 extended v2, Sec. 2, Fig. 1; Kibble 1961, Sciama 1964):
 
 Output: figure_torsion_geometry_schema.png (300 dpi)
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 import matplotlib

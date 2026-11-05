@@ -1,6 +1,6 @@
 """
 Script: plot_singularity_resolution_v2.py
-Paper:  Foundation I: Unified Resolution of Cosmological Tensions
+Paper:  Foundation I
 Author: Pascal Fichant
 Date:   21/04/2026
 Version: v2 referee
@@ -40,6 +40,15 @@ Changelog v1 -> v2:
     + Legend placed in dedicated lower axes to avoid curve overlap
     + Title as fig.suptitle to avoid plot-area intrusion
 """
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import matplotlib
 matplotlib.use('Agg')
@@ -88,7 +97,8 @@ def plot_singularity_resolution():
 
     fig = plt.figure(figsize=(11, 7.5))
     fig.suptitle(
-        'Singularity Resolution: ECF Primordial Bounce (App. H)',
+        # Title aligned on the F1 Extended caption (fig:bounce, l.3260) — 17/08/2026 audit.
+        'Regularized High-Density Behavior in the ECF (App. H)',
         fontsize=12, fontweight='bold', y=0.97, fontfamily='serif'
     )
 
@@ -117,7 +127,7 @@ def plot_singularity_resolution():
     ax.set_ylim(0, 4.8)
     ax.set_xlabel('Cosmic time t  [schematic, dimensionless]',
                   fontsize=11, fontfamily='serif')
-    ax.set_ylabel('Energy density  (rho / rho_C)',
+    ax.set_ylabel(r'Energy density  $\rho/\rho_C$',
                   fontsize=11, fontfamily='serif')
     ax.grid(True, ls=':', alpha=0.38, lw=0.7)
     ax.tick_params(labelsize=10)
@@ -127,11 +137,14 @@ def plot_singularity_resolution():
     leg_ax.axis('off')
 
     legend_items = [
-        (l1,  'GR:  rho ~ 1/t^2   (standard, singular)'),
-        (l2,  'ECF: rho_C / (1 + rho_C * t^2)   [Poplawski 2010, stiff fluid w=1]'),
-        (l3,  'Cartan density rho_C   (~5.15 x 10^96 kg/m^3,  App. H)'),
+        # 17/08/2026 audit: legend and axis were plain ASCII (rho, ^2, x 10^96)
+        # while every other F1 figure uses mathtext. Rendered properly; the
+        # author's name also restored to Popławski, as in the F1 bibliography.
+        (l1,  r'GR:  $\rho \sim 1/t^2$   (standard, singular)'),
+        (l2,  'ECF: $\\rho_C/(1+\\rho_C t^2)$   [Popławski 2010, stiff fluid $w=1$]'),
+        (l3,  'Cartan density $\\rho_C$   ($\\simeq 5.15\\times10^{96}$ kg m$^{-3}$,  App. H)'),
         (Patch(fc='#e8e8e8', ec='gray'),
-         'Classically forbidden zone  (rho > rho_C)'),
+         'Classically forbidden zone  ($\\rho > \\rho_C$)'),
     ]
 
     for i, (handle, label) in enumerate(legend_items):

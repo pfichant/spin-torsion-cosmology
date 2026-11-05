@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
 # plot_primordial_boost_v2.py
-# Figure figgrowthboost -- Foundation I: Unified Resolution of Cosmological
+# Figure figgrowthboost -- Foundation I
 # Tensions (fichant_ecf_F1_Extended_v2) -- Pascal Fichant, 21/04/2026
 #
 # PHYSICAL CALIBRATION (App. E, Sec. secsoundhorizon, figgrowthboost)
@@ -36,6 +38,12 @@
 # [CLN] All debug comments removed; code is referee-ready
 # =============================================================================
 
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -123,7 +131,8 @@ def plot_primordial_boost(outfile="figure_primordial_boost.png"):
 
     ax.set_xlabel(r'Scale factor $a \times 10^{4}$', fontsize=12, labelpad=4)
     ax.set_ylabel(r'$\delta(a)\,/\,\delta_{\rm init}$', fontsize=14, labelpad=6)
-    ax.set_title('ECF Primordial Boost: Overcoming Radiation Stagnation',
+    # Title aligned on the F1 Extended caption (fig:primordialboost) — 17/08/2026 audit.
+    ax.set_title('Transient Pre-Recombination Boost in the ECF',
                  fontsize=13, fontweight='bold', pad=8)
 
     ax.grid(ls=':', alpha=0.40)

@@ -55,6 +55,15 @@ Output
     LaTeX: \\includegraphics{Figure_K1_Global_Consistency}
            \\label{fig:k1global}   (F1 Appendix K §K.1)
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import matplotlib
 matplotlib.use('Agg')
@@ -106,7 +115,8 @@ fig.subplots_adjust(left=0.09, right=0.62, top=0.88, bottom=0.10)
 ax.plot(ell, dl_l, color='royalblue', ls='--', lw=2.2, alpha=0.85,
         label=r'$\Lambda$CDM  ($H_0=67.4$, $d_{\rm silk}=1400$)')
 ax.plot(ell, dl_e, color='firebrick', lw=2.2,
-        label=r'ECF  ($H_0=73.0$, $d_{\rm silk}=1320$, F1 App. K)')
+        # 17/08/2026 audit: H_0 was displayed rounded to 73.0; canonical is 73.04.
+        label=r'ECF  ($H_0=73.04$, $d_{\rm silk}=1320$, F1 App. K)')
 ax.errorbar(sample_l, sample_dl, yerr=errors,
             fmt='o', color='black', alpha=0.45, ms=3.5, elinewidth=0.9,
             capsize=1.5,

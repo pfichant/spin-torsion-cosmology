@@ -1,7 +1,7 @@
 """
 ================================================================================
 SCRIPT: chi_carre.py  —  v2 (referee-ready)
-Paper:  Foundation I: Unified Resolution of Cosmological Tensions
+Paper:  Foundation I
         (Einstein-Cartan-Friedmann framework)
 Author: Pascal Fichant
 Date:   13/04/2026
@@ -14,9 +14,14 @@ Description:
     Table 3 of the paper and requires the full likelihood pipeline.
 
 Bug fixes vs v1:
-    BUG1 — BAO z=1.48: corrected transcription error (38.4 → 30.85, err 1.1 → 0.80)
-            Source: Hou et al. 2021 (eBOSS DR16 QSO), arXiv:2007.08998
-            (error noted in Table 3 footnote of the paper)
+    BUG1 — BAO z=1.48: target set to the eBOSS DR16 QSO CONSENSUS value
+            D_M/r_d = 30.21 +/- 0.79 (consensus BAO+RSD, eq. 49), Hou et al. 2021, arXiv:2007.08998, MNRAS 500, 1201-1221
+            (consensus of the configuration- and Fourier-space analyses; configuration
+            space alone: 30.66 +/- 0.88). Canonised on the primary source, 22/09/2026.
+            [P3, 22/09/2026 — provenance memo] The values 38.4 +/- 1.1 and 30.85 +/- 0.80
+            carried by earlier versions have NO retrievable source in that paper. 30.85
+            is WITHDRAWN as an untraced historical target; the claim that it corrected a
+            transcription error was self-referential (paper -> this script -> paper).
     BUG2 — S8 sigma: corrected 0.014 → 0.019 to match chi2_LCDM=12.1 in Table 3
             KiDS-1000 reports S8 = 0.766 +0.020/-0.014; effective symmetric 1-sigma ~ 0.019
             Source: Heymans et al. 2021, arXiv:2105.06969
@@ -27,13 +32,22 @@ Observational inputs:
     H0   : SH0ES 2022, H0 = 73.04 ± 1.04 km/s/Mpc (Riess et al. 2022)
     S8   : KiDS-1000 combined, S8 = 0.766 ± 0.019 (Heymans et al. 2021)
     BAO  : BOSS DR12  z=0.38,0.51,0.61  (Alam et al. 2017, arXiv:1607.03155)
-           eBOSS DR16 z=1.48            (Hou et al. 2021,  arXiv:2007.08998)
+           eBOSS DR16 z=1.48            (Hou et al. 2021,  arXiv:2007.08998, consensus)
 
 Model parameters:
     Lambda-CDM : H0=67.4, rs=147.1 Mpc, S8=0.832, Om=0.315  (Planck 2018)
-    ECF        : H0=73.04, rs=135.8 Mpc, S8=0.766, Om=0.315
+    ECF        : H0=73.04, rs=135.65 Mpc, S8=0.766, Om=omega_m/h^2=0.2669  [A-6/A-7, 22/09/2026; was rs=135.8, Om=0.315]
 ================================================================================
 """
+# Last modified: 25/08/2026, 21:49 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy.integrate import quad
@@ -50,24 +64,44 @@ C_LIGHT = 299792.458  # km/s
 
 obs_data = {
     # SH0ES 2022 — Riess et al. 2022, arXiv:2112.04510
-    # sigma = 1.04 → chi2_LCDM = (73.04-67.4)^2/1.04^2 = 29.4 (see note below)
-    # Paper Table 3 reports 30.5; small difference from H0_Planck=67.36 vs 67.4.
-    # We use H0_obs=73.04, sigma=1.0 giving chi2=31.8 ~ 30.5 within rounding.
+    # chi2_LCDM = (73.04 - 67.4)^2 / 1.04^2 = 29.41, with the values declared
+    # throughout F1 (H0_LCDM = 67.4, H0_obs = 73.04, sigma = 1.04).
+    #
+    # UNRESOLVED DISCREPANCY (audit of 17/08/2026). Table 4 of F1 reports 30.5
+    # for this entry. That number is reproduced by no declared parameter set:
+    #   H0_LCDM = 67.36, sigma = 1.04  -> 29.83
+    #   H0_LCDM = 67.4,  sigma = 1.00  -> 31.81
+    #   30.5 would have required sigma = 1.021, or H0_LCDM = 67.296 --
+    #   neither of which appears anywhere in the corpus.
+    # An earlier version of this comment claimed the first as a "small
+    # difference" and the second as "~30.5 within rounding"; neither holds,
+    # and the second contradicted the code below, which uses sigma = 1.04.
+    # That comment has been withdrawn rather than repaired.
+    #
+    # RESOLVED 18/08/2026: Table 4 has been aligned on 29.41 throughout F1
+    # Extended and F1 Short. Two defects were fixed together -- the H0 entry
+    # (30.5 was reproduced by no declared parameter set) and the total, which
+    # omitted the eBOSS DR16 row. The published figures are now the sum of
+    # the six rows: Delta chi2 = -39.5, Delta AIC = -31.5, Delta BIC = -7.0.
+    # The Kass-Raftery conclusion is unchanged (|Delta BIC| = 8.1 > 6, still
+    # "strong evidence"), and every row is now traceable to a script.
     'H0': {'val': 73.04, 'err': 1.04,
            'ref': 'Riess et al. 2022, arXiv:2112.04510'},
 
     # KiDS-1000 — Heymans et al. 2021, arXiv:2105.06969
     # Asymmetric 1-sigma: +0.020 / -0.014; effective symmetric sigma ~ 0.019
-    # chi2_LCDM = (0.832-0.766)^2 / 0.019^2 = 12.07  (Table 3: 12.1)  ✓
+    # chi2_LCDM = (0.832-0.766)^2 / 0.019^2 = 12.07  (Foundation I, three occurrences)  ✓
     'S8': {'val': 0.766, 'err': 0.019,
            'ref': 'Heymans et al. 2021, arXiv:2105.06969'},
 
     # BAO — BOSS DR12 (Alam 2017) + eBOSS DR16 QSO (Hou 2021)
-    # CORRECTION BUG1: z=1.48 corrected from (38.4, 1.1) to (30.85, 0.80)
+    # [Q1, 22/09/2026; corrected 12/10/2026] z=1.48 set to the eBOSS DR16 QSO consensus (30.21, 0.79; 30.22 used 22/09-12/10/2026 by mistake),
+    # canonised on the primary source Hou et al. 2021; 38.4 +/- 1.1 and 30.85 +/- 0.80
+    # are untraced historical targets (WITHDRAWN).
     'BAO': {
         'z':   np.array([0.38,  0.51,  0.61,  1.48]),
-        'val': np.array([10.23, 13.36, 15.45, 30.85]),   # v1 had 38.4 at z=1.48
-        'err': np.array([0.17,  0.21,  0.22,  0.80]),    # v1 had 1.1
+        'val': np.array([10.23, 13.37, 15.61, 30.21]),   # untraced before: 38.4, then 30.85 ; [04/10/2026, decision 7-compl] z=0.51 13.36->13.37, z=0.61 15.45->15.61 (Alam+2017 consensus 1975.22 and 2306.68 Mpc / r_d,fid 147.78; primary table to be confirmed)
+        'err': np.array([0.166, 0.206, 0.251, 0.79]),    # untraced before: 1.1, then 0.80   # [05/10/2026, ALAM-ERR] BOSS DR12: stat (+) syst, Alam+2017 Table 7 / 147.78 (was 0.17, 0.21, 0.22 = stat only at z=0.61)
         'ref': ['Alam et al. 2017 (DR12)', 'Alam et al. 2017 (DR12)',
                 'Alam et al. 2017 (DR12)', 'Hou et al. 2021 (DR16 QSO)']
     }
@@ -77,17 +111,26 @@ obs_data = {
 # 3. MODEL PARAMETERS
 # ─────────────────────────────────────────────────────────────────────────────
 
+# [E2, 22/09/2026 -- DEC-A7-POST-07] The 'ECF' entry S8 = 0.766 below is the
+# KiDS-1000 TARGET adopted as the model value of the historical chi2 budget,
+# not an ECF prediction; the gamma_spin = 0.3116 behind it is a HISTORICAL
+# CALIBRATION (withdrawn as canonical post-A-7). The chi2/AIC/BIC produced
+# here are HISTORICAL and are NOT recomputed (DEC-A7-POST-07 §9).
 MODELS = {
     'LCDM': {'H0': 67.4,  'rs': 147.1, 'S8': 0.832, 'Om': 0.315,
              'label': 'Planck 2018 Lambda-CDM'},
-    'ECF':  {'H0': 73.04, 'rs': 135.8, 'S8': 0.766, 'Om': 0.315,
+    'ECF':  {'H0': 73.04, 'rs': 135.65, 'S8': 0.766, 'Om': (0.02237+0.1200)/0.7304**2,  # [A-6/A-7 22/09/2026]
              'label': 'ECF (Einstein-Cartan Framework)'},
 }
 
-# chi2_S8 from MCMC posterior (Table 3, Paper)
-# chi2_ECF(S8)=1.2 is NOT zero: it reflects the posterior distribution over
-# the full MCMC chain, not a point evaluation at S8_ECF=0.766.
-CHI2_S8_ECF_MCMC = 1.2   # from Table 3
+# chi2_S8 under option A (applied 24/08/2026).
+# The DIVISIVE form of S8_ECF (eq. l.1209 of Foundation I, and
+# script_06_S8_resolution.py) makes the ECF prediction coincide with the
+# measurement, so this term vanishes.
+# The previous value 1.2 was defended here as an MCMC posterior spread;
+# that justification is withdrawn with the value, so that a later audit
+# does not find a reasoned defence of a superseded number.
+CHI2_S8_ECF_MCMC = 0.0   # option A
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. PHYSICS FUNCTIONS
@@ -165,10 +208,20 @@ if __name__ == "__main__":
 
     # Paper Table 3 reference values (including Planck CMB)
     paper_ref = {
-        'H0':    {'lcdm': 30.5,   'ecf': 0.1},
-        'S8':    {'lcdm': 12.1,   'ecf': 1.2},
+        # 30.5 is the value printed in Table 4; 29.41 is what the declared
+        # parameters give. Both are carried so the gap stays visible.
+        'H0':    {'lcdm': 29.41,  'ecf': 0.1},   # matches Table 4 since 18/08/2026
+        # 12.07, not 12.1: ((0.832-0.766)/0.019)^2 = 12.0665, the value
+        # Foundation I carries three times. 12.1 is a rounding that no
+        # paper prints and that shifts the LCDM total by +0.03.
+        'S8':    {'lcdm': 12.07,  'ecf': 0.0},   # option A, 24/08/2026
         'BAO':   {'lcdm':  9.4,   'ecf': 9.5},
-        'TOTAL': {'lcdm': 2814.1, 'ecf': 2774.6},
+        # Sum of the six rows of Table 4 with chi2_ECF(S8) = 0:
+        #   LCDM 2345.2+420.1+6.2+3.2+29.41+12.07 = 2816.18
+        #   ECF  2347.0+420.1+6.2+3.3+ 0.10+ 0.0 = 2776.70
+        # The former 2814.1/2774.6 also gave -39.5, but from totals
+        # matching no row of the budget (gaps +2.11 and +3.30).
+        'TOTAL': {'lcdm': 2816.18, 'ecf': 2776.70},
     }
 
     print(SEP)
@@ -185,7 +238,7 @@ if __name__ == "__main__":
           f"{'pred_ECF':>9}  {'chi2_LCDM':>10}  {'chi2_ECF':>9}  ref")
     for r_l, r_e in zip(bao_lcdm, bao_ecf):
         z_, obs_, err_ = r_l[0], r_l[1], r_l[2]
-        flag = " *** CORRECTED (was 38.4, err 1.1)" if abs(z_-1.48) < 0.01 else ""
+        flag = " *** eBOSS DR16 consensus (untraced before: 38.4, then 30.85)" if abs(z_-1.48) < 0.01 else ""
         print(f"    {z_:>5.2f}  {obs_:>6.2f}  {err_:>5.2f}  "
               f"{r_l[3]:>10.3f}  {r_e[3]:>9.3f}  "
               f"{r_l[4]:>10.3f}  {r_e[4]:>9.3f}{flag}")
@@ -201,24 +254,35 @@ if __name__ == "__main__":
     ]
     for r in rows:
         print(f"    {r[0]:<12} {r[1]:>12.2f} {r[2]:>18.1f} {r[3]:>10.3f} {r[4]:>16.1f} "
-              f"{r[1]-r[3]:>8.2f}")
+              f"{r[1]-r[3]:>8.1f}")
 
     print("\n>>> IMPORTANT SCOPE NOTE")
     print(f"    This script covers only the TENSION SECTORS (H0+S8+BAO).")
     print(f"    Full chi2 from paper: LCDM={paper_ref['TOTAL']['lcdm']:.1f},  "
-          f"ECF={paper_ref['TOTAL']['ecf']:.1f},  Delta={paper_ref['TOTAL']['lcdm']-paper_ref['TOTAL']['ecf']:.1f}")
-    print(f"    Planck CMB terms (high-ℓ + low-ℓ + lensing) contribute ~2767 to both totals")
-    print(f"    and are NEUTRAL: Delta_chi2(Planck) ≈ +1.8  (near-zero, see Table 3)")
-    print("    BAO chi2 (script) < BAO chi2 (paper): script uses diagonal DM/rs only;")
-    print("    paper uses full BOSS DR12 covariance (DM+DH+cross-terms, Alam 2017 Eq.10)")
-    print("    => BAO sector is NEUTRAL (Delta=0) for both models: this does not affect Delta_chi2=-39.5")
+          f"ECF={paper_ref['TOTAL']['ecf']:.1f},  Delta={paper_ref['TOTAL']['lcdm']-paper_ref['TOTAL']['ecf']:.1f}"
+          f"  (historical)")
+    # [D3, 22/09/2026 -- DEC-A7-POST-02/05] Former text declared the BAO sector
+    # "NEUTRAL (Delta=0)" and "BAO chi2 (script) < BAO chi2 (paper)": both false
+    # after A-7. The statement is now computed from the partial budget above.
+    print("    [historical values, Omega_m = 0.315 -- NOT RECOMPUTED: Boltzmann/CLASS-EC dependency missing, PO-F3-9]")
+    print(f"    Planck CMB terms (high-ℓ + low-ℓ + lensing) contribute ~2767 to both totals;")
+    print(f"    Delta_chi2(Planck) ≈ +1.8 in that historical budget (NOT RECOMPUTED after A-7)")
+    _d_bao = c2_b_ecf - c2_b_lcdm
+    _verdict = ("ECF disfavoured" if _d_bao > 1.0 else "ECF favoured" if _d_bao < -1.0 else "near-neutral")
+    print(f"    BAO (script, diagonal DM/rs, {len(bao_ecf)} bins): chi2_LCDM = {c2_b_lcdm:.2f}, "
+          f"chi2_ECF = {c2_b_ecf:.2f}, chi2_ECF - chi2_LCDM = {_d_bao:+.1f}  -> {_verdict}")
+    print(f"    (paper: {paper_ref['BAO']['lcdm']} / {paper_ref['BAO']['ecf']} with the full BOSS DR12 covariance,"
+          f" DM+DH+cross-terms, Alam 2017 Eq.10 -- not reproduced here)")
+    print("    => its propagation to the global Delta_chi2 is NOT RECOMPUTED (DEC-A7-POST-02)")
     
     print("\n>>> INTERNAL CONSISTENCY CHECKS")
     assert abs(c2_s_lcdm - paper_ref['S8']['lcdm']) < 0.5, f"S8 LCDM chi2 mismatch: {c2_s_lcdm:.2f}"
-    assert abs(c2_h_lcdm - paper_ref['H0']['lcdm']) < 3.0, f"H0 LCDM chi2 mismatch: {c2_h_lcdm:.2f}"
+    # Tolerance tightened from 3.0 to 0.05: the former was wide enough to
+    # hide the 1.1 gap with Table 4 instead of reporting it.
+    assert abs(c2_h_lcdm - paper_ref['H0']['lcdm']) < 0.05, f"H0 LCDM chi2 mismatch: {c2_h_lcdm:.2f}"
     bao_148 = bao_lcdm[3]
-    assert abs(bao_148[1] - 30.85) < 0.01, f"BAO z=1.48 val still wrong: {bao_148[1]}"
-    print(f"    S8 chi2 LCDM = {c2_s_lcdm:.2f}  (target 12.1, tol 0.5)  OK")
-    print(f"    H0 chi2 LCDM = {c2_h_lcdm:.2f}  (target 30.5, tol 3.0)  OK")
-    print(f"    BAO z=1.48   = {bao_148[1]:.2f}  (corrected from 38.4)   OK")
+    assert abs(bao_148[1] - 30.21) < 0.01, f"BAO z=1.48 val still wrong: {bao_148[1]}"
+    print(f"    S8 chi2 LCDM = {c2_s_lcdm:.2f}  (target 12.07, tol 0.5)  OK")
+    print(f"    H0 chi2 LCDM = {c2_h_lcdm:.2f}  (declared parameters; matches Table 4)  OK")
+    print(f"    BAO z=1.48   = {bao_148[1]:.2f}  (eBOSS DR16 QSO consensus, Hou+2021)   OK")
     print(SEP)

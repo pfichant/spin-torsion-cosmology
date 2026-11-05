@@ -23,15 +23,25 @@ With the calibration g_CS_eff = beta_obs / (S_ref * I_torsion) the model
 reproduces beta_obs = 0.35 deg by construction; the non-trivial content
 is the consistency of the required S_ref with the residual torsion sector.
 
-Numerical values (alpha=0, z_LSS=1100):
-    I_torsion = 3.1177
-    S_ref     = 4.3237
+Numerical values (alpha=0, z_LSS=1100; ECF background Omega_m = omega_m/h_ECF^2,
+Omega_r = omega_r/h_ECF^2 since D3 22/09/2026 -- were 3.1177 and 4.3237 at 0.315/9.0e-5):
+    I_torsion = 3.3320
+    S_ref     = 4.0456
     g_CS_eff  = 0.02596 deg/unit
     beta_th   = 0.3500 deg
 
 Dependencies : numpy, scipy
 Runtime      : < 1 s
 """
+# Last modified: 19/08/2026, 09:37 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 import numpy as np
 from scipy.integrate import quad
@@ -44,8 +54,13 @@ beta_err = 0.14    # [deg]  1-sigma
 z_LSS    = 1100.0  # Last scattering surface
 
 # Cosmological background (Foundation I Table 2)
-Omega_m = 0.315
-Omega_r = 9.0e-5
+# [D3, 22/09/2026 -- DEC-A7-POST-05, condition 3] This IS the ECF background:
+# Foundation I Table 2 now lists Omega_m = omega_m/h^2 = 0.267 (A-7). Same rule
+# as compute_fsigma8_ecf.py: Omega_i = omega_i/h_ECF^2 (h_ECF = 0.7304) for matter
+# AND radiation, omega_r = omega_g [1 + 7/8 (4/11)^(4/3) N_eff] (script_01, A-6).
+# Was Omega_m = 0.315, Omega_r = 9.0e-5 (Planck-h values).
+Omega_m = (0.02237 + 0.1200)/0.7304**2                              # 0.266868
+Omega_r = 2.4728e-5*(1 + (7/8)*(4/11)**(4/3)*3.046)/0.7304**2       # 7.8417e-5
 Omega_L = 1.0 - Omega_m
 
 # Residual torsion model
@@ -124,7 +139,20 @@ if __name__ == "__main__":
     I_check = S_ref * I_torsion
     match_I = abs(I_check - I_eff_paper) < 0.01
     print(f"    S_ref * I_torsion = {I_check:.4f}  (paper: {I_eff_paper}) --> {'MATCH' if match_I else 'MISMATCH'}")
+    print("    [27/09/2026, retour Corpus] This product is I_eff_paper by construction"
+          " (S_ref is DEFINED as I_eff_paper/I_torsion), so it cannot fail regardless of"
+          " Omega_m/Omega_r. It is not an independent test -- see the check below.")
     print(f"    alpha = {alpha}  (topological background, constant in redshift)")
+
+    print("\n[D-bis] INDEPENDENT CHECK ON I_torsion ITSELF (not by construction)")
+    I_torsion_canon = 3.3320  # canonical value, DEC-A7-POST-05 (Omega_r = omega_r/h_ECF^2)
+    match_I_torsion = abs(I_torsion - I_torsion_canon) < 0.001
+    print(f"    I_torsion computed = {I_torsion:.4f}  (canonical: {I_torsion_canon})"
+          f"  --> {'MATCH' if match_I_torsion else 'MISMATCH -- Omega_m/Omega_r likely reverted'}")
+    S_ref_canon = 4.0456
+    match_S_ref = abs(S_ref - S_ref_canon) < 0.001
+    print(f"    S_ref     computed = {S_ref:.4f}  (canonical: {S_ref_canon})"
+          f"  --> {'MATCH' if match_S_ref else 'MISMATCH'}")
     print(f"    LiteBIRD forecast: sigma(beta) ~ 0.1 deg  --> ECF prediction testable")
 
     print(f"\n{sep}")

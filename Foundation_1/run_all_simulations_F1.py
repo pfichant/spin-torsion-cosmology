@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 =============================================================================
-Project     : Foundation I: The Metric Universe
+Project     : Foundation I
 Script      : run_all_simulations_F1.py (v2)
 Author      : Pascal Fichant
 Date        : April 2026
@@ -20,12 +20,18 @@ Note:
     Windows cp1252 terminals. All figures are centralized in figures_output/.
 =============================================================================
 """
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 import os
 import sys
 import io
 import subprocess
 import shutil
 from datetime import datetime
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 
 # ---------------------------------------------------------------------------
 # Force UTF-8 for this process (Windows cp1252 console)
@@ -62,6 +68,41 @@ def setup_environment():
             os.makedirs(folder)
             print(f"[INIT] Created directory: {folder}")
 
+    # [ADDED 15/09/2026, on Pascal's suggestion] Clear image artefacts left in
+    # the script folders by the PREVIOUS run.
+    #
+    # Since centralisation was changed to copy-without-delete, the sources pile
+    # up. Clearing them at the START rather than the end is the safer order:
+    # nothing has been produced yet, so nothing can be lost -- and whatever
+    # remains afterwards demonstrably came from THIS run.
+    #
+    # Data files are never touched: .csv, .json and the data/ and output/
+    # subfolders are the chain's INPUTS.
+    IMAGE_EXT = (".png", ".mp4", ".gif", ".jpg", ".jpeg", ".svg",
+                 ".mp3", ".webm", ".avi", ".mov", ".webp", ".bmp", ".tif", ".tiff")
+    cleared = 0
+    for folder_name in STRUCTURE:
+        folder_path = os.path.join(CODE_BASE, folder_name)
+        if not os.path.isdir(folder_path):
+            continue
+        # Walk the subfolders too: some scripts drop figures into output/ or
+        # data/ alongside the CSVs. The criterion is the EXTENSION, not the
+        # folder -- .csv and .json are never touched wherever they sit.
+        # _generated/ is skipped: those frames are the scripts' own working
+        # material, not stale artefacts.
+        for root, dirs, files in os.walk(folder_path):
+            dirs[:] = [d for d in dirs if d != "_generated"]
+            for f in files:
+                if not f.lower().endswith(IMAGE_EXT):
+                    continue
+                try:
+                    os.remove(os.path.join(root, f))
+                    cleared += 1
+                except Exception as exc:
+                    print(f"  [CLEAN] could not remove {f}: {type(exc).__name__}")
+    if cleared:
+        print(f"[INIT] Cleared {cleared} stale image(s) from the script folders"
+              f" (data files untouched).")
 
 def run_script(script_path, log_file):
     """
@@ -155,22 +196,68 @@ def main():
                     success_count += 1
 
         # --- CENTRALIZE FIGURES --------------------------------------------
-        print("\n>>> CENTRALIZING FIGURES → figures_output/ ...")
+        # CORRECTED 14/09/2026. The previous version copied then removed each
+        # file, and swallowed any exception into a silent counter. On a run
+        # where the destination was unavailable, all 27 copies failed with
+        # WinError 3 and the pipeline reported "Figures collected : 0" -- a
+        # result indistinguishable from having produced nothing at all.
+        #
+        # Three changes: the destination is proved writable before starting,
+        # sources are never deleted, and every failure is named on screen.
+        print("\n>>> CENTRALIZING FIGURES \u2192 figures_output/ ...")
         log_file.write("\n>>> FIGURE CENTRALIZATION\n")
         moved_count = 0
+        failures = []
 
-        for root, dirs, files in os.walk(CODE_BASE):
-            for file in files:
-                if file.lower().endswith((".png", ".pdf", ".jpg", ".jpeg")):
-                    src = os.path.join(root, file)
-                    dst = os.path.join(FIG_DIR, file)
-                    try:
-                        shutil.copy2(src, dst)
-                        os.remove(src)
-                        moved_count += 1
-                        log_file.write(f"  [MOVED] {file}\n")
-                    except Exception as exc:
-                        log_file.write(f"  [COPY ERROR] {file}: {exc}\n")
+        # Prove the destination is really writable. makedirs can succeed on a
+        # placeholder folder that then refuses the write.
+        dest_ok = True
+        try:
+            os.makedirs(FIG_DIR, exist_ok=True)
+            probe = os.path.join(FIG_DIR, ".write_probe")
+            with open(probe, "w") as fh:
+                fh.write("ok")
+            os.remove(probe)
+        except Exception as exc:
+            dest_ok = False
+            msg = (f"  [FATAL] Cannot write into {FIG_DIR}\n"
+                   f"          {type(exc).__name__}: {exc}\n"
+                   f"          Figures stay where they were produced, under\n"
+                   f"          02_Scientific_Code/. Nothing is lost -- collect\n"
+                   f"          them from there, or run:\n"
+                   f"              python collect_figures_F1.py <other_path>")
+            print(msg)
+            log_file.write(msg + "\n")
+
+        if dest_ok:
+            for root, dirs, files in os.walk(CODE_BASE):
+                # [ADDED 15/09/2026, on Pascal's remark] Skip _generated/ :
+                # animation frames are simulation intermediates, not figures of
+                # the paper. Two scripts write hundreds of them there --
+                # deliberately, in their own subfolder -- and the recursive walk
+                # was hauling all of them into figures_output, where they
+                # outnumbered the real figures three to one. None appears in any
+                # PDF; they exist only to be assembled into a GIF or MP4.
+                dirs[:] = [d for d in dirs if d != "_generated"]
+                for file in files:
+                    if file.lower().endswith((".png", ".pdf", ".jpg", ".jpeg")):
+                        src = os.path.join(root, file)
+                        dst = os.path.join(FIG_DIR, file)
+                        try:
+                            shutil.copy2(src, dst)
+                            moved_count += 1
+                            log_file.write(f"  [COPIED] {file}\n")
+                        except Exception as exc:
+                            failures.append((file, type(exc).__name__, str(exc)[:70]))
+                            log_file.write(f"  [COPY ERROR] {file}: {exc}\n")
+
+            if failures:
+                print(f"\n  {len(failures)} file(s) could not be copied:")
+                for f, kind, m in failures[:8]:
+                    print(f"    {f:44} {kind}: {m}")
+                if len(failures) > 8:
+                    print(f"    ... and {len(failures) - 8} more, see the log")
+                print("  Sources are intact under 02_Scientific_Code/.")
 
         # --- SUMMARY -------------------------------------------------------
         duration = datetime.now() - start_time
