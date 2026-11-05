@@ -21,7 +21,7 @@
 - **Limit of the calibrated spin branch (23/10/2026).** The PIT Letter quotes Ω_spin^peak = 0.093 only as an observational input of Foundation I. It now states that this calibration needs the a⁻⁶ law up to z ~ 10⁵ and that BBN excludes the same branch at 1 MeV (Foundation I; PO-ECF-BBN-SPIN, open). The sentence claiming that QCD physics fixes the value without a free parameter carries a dated correction (16/10/2026).
 - **References checked at source (22/10/2026).** Nine references corrected. The paragraph formerly titled « Independent corroboration » no longer presents Ivanov & Wellenzohn and Yun & Lee as obtaining the same result independently (the first treats torsion as an external field; the second is a holographic dark-energy model whose Hubble-cutoff variant is excluded in Einstein–Cartan cosmology); « Planck+BAO » added for Ω_K; the vacuum-energy discrepancy reads ≈ 55 (electroweak scale) to ≈ 122 (cutoff) orders of magnitude, following Martin (2012).
 
-- **Reproduction script and directory names (26/10/2026).** A single script, `run_all_simulations_PIT.py`, now runs the two scripts of the Letter and can recompile it (section « Reproducing the figure and the check »). The directory name in the structure and in the commands is `PIT_Letter/` (it read `Foundation_PIT/`, which is not the name in the repository), and the compile section no longer lists `bibtex`: the bibliography is inside the `.tex`; `pip install -r requirements.txt` is replaced by the explicit list (the repository has no `requirements.txt`). No change to the paper or to its numbers.
+- **Reproduction script (26/10/2026).** A single script, `run_all_simulations_PIT.py`, now runs the two scripts of the Letter (section « Reproducing the figure and the check »). The directory name in the structure and in the commands is `Foundation_PIT/`, the name in the repository; `pip install -r requirements.txt` is replaced by the explicit list (the repository has no `requirements.txt` for v9; `requirements_PIT.txt` dates from v8). The LaTeX source is not distributed in this repository: the Letter is the deposited PDF. No change to the paper or to its numbers.
 - **Published (26/10/2026).** v9 was deposited on Zenodo as a new version of the concept record, version doi:10.5281/zenodo.23674598. The deposited PDF is the 26/10/2026 compilation; its text is identical to the 23/10/2026 compilation of the kit, except the « Dated: » line (`\today`).
 
 The version register (§5, dated entries 20–24/10/2026) is the authority for each change; where this README and the register differ, the register and the PDF prevail.
@@ -156,17 +156,16 @@ the TIP.
 
 ```text
 spin-torsion-cosmology/
-├── PIT_Letter/
+├── Foundation_PIT/
 │   ├── 01_Paper_Publication/
-│   │   ├── fichant_ecf_PIT_Letter_v9.tex
-│   │   └── fichant_ecf_PIT_Letter_v8Notes.bib
+│   │   └── fichant_ecf_PIT_Letter_Preprint_v9.pdf   (deposited on Zenodo, 26/10/2026)
 │   ├── 02_Scientific_Code/
 │   │   ├── A_Core_Calculations/
 │   │   │   └── verify_flrw_curvature_degeneracy.py
 │   │   └── B_Paper_Plots/
 │   │       ├── plot_Cosmic_History_Omegas.py
 │   │       └── Figure_CosmicHistory_Omegas_PIT.png   (written here when the script is run)
-│   ├── run_all_simulations_PIT.py     (runs the two scripts; --compile recompiles the Letter)
+│   ├── run_all_simulations_PIT.py     (runs the two scripts)
 │   └── README_PIT_v9.md
 ```
 
@@ -174,7 +173,7 @@ The two scripts are deliberate copies of the Foundation I original
 (`plot_Cosmic_History_Omegas.py`, here with `PAPER = "PIT"`) and of the
 Foundation II original (`verify_flrw_curvature_degeneracy.py`, in
 `Foundation_2/02_Scientific_Code/A_Core_Calculations/`), so that the Letter can
-be reproduced from `PIT_Letter/` alone.
+be reproduced from `Foundation_PIT/` alone.
 
 ---
 
@@ -184,19 +183,18 @@ One command runs both scripts of the Letter, writes `logs/run_PIT.log` and copie
 
 ```bash
 pip install numpy scipy matplotlib sympy
-cd PIT_Letter/
+cd Foundation_PIT/
 python run_all_simulations_PIT.py             # the two scripts
-python run_all_simulations_PIT.py --compile   # + recompiles the Letter in _build_PIT/ (pdflatex x3)
 ```
 
-Expected: `2 script(s) OK, 0 failure(s)`; with `--compile`, 6 pages and 0 LaTeX errors. The compiled text is identical to the deposited PDF except the « Dated: » line, which follows the compile date (`\today`). The script modifies nothing in `01_Paper_Publication/`. Exit code 0 if everything passes, 1 otherwise. The two scripts can also be run one by one, as below.
+Expected: `2 script(s) OK, 0 failure(s)`. The script modifies nothing in `01_Paper_Publication/`. Exit code 0 if everything passes, 1 otherwise. The two scripts can also be run one by one, as below.
 
 ### Reproducing the Figure
 
 
 ```bash
 pip install numpy scipy matplotlib sympy
-cd PIT_Letter/02_Scientific_Code/B_Paper_Plots/
+cd Foundation_PIT/02_Scientific_Code/B_Paper_Plots/
 python plot_Cosmic_History_Omegas.py
 ```
 
@@ -229,22 +227,9 @@ perturbations or from non-minimal torsion–curvature couplings.
 
 ```bash
 pip install sympy
-cd PIT_Letter/02_Scientific_Code/A_Core_Calculations/
+cd Foundation_PIT/02_Scientific_Code/A_Core_Calculations/
 python verify_flrw_curvature_degeneracy.py
 ```
-
----
-
-## Compile
-
-```bash
-cd PIT_Letter/01_Paper_Publication/
-pdflatex fichant_ecf_PIT_Letter_v9.tex
-pdflatex fichant_ecf_PIT_Letter_v9.tex
-pdflatex fichant_ecf_PIT_Letter_v9.tex   # three passes; the bibliography is in the .tex, no bibtex step
-```
-
-Requires `revtex4-2` (standard APS distribution).
 
 ---
 
