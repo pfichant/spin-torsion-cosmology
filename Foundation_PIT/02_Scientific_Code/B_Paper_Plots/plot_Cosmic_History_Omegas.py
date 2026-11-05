@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
-#  plot_Cosmic_History_Omegas_v3.py
+#  plot_Cosmic_History_Omegas.py   (F1 destination; PAPER switch below)
 #  ECF Framework — Cosmic History: Evolution of Fractional Density Parameters
 # =============================================================================
 #
@@ -8,7 +10,7 @@
 #  -------
 #  This script reproduces Figure [X] of:
 #    - Fichant (2026), "The Topological Invariance Principle" (PIT Letter, PRL)
-#    - Fichant (2026), "Foundation I: The Metric Universe" (F1 Extended, PRD)
+#    - Fichant (2026), "Foundation I" (F1 Extended, PRD)
 #
 #  The figure shows the temporal evolution of fractional energy densities
 #  Omega_i(a) in the ECF (Einstein-Cartan Framework), including the transient
@@ -47,6 +49,12 @@
 #  https://github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
 
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')          # non-interactive backend for server/batch use
@@ -130,7 +138,7 @@ def calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0):
     total density (without spin) evaluated at a_p.
 
     NOTE: the naive approximation Os0 ~ alphaspin * Or0 * a_p^2 is only
-    valid when Omega_matter(a_peak) << 1, which does NOT hold at z=7500
+    valid when Omega_matter(a_peak) << 1, which does NOT hold at z=5600
     (Omega_m ~ 0.32 at that epoch). This corrected formula is used instead.
 
     Parameters
@@ -139,7 +147,7 @@ def calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0):
         Target Omega_spin at the peak (= 0.093, calibrated in F1 Sec. 5,
         cited as Eq. 7 in the PIT Letter).
     zpeak : float
-        Redshift of maximum torsion density (= 7500, prior to recombination).
+        Spin sector normalisation redshift (= 5600, solver anchor).
     Om0, Or0, OL0 : float
         Present-day matter, radiation, and Lambda density parameters (Planck 2018).
 
@@ -211,17 +219,23 @@ def build_density_params(Om0, Or0, OL0, Os0, a):
 
 
 # =============================================================================
-#  COSMOLOGICAL PARAMETERS  (Planck 2018, TT,TE,EE+lowE, Table 2)
+#  COSMOLOGICAL PARAMETERS  -- ECF background, internal closure A-7
+#  (Omega_i = omega_i / h^2 with Planck 2018 physical densities and h = 0.7304)
+#  [07/10/2026, decision A: the PIT caption describes "the ECF model"; the
+#   former Planck-h values 0.315 / 9.0e-5 are HISTORICAL here. The F1 copy of
+#   this script keeps the Planck convention, stated in the F1 caption
+#   (DEC-A7-POST-05, 22/09/2026).]
 # =============================================================================
-Om0       = 0.315    # Omega_matter,0    (baryons + CDM)
-Or0       = 9.0e-5   # Omega_radiation,0 (photons + massless neutrinos)
+Om0       = 0.14237 / 0.7304**2   # = 0.2669, Omega_matter,0 (baryons + CDM)
+Or0       = 4.1834e-5 / 0.7304**2 # = 7.8417e-5, Omega_radiation,0 (photons + massless neutrinos)
 OL0       = 1.0 - Om0 - Or0   # Omega_Lambda,0 (flat LCDM baseline)
 
 # ECF-specific parameter: spin density peak amplitude
 # Calibrated by MCMC against Planck + SH0ES + BOSS/eBOSS + KiDS-1000
 # (F1 Sec. 5, Table II; cited as Eq. 7 in PIT Letter)
 alphaspin = 0.093    # Omega_spin(a_peak) = 0.093  [dimensionless]
-zpeak     = 7500     # redshift at peak torsion density (pre-recombination)
+zpeak     = 5600     # spin sector normalisation redshift (solver anchor)
+#           [CORRECTED 05/09/2026, I82] was 7500
 
 # Compute Os0 using the corrected (non-naive) calibration formula
 Os0 = calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0)
@@ -282,11 +296,16 @@ ax1.plot(a_check, Oms_c, color=Cs,          lw=2.5,
 # Shaded area under the torsion curve to make the transient phase visible
 ax1.fill_between(a_check, 0, Oms_c, color=Cs, alpha=0.18)
 
-# Vertical dotted line at the torsion peak (z = 7500)
+# Vertical dotted line at the spin normalisation redshift (z = 5600)
 ax1.axvline(ap, color='gray', ls=':', lw=1.0, alpha=0.7)
 
 # Floating labels for era identification (avoids legend clutter)
 fs_ann = 7 if PAPER == "PIT" else 8
+# [06/09/2026] Label added -- the line existed but carried no value,
+# leaving the anchor invisible on the figure itself even though the
+# whole calibration hinges on it (I82, z_ref=5600 vs the older z=7500).
+ax1.text(ap, 1.095, rf'$z={zpeak:.0f}$', fontsize=fs_ann, ha='center',
+         va='top', color='gray', style='italic')
 ax1.text(3.0e-6, 0.52,  'Torsion',   color='#c0392b', fontsize=fs_ann,
          ha='center', fontweight='bold')
 ax1.text(1.0e-4, 0.82,  'Radiation', color='#d35400', fontsize=fs_ann,
@@ -308,20 +327,26 @@ ax1.grid(True, which='both', ls=':', lw=0.5, alpha=0.5)
 
 # Cosmological era annotations at the top of the panel
 fs_era = 6 if PAPER == "PIT" else 7
+# [18/08/2026 audit] Epoch markers corrected. BBN was placed at a = 2e-4,
+# whereas T ~ 1 MeV corresponds to a = 2.4e-10 -- six orders earlier, i.e.
+# outside this panel. LSS and EQ were also misplaced AND in the wrong order:
+# matter-radiation equality (a = 2.9e-4) precedes recombination (a = 9.0e-4),
+# not the reverse. BBN is dropped rather than relabelled: it falls off the
+# plotted range, and showing it inside the panel is what made the spin sector
+# appear subdominant at nucleosynthesis (see F1 Sec. 2, corrected 18/08/2026).
 for xa, label in [(3e-6,  'Bounce'),
-                  (2e-4,  'BBN'),
-                  (6e-4,  'LSS'),
-                  (2e-3,  'EQ'),
+                  (2.9e-4, 'EQ'),
+                  (9.0e-4, 'LSS'),
                   (3e-1,  'Today')]:
     ax1.text(xa, 1.04, label, fontsize=fs_era, ha='center',
              color='#555555', style='italic')
 
-# ── Bottom panel: TIP numerical verification (Omega_k = 0) ───────────────
+# ── Bottom panel: Omega_k, identically zero once k = 0 (closure identity) ─
 ax2 = plt.subplot(gs[1])
 
 ax2.plot(a_check, Omk_c, color=Ck, lw=1.8,
          label=r'$\Omega_k$ Curvature')
-# Reference line at Omega_k = 0: the TIP invariant
+# Reference line at Omega_k = 0 (the postulated exact spatial flatness)
 ax2.axhline(0.0, color='black', ls='-', lw=0.8, alpha=0.4)
 
 ax2.set_xscale('log')
