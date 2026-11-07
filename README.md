@@ -16,16 +16,6 @@ Licence CC BY 4.0 · Pascal Fichant, independent researcher, Montpellier · `p.f
 | [`Foundation_3/`](Foundation_3) | *Foundation III — Cosmological Physics* | [10.5281/zenodo.22359982](https://doi.org/10.5281/zenodo.22359982) |
 | [`Architecture/`](Architecture) | *Architecture of the Corpus* (FR and EN PDFs, version registers) | [10.5281/zenodo.22778507](https://doi.org/10.5281/zenodo.22778507) |
 
-### Working preprints (not deposited on Zenodo, no DOI)
-
-| Folder | Document | Status |
-|---|---|---|
-| [`Foundation_4/`](Foundation_4) | *Fondation IV : L'Univers Fertile* (in French) | working preprint v0.3 — exploratory programme |
-| [`Strong_Gravity/`](Strong_Gravity) | *Fondation III : Gravité Forte et Géométrie des Objets Compacts* (in French) | working preprint v2.1 |
-| [`Chiral_Bounce/`](Chiral_Bounce) | *The Cosmological Bounce as a Chiral Phase Transition* | working preprint v0.4 |
-
-These three are not part of the deposited corpus; their figures are produced by the scripts listed in their READMEs (Foundation IV has its own scripts; the other two share those of Foundation III).
-
 Each paper folder holds the PDF of the paper (`01_Paper_Publication/`), the scripts (`02_Scientific_Code/`) and its own README, which lists every script and the figure or number it produces. The PDFs are also deposited on Zenodo with each paper; the LaTeX sources are not published in this repository.
 
 ---
