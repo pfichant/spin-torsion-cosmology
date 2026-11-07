@@ -14,7 +14,7 @@ Licence CC BY 4.0 · Pascal Fichant, independent researcher, Montpellier · `p.f
 | [`Foundation_1/`](Foundation_1) | *Foundation I: The Metric Universe* (Extended and PRD Short versions) | [10.5281/zenodo.19577447](https://doi.org/10.5281/zenodo.19577447) |
 | [`Foundation_2/`](Foundation_2) | *Foundation II: The Chiral Universe* | [10.5281/zenodo.20629237](https://doi.org/10.5281/zenodo.20629237) |
 | [`Foundation_3/`](Foundation_3) | *Foundation III — Cosmological Physics* | [10.5281/zenodo.22359982](https://doi.org/10.5281/zenodo.22359982) |
-| [`Architecture/`](Architecture) | *Architecture of the Corpus* (FR and EN Markdown sources) | [10.5281/zenodo.22778507](https://doi.org/10.5281/zenodo.22778507) |
+| [`Architecture/`](Architecture) | *Architecture of the Corpus* (FR and EN PDFs, version registers) | [10.5281/zenodo.22778507](https://doi.org/10.5281/zenodo.22778507) |
 
 ### Working preprints (not deposited on Zenodo, no DOI)
 
