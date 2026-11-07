@@ -1,0 +1,21 @@
+--- a/external/heating/injection.c
++++ b/external/heating/injection.c
+@@ -1,3 +1,5 @@
++#include <stdlib.h>
++#include <string.h>
+ /** @file injection.c Documented exotic energy injection module
+  *
+  * written by Nils Schoeneberg and Matteo Lucca, 27.02.2019
+@@ -1115,6 +1117,12 @@
+       class_stop(pin->error_message,"Invalid PBH_accretion_recipe");
+   }
+ 
++  /* ECF patch 16/10/2026: env PBH_LMODE = 'edd' (L = L_Edd, Serpico et al. 2020 Eq. 25) or 'cap' (L <= L_Edd); PBH_ZCUT = z: no injection below z */
++  { char * mode = getenv("PBH_LMODE");
++    if (mode != NULL && strcmp(mode,"edd")==0) L_acc = L_ed;
++    else if (mode != NULL && strcmp(mode,"cap")==0) L_acc = MIN(L_acc, L_ed);
++    char * zc = getenv("PBH_ZCUT"); if (zc != NULL && z < atof(zc)) L_acc = 0.; }
++
+   *energy_rate = pin->rho_cdm*pin->PBH_accretion_fraction/
+                       (pin->PBH_accretion_mass*_Sun_mass_)*L_acc/pow(_c_,2.);                       // [J/(m^3 s)]
+ 

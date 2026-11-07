@@ -8,6 +8,16 @@ Papier / Paper  : "Foundation II: The Chiral Universe" (v1.0.5)
 =============================================================================
 """
 
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 """
 =============================================================================
 [FR] SIMULATION COSMOLOGIQUE ECF : DU "BIG BOUNCE" AUX GALAXIES JWST (z=10)
@@ -31,7 +41,7 @@ import matplotlib.animation as animation
 from matplotlib.patches import Ellipse, Circle
 
 # ==========================================
-# RÉGLAGES DE LA LANGUE / LANGUAGE SETTINGS
+# LANGUAGE SETTINGS
 # ==========================================
 LANGUE = 'EN'  # USER CHOOSE 'FR' ou 'EN'
 
@@ -86,7 +96,7 @@ ax.axis('off')
 # Titre Principal Haut
 ax.text(0, 15.2, T['main_title'], color='white', fontsize=22, ha='center', va='top', fontweight='bold')
 
-# Crédits Bas Gauche
+# Credits, lower left
 credit_text = ax.text(-15.5, -14, T['credit'], color='gray', fontsize=10, va='bottom', ha='left', family='monospace')
 
 # HUD de Phase (Haut)
@@ -131,7 +141,7 @@ def update(absolute_frame):
         ax.set_facecolor('black')
         title_text.set_color('white')
 
-    # Logique des phases
+    # Phase logic
     if frame < 100:
         prog = frame / 100.0
         universe.set_width(2 + 10 * prog)
@@ -204,7 +214,7 @@ def update(absolute_frame):
 # Animation
 ani = animation.FuncAnimation(fig, update, frames=n_frames, interval=40, blit=False)
 
-# Sauvegarde sécurisée
+# Safe save
 nom_fichier = f"ECF_Simulation_v1.4_{LANGUE}.mp4"
 try:
     if os.path.exists(nom_fichier): os.remove(nom_fichier) # Supprime si existe déjà

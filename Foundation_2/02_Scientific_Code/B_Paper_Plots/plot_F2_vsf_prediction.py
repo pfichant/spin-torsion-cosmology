@@ -14,7 +14,7 @@ and to available observational data.
 PHYSICS SUMMARY
 ---------------
 In the ECF, Chiral Walls (2D topological defects, pi_0) nucleate at the
-Kibble-Zurek (KZ) transition at T ~ 150 GeV and repel baryonic matter via
+Kibble-Zurek (KZ) transition at T ~ 159 GeV and repel baryonic matter via
 the Israel (1966) mechanism:
   z_ddot = (8*pi*G*sigma_2D/3) * z
 
@@ -22,24 +22,27 @@ This carves cosmic voids at a characteristic scale set by the KZ comoving
 correlation length xi_KZ ~ 60 Mpc.
 
 The ECF-modulated VSF is (Foundation II, Eq. vsf_ecf_modulated):
-  dn/dlnR (ECF) = dn/dlnR (SvdW) * A_ECF(R, z)
+  dn/dlnR (ECF) = dn/dlnR (SvdW) * A_ECF(R)
 
 where the amplification factor is (Eq. A_ecf):
-  A_ECF(R, z) = 1 + alpha_KZ * exp[-(R - xi_KZ)^2 / (2*sigma_KZ^2)]
-                              * (1+z)^{-3*w_a}
+  A_ECF(R) = 1 + alpha_KZ * exp[-(R - xi_KZ)^2 / (2*sigma_KZ^2)]
+  [22/09/2026, N-10 option (a)] the factor (1+z)^{-3*w_a} is WITHDRAWN
+  (no derivation); no z-evolution is claimed; z-dependence open (PO-F3-XI).
 
 with:
-  xi_KZ    ~ 60 Mpc      (KZ comoving scale; not a free parameter,
-                          derived from T_EW = 150 GeV via torsion wave eq.)
+  xi_KZ    ~ 60 Mpc      (KZ comoving scale; ADOPTED value, calibration
+                          procedure not documented (A-10, 22/09/2026); NOT
+                          derived from T_EW -- see PO-F3-XI and the
+                          canonical-values note below for the
+                          24-orders-of-magnitude gap)
   sigma_KZ ~ 15 Mpc      (KZ mass function width)
-  w_a      = -0.153       (PIT calibration, inherited from Foundation I)
-  alpha_KZ ~ 0.8 - 1.4   (1-sigma range, constrained from BOSS DR12 upper
-                          envelope at R ~ 100 Mpc; sole free parameter)
+  alpha_KZ ~ 0.8 - 1.4   (ADOPTED interval, central 1.1; calibration
+                          procedure not documented -- N-8, 22/09/2026)
 
 THREE FALSIFIABLE PREDICTIONS (Foundation II §Cosmic Voids)
 ------------------------------------------------------------
-  (i)  Excess amplitude at R > 60 Mpc:
-       A_ECF(R=100 Mpc, z=0.5) ~ 1.8-2.5 (central: 2.1)
+  (i)  Excess amplitude at the peak of the adopted spatial template:
+       1 + alpha_KZ ~ 2.1 at R = xi_KZ (no value at a given z is claimed)
 
   (ii) Characteristic peak scale at R ~ 60 Mpc:
        Spectral feature absent in Lambda-CDM and w0CDM continuum models;
@@ -81,9 +84,15 @@ OBSERVATIONAL CONSTRAINTS
 
 CANONICAL VALUES
 ----------------
-  xi_KZ   = 60 Mpc   (KZ scale; derived, not fitted)
+  xi_KZ   = 60 Mpc   (KZ scale; ADOPTED value, calibration procedure not
+                     documented (A-10), NOT derived. This line read
+                     'derived, not fitted' until 26/08/2026, which
+                     contradicted Foundation II: direct Kibble-Zurek
+                     dilution from T_EW misses the observed scale by
+                     some 24 orders of magnitude, and the microscopic
+                     origin is an open problem -- PO-F3-XI.)
   sigma_KZ = 15 Mpc  (KZ width)
-  w_a     = -0.153    (PIT calibration)
+  (w_a no longer enters A_ECF: factor withdrawn, N-10)
   alpha_KZ_lo = 0.8  (1-sigma lower)
   alpha_KZ_cen = 1.1 (central)
   alpha_KZ_hi = 1.4  (1-sigma upper)
@@ -146,9 +155,9 @@ plt.rcParams.update({
 })
 
 # ── ECF canonical parameters ───────────────────────────────────────────────────
-XI_KZ    = 60.0    # Mpc — KZ comoving scale (derived, not free)
+XI_KZ    = 60.0    # Mpc — KZ comoving scale (adopted, not derived — PO-F3-XI)
 SIGMA_KZ = 15.0    # Mpc — KZ width
-W_A      = -0.153  # PIT calibration (Foundation I)
+W_A      = -0.153  # no longer used by A_ecf (N-10, option (a), 22/09/2026); kept for reference
 ALPHA_LO = 0.8
 ALPHA_CEN = 1.1
 ALPHA_HI  = 1.4
@@ -178,8 +187,10 @@ def A_ecf(R, z, alpha_KZ):
     Foundation II, Eq. A_ecf.
     """
     gaussian = np.exp(-((R - XI_KZ)**2) / (2 * SIGMA_KZ**2))
-    redshift_factor = (1 + z)**(-3 * W_A)
-    return 1.0 + alpha_KZ * gaussian * redshift_factor
+    # [22/09/2026, N-10 option (a)] the factor (1+z)^{-3*w_a} is withdrawn
+    # (no derivation). The argument z is kept for call compatibility and is
+    # not used: A_ECF depends on R only. z-dependence: PO-F3-XI (OPEN).
+    return 1.0 + alpha_KZ * gaussian
 
 # ── Compute VSFs at z=0.5 ──────────────────────────────────────────────────────
 z_ref  = 0.5
@@ -229,7 +240,7 @@ ax0.plot(R_arr, vsf_sv, color=C_LCDM, lw=2.5, ls='-',
 # ECF range
 ax0.fill_between(R_arr, vsf_ecf_lo, vsf_ecf_hi,
                  color=C_ECF, alpha=0.20, zorder=3,
-                 label=r'ECF range ($\alpha_{\rm KZ}=0.8$–$1.4$, $1\sigma$)')
+                 label=r'ECF range ($\alpha_{\rm KZ}=0.8$–$1.4$, adopted)')
 ax0.plot(R_arr, vsf_ecf_cen, color=C_ECF, lw=2.5, ls='-',
          label=r'ECF central ($\alpha_{\rm KZ}=1.1$)', zorder=5)
 ax0.plot(R_arr, vsf_ecf_lo,  color=C_ECF, lw=1.2, ls='--', zorder=4)
@@ -238,19 +249,19 @@ ax0.plot(R_arr, vsf_ecf_hi,  color=C_ECF, lw=1.2, ls='--', zorder=4)
 # Euclid Q2 prediction band
 ax0.fill_between(R_arr, vsf_euclid_lo, vsf_euclid_hi,
                  color=C_EUCLID, alpha=0.15, zorder=2,
-                 label='Euclid Q2 predicted\nmeasurement (±18%, z<1)')
+                 label='Euclid DR1 predicted\nmeasurement (±18%, z<1)')
 ax0.plot(R_arr, vsf_euclid_lo, color=C_EUCLID, lw=1.0, ls=':', zorder=3)
 ax0.plot(R_arr, vsf_euclid_hi, color=C_EUCLID, lw=1.0, ls=':', zorder=3)
 
 # KZ scale arrow
 ax0.axvline(XI_KZ, color='#AA5500', lw=1.5, ls='--', alpha=0.7, zorder=6)
 ax0.text(XI_KZ + 1.5, 0.15,
-         r'$\xi_{\rm KZ}=60$ Mpc' '\n(derived, not free)',
+         r'$\xi_{\rm KZ}=60$ Mpc' '\n(adopted, not derived — PO-F3-XI)',
          fontsize=8.5, color='#AA5500')
 
 ax0.set_xlabel(r'Void radius $R$  [Mpc]', fontsize=12)
 ax0.set_ylabel(r'${\rm d}n/{\rm d}\ln R$  (normalised)', fontsize=12)
-ax0.set_title(r'(a) VSF at $z=0.5$', fontsize=13, fontweight='bold')
+ax0.set_title(r'(a) VSF (adopted template, no $z$-dependence claimed)', fontsize=13, fontweight='bold')
 ax0.set_xlim(10, 200)
 ax0.set_ylim(0, 2.8)
 ax0.legend(loc='upper right', fontsize=8.5,
@@ -267,7 +278,7 @@ ax1.set_facecolor('#F8F8FF')
 
 ax1.fill_between(R_arr, ratio_lo, ratio_hi,
                  color=C_ECF, alpha=0.22, zorder=3,
-                 label=r'ECF range ($1\sigma$)')
+                 label=r'ECF range ($\alpha_{\rm KZ}$ adopted)')
 ax1.plot(R_arr, ratio_cen, color=C_ECF, lw=2.5, ls='-',
          label=r'ECF central', zorder=5)
 ax1.plot(R_arr, ratio_lo,  color=C_ECF, lw=1.2, ls='--', zorder=4)
@@ -275,14 +286,14 @@ ax1.plot(R_arr, ratio_hi,  color=C_ECF, lw=1.2, ls='--', zorder=4)
 ax1.axhline(1.0, color=C_LCDM, lw=2.0, ls='-',
             label=r'$\Lambda$CDM baseline ($A=1$)', zorder=4)
 
-# Mark the key prediction: x2.1 at R=100 Mpc
-R_100  = 100.0
-A_100  = A_ecf(np.array([R_100]), z_ref, ALPHA_CEN)[0]
+# [N-7] Mark the amplitude at the peak of the adopted spatial template
+R_pk   = XI_KZ
+A_pk   = A_ecf(np.array([R_pk]), z_ref, ALPHA_CEN)[0]
 ax1.annotate('',
-    xy=(R_100, A_100), xytext=(R_100, 1.0),
+    xy=(R_pk, A_pk), xytext=(R_pk, 1.0),
     arrowprops=dict(arrowstyle='<->', color='#AA3300', lw=2.0))
-ax1.text(R_100 + 2, (1.0 + A_100)/2,
-         fr'$\times{A_100:.1f}$ at $R=100$ Mpc',
+ax1.text(R_pk + 2, (1.0 + A_pk)/2,
+         fr'$1+\alpha_{{\rm KZ}}\simeq{A_pk:.1f}$ at peak (adopted)',
          fontsize=9.5, color='#AA3300', fontweight='bold')
 
 # KZ peak annotation
@@ -297,10 +308,10 @@ ax1.text(170, 1.04, 'null result\n(ΛCDM)', fontsize=8,
          color='#666666', ha='right')
 
 ax1.set_xlabel(r'Void radius $R$  [Mpc]', fontsize=12)
-ax1.set_ylabel(r'$A_{\rm ECF}(R,z=0.5) = n_{\rm ECF} / n_{\Lambda{\rm CDM}}$',
+ax1.set_ylabel(r'$A_{\rm ECF}(R) = n_{\rm ECF} / n_{\Lambda{\rm CDM}}$',
                fontsize=11)
 ax1.set_title('(b) ECF amplification ratio\n'
-              r'$\mathcal{A}_{\rm ECF}(R,z)$',
+              r'$\mathcal{A}_{\rm ECF}(R)$',
               fontsize=13, fontweight='bold')
 ax1.set_xlim(10, 200)
 ax1.set_ylim(0.5, 3.2)
@@ -316,14 +327,11 @@ for sp in ax1.spines.values():
 ax2 = axes[2]
 ax2.set_facecolor('#F8F8FF')
 
-z_arr = [0.0, 0.5, 1.0, 1.5]
-colors_z = ['#CC0000', '#FF6600', '#0055BB', '#0099BB']
-ls_z     = ['-',      '--',      '-.',      ':']
-
-for z_val, col, ls in zip(z_arr, colors_z, ls_z):
-    ratio_z = A_ecf(R_arr, z_val, ALPHA_CEN)
-    ax2.plot(R_arr, ratio_z, color=col, lw=2.2, ls=ls,
-             label=fr'$z={z_val}$')
+# [N-10, option (a), 22/09/2026] The factor (1+z)^{-3 w_a} is withdrawn:
+# A_ECF no longer depends on z. A single curve is drawn; the redshift
+# dependence of the VSF excess remains to be derived (PO-F3-XI).
+ax2.plot(R_arr, A_ecf(R_arr, 0.0, ALPHA_CEN), color='#CC0000', lw=2.2, ls='-',
+         label=r'$\alpha_{\rm KZ}=1.1$ (any $z$: no evolution claimed)')
 
 ax2.axhline(1.0, color=C_LCDM, lw=1.8, ls='-', alpha=0.5,
             label=r'$\Lambda$CDM')
@@ -332,9 +340,9 @@ ax2.text(XI_KZ + 1.5, 3.0,
          r'$\xi_{\rm KZ}$', fontsize=9, color='#AA5500')
 
 ax2.set_xlabel(r'Void radius $R$  [Mpc]', fontsize=12)
-ax2.set_ylabel(r'$A_{\rm ECF}(R,z)$  [ECF/ΛCDM ratio]', fontsize=11)
-ax2.set_title('(c) Redshift evolution\n'
-              r'($\alpha_{\rm KZ}=1.1$, $w_a=-0.153$)',
+ax2.set_ylabel(r'$A_{\rm ECF}(R)$  [ECF/ΛCDM ratio]', fontsize=11)
+ax2.set_title('(c) No redshift evolution claimed\n'
+              r'($\alpha_{\rm KZ}=1.1$; PO-F3-XI)',
               fontsize=13, fontweight='bold')
 ax2.set_xlim(10, 200)
 ax2.set_ylim(0.5, 3.8)
@@ -344,10 +352,10 @@ ax2.tick_params(which='both', direction='in', top=True, right=True)
 for sp in ax2.spines.values():
     sp.set_color('#AABBDD')
 
-# Note: w_a drives z-evolution
+# Note [N-10]: no z-evolution claimed
 ax2.text(0.04, 0.06,
-    r'$A_{\rm ECF}\propto(1+z)^{-3w_a}$; $w_a=-0.153$' '\n'
-    r'$\Rightarrow$ excess grows toward $z=0$',
+    r'$z$-dependence of $A_{\rm ECF}$ not derived' '\n'
+    r'(factor $(1+z)^{-3w_a}$ withdrawn; PO-F3-XI)',
     transform=ax2.transAxes, fontsize=8.5, color='#444444',
     bbox=dict(boxstyle='round,pad=0.35', fc='#F0F4FF',
               ec='#334488', alpha=0.88))
@@ -355,16 +363,16 @@ ax2.text(0.04, 0.06,
 # ── Suptitle ───────────────────────────────────────────────────────────────────
 fig.suptitle(
     'Figure M2 — ECF Void Size Function: Quantitative Prediction vs ΛCDM\n'
-    r'$\xi_{\rm KZ}=60$ Mpc (derived from $T_{\rm EW}=150$ GeV, not fitted)   |   '
-    r'$\alpha_{\rm KZ}$ constrained from BOSS DR12   |   '
-    r'\textbf{Falsification test: Euclid Q2, 24 June 2026}',
+    r'$\xi_{\rm KZ}=60$ Mpc (adopted value, not derived; PO-F3-XI)   |   '
+    r'$\alpha_{\rm KZ}$ adopted (calibration not documented)   |   '
+    'Falsification test: Euclid DR1-Complete (mid-2027)',
     fontsize=11, fontweight='bold', color='#111111', y=1.02)
 
 # ── Euclid Q2 flag box ─────────────────────────────────────────────────────────
 fig.text(0.50, -0.01,
-    r'\textbf{Euclid Q2 kill-switch (24 June 2026):}'
-    '  null result (no excess at $2\sigma$, $R>60$ Mpc)'
-    '  $\Rightarrow$  disfavours ECF Chiral Wall mechanism',
+    'Euclid DR1-Complete (mid-2027) kill-switch:'
+    '  a null result (no excess at $2\\sigma$, $R>60$ Mpc)'
+    '  $\\Rightarrow$  would disfavour the ECF Chiral Wall template',
     fontsize=10, color='#CC2222', ha='center',
     bbox=dict(boxstyle='round,pad=0.5', fc='#FFF0F0',
               ec='#CC2222', alpha=0.95, lw=1.2))

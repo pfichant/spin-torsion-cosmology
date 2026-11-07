@@ -1,6 +1,48 @@
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# =============================================================================
+# TWO OUTPUTS, TWO DIFFERENT STATUSES -- READ THIS BEFORE JUDGING EITHER
+# =============================================================================
+# ⚠️ CORRECTED 23/08/2026. An earlier audit note marked this whole script
+# "exploratory, superseded". That was TOO BROAD: the script produces two
+# things, and only one of them is superseded.
+#
+#   ⚠️ CORRECTED 25/08/2026: the F2 figure is produced by
+#      plot_fig10_analysis.py (2x5 grid, dotted baryon line), NOT by this
+#      script. This one now writes Fig_10_Galaxies_Verification.png.
+#      What follows describes the FIGURE ITSELF, which remains accurate:
+#   ✅ THE FIGURE IS IN FOUNDATION II.
+#      It appears as \label{fig:galaxy_analysis}, is referenced twice in the
+#      text, and its caption reads "Universality of the ECF Torsion Halo
+#      (Sample Analysis)" over a sample spanning dwarfs (DDO 154) to giants
+#      (NGC 2841). ⭐ That caption quotes NO chi2 -- the figure shows the
+#      SHAPE of the fit across galaxy types, which is a legitimate and
+#      still-current illustration.
+#
+#   ⚠️ THE LaTeX TABLE (\label{tab:sparc_stats}) IS NOT IN THE PAPER and is
+#      not meant to be. It belongs to the pilot stage on 10 galaxies, later
+#      superseded by the full fit (fit_sparc175.py), which is what Foundation
+#      II quotes. Its companion is fetch_sparc_data.py, which downloads
+#      exactly those 10 curves.
+# =============================================================================
+# ⚠️ STATUS, set on 22/08/2026. This script belongs to an EARLIER STAGE of the
+# work: a pilot run on 10 representative SPARC galaxies, later superseded by
+# the full 175-galaxy fit (fit_sparc175.py). Its companion is
+# fetch_sparc_data.py, which downloads exactly those 10 curves.
+#
+# ⇒ Its LaTeX table (\label{tab:sparc_stats}) is NOT in Foundation II and is
+#   not meant to be: the paper quotes the 175-galaxy result instead.
+#
+# ⚠️ READ ITS NUMBERS WITH THAT IN MIND. The 10 galaxies give a median
+# reduced chi2 of 2.08, against 0.796 over the full 175. That is not a
+# weakness of the model on these objects: they are among the best-measured
+# curves in the catalogue -- error bars of 1.8 to 3.0 km/s, up to 73 points
+# (NGC 2403). ⭐ A two-parameter profile cannot track a curve measured to
+# 2 km/s, so the chi2 is severe BY CONSTRUCTION, and would be for NFW too.
+# The pilot sample was chosen for data quality, which makes it the harshest
+# possible test -- not the most favourable one.
+# =============================================================================
 """
 =============================================================================
 FILENAME       : verify_galaxies_from_csv.py
@@ -37,7 +79,7 @@ def ecf_velocity_model(r, v_inf, rs):
 
 # --- MAIN LOOP ---
 results = []
-# Grille 3x4 (suffisant pour 10 plots)
+# 3x4 grid (enough for 10 plots)
 fig, axes = plt.subplots(3, 4, figsize=(16, 12))
 axes = axes.flatten()
 
@@ -100,10 +142,15 @@ for i, (name, Vflat_guess) in enumerate(galaxy_targets):
         
         # Plotting
         ax.errorbar(r, v_obs, yerr=v_err, fmt='o', color='black', alpha=0.6, ms=3, label='Data')
-        ax.plot(r, v_bar, color='green', linestyle='--', label='Baryons')
+        # ⚠️ COLOUR CORRECTED 23/08/2026: this drew the baryonic curve in
+        # GREEN, but the caption of fig:galaxy_analysis in Foundation II reads
+        # "Blue: Newtonian prediction from visible baryons (stars + gas)".
+        # A reader looking for the blue curve would not have found one.
+        # The caption is the published text, so the script follows it.
+        ax.plot(r, v_bar, color='blue', linestyle='--', label='Baryons')
         ax.plot(r, v_model, color='red', linewidth=2, label='ECF Fit')
         
-        # Titre avec raw string (r"") pour éviter le warning SyntaxWarning
+        # Raw string (r"") in the title, to avoid a SyntaxWarning
         ax.set_title(rf"{name} ($\chi^2_\nu={chi2_red:.2f}$)", fontsize=10)
         
         if i >= 6: ax.set_xlabel("Radius (kpc)") # Ajusté pour la grille
@@ -112,13 +159,19 @@ for i, (name, Vflat_guess) in enumerate(galaxy_targets):
     except Exception as e:
         print(f"[FAIL] Fit failed for {name}: {e}")
 
-# Masquer les axes vides (il y en a 2 maintenant: 10 plots sur 12 places)
+# Hide the empty axes (two of them: 10 plots in 12 slots)
 for j in range(len(galaxy_targets), len(axes)):
     axes[j].axis('off')
 
 axes[0].legend(loc='upper left', fontsize=8)
 plt.tight_layout()
-plt.savefig('Fig_10_Galaxies_Analysis.png', dpi=300)
+# RENAMED 25/08/2026 -- NAME COLLISION RESOLVED.
+# This script wrote Fig_10_Galaxies_Analysis.png, the SAME name as
+# plot_fig10_analysis.py, and OVERWROTE it (verified: 5400x2400 -> 4800x3600).
+# The paper figure is the 2x5 grid of plot_fig10_analysis.py: that script
+# declares 'Figure 10 (a 2x5 grid)', and the F2 caption says 'Blue DOTTED
+# line' -- dotted there, dashed here. Whichever ran last used to win.
+plt.savefig('Fig_10_Galaxies_Verification.png', dpi=300)
 print("[OK] Figure saved.")
 
 # Generate LaTeX Table

@@ -25,7 +25,11 @@ from matplotlib.colors import LinearSegmentedColormap
 import os
 
 # ================= CONFIGURATION =================
-OUTPUT_DIR = "ecf_incubator_frames"
+# ⭐ Intermediate animation frames go under _generated/ (convention of
+# 24/08/2026): everything below that folder is REGENERABLE and is
+# excluded from the archive and from the repository. The deliverable
+# is the assembled animation, not these frames.
+OUTPUT_DIR = os.path.join("_generated", "ecf_incubator_frames")
 N_FRAMES = 100       
 IMG_SIZE = 800       
 N_STARS = 2000       

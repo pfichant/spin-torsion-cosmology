@@ -1,7 +1,11 @@
-
+# [09/10/2026, décision de Pascal 3-B] Foundation II : même figure que la lettre PIT, sur le fond actif A-7
+# (Omega_m = omega_m/h^2 = 0.2669, h = 0.7304). Contenu identique à PIT_Letter/.../plot_Cosmic_History_Omegas.py ;
+# l'ancienne version (Omega_m = 0.315, convention Planck) est sauvegardée hors du kit.
 #!/usr/bin/env python3
+# Last modified: 21/08/2026, 16:05 (Paris time)
+# Corpus: Foundation I — github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
-#  plot_Cosmic_History_Omegas_v3.py
+#  plot_Cosmic_History_Omegas.py   (F1 destination; PAPER switch below)
 #  ECF Framework — Cosmic History: Evolution of Fractional Density Parameters
 # =============================================================================
 #
@@ -9,13 +13,15 @@
 #  -------
 #  This script reproduces Figure [X] of:
 #    - Fichant (2026), "The Topological Invariance Principle" (PIT Letter, PRL)
-#    - Fichant (2026), "Foundation I: The Metric Universe" (F1 Extended, PRD)
+#    - Fichant (2026), "Foundation I" (F1 Extended, PRD)
 #
 #  The figure shows the temporal evolution of fractional energy densities
 #  Omega_i(a) in the ECF (Einstein-Cartan Framework), including the transient
-#  primordial torsion/spin component. The bottom panel verifies numerically
-#  that the Topological Invariance Principle (TIP, Omega_total = 1) holds
-#  at all times, i.e. Omega_k = 0 throughout cosmic history.
+#  primordial torsion/spin component. The bottom panel displays Omega_k, which
+#  is identically zero once k = 0: this is the postulate of exact spatial
+#  flatness (TIP), i.e. an identity of the closure relation, not a verified
+#  prediction. See the v8 Letter: once k = 0, sum_i Omega_i = 1 holds for any
+#  matter content whatsoever.
 #
 #  USAGE
 #  -----
@@ -46,6 +52,12 @@
 #  https://github.com/pfichant/spin-torsion-cosmology
 # =============================================================================
 
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')          # non-interactive backend for server/batch use
@@ -56,7 +68,7 @@ import matplotlib.gridspec as gridspec
 # =============================================================================
 #  DESTINATION SWITCH  <-- only parameter to change between the two papers
 # =============================================================================
-PAPER = "F1"   # "PIT" : PRL Letter, double-col 7.2"  |  "F1" : PRD Extended, single-col 3.375"
+PAPER = "PIT"   # "PIT" : PRL Letter, double-col 7.2"  |  "F1" : PRD Extended, single-col 3.375"
 # =============================================================================
 
 
@@ -129,7 +141,7 @@ def calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0):
     total density (without spin) evaluated at a_p.
 
     NOTE: the naive approximation Os0 ~ alphaspin * Or0 * a_p^2 is only
-    valid when Omega_matter(a_peak) << 1, which does NOT hold at z=7500
+    valid when Omega_matter(a_peak) << 1, which does NOT hold at z=5600
     (Omega_m ~ 0.32 at that epoch). This corrected formula is used instead.
 
     Parameters
@@ -138,7 +150,7 @@ def calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0):
         Target Omega_spin at the peak (= 0.093, calibrated in F1 Sec. 5,
         cited as Eq. 7 in the PIT Letter).
     zpeak : float
-        Redshift of maximum torsion density (= 7500, prior to recombination).
+        Spin sector normalisation redshift (= 5600, solver anchor).
     Om0, Or0, OL0 : float
         Present-day matter, radiation, and Lambda density parameters (Planck 2018).
 
@@ -171,12 +183,15 @@ def build_density_params(Om0, Or0, OL0, Os0, a):
     number density. This is geometrically distinct from scalar-field kination
     (which requires a free initial condition) -- see F1 Sec. 2.
 
-    TIP VERIFICATION
-    ----------------
-    The Topological Invariance Principle (PIT Letter, Sec. II) postulates
-    that Omega_total = 1 at all times, i.e. Omega_k = 0.
-    This is verified numerically as:
-        Omega_k = 1 - (Omega_r + Omega_m + Omega_L + Omega_s)  ~  0
+    FLATNESS IDENTITY (not a verified prediction)
+    ---------------------------------------------
+    The v8 Letter states exact spatial flatness as a POSTULATE: Omega_k = 0.
+    Once k = 0, the closure relation
+        Omega_k = 1 - (Omega_r + Omega_m + Omega_L + Omega_s)  =  0
+    is an IDENTITY that holds for any matter content -- adding the spin
+    component changes H, and rho_crit = 3H^2/8piG is recomputed with it.
+    The bottom panel therefore illustrates this identity; it does not verify
+    a compensation mechanism (that claim, present in v4-v7, is withdrawn in v8).
 
     Parameters
     ----------
@@ -201,23 +216,29 @@ def build_density_params(Om0, Or0, OL0, Os0, a):
     Omm  = rhom  / rhotot
     OmL  = rhoL  / rhotot
     Oms  = rhos  / rhotot
-    Omk  = 1.0 - Omr - Omm - OmL - Oms  # TIP: should be identically 0
+    Omk  = 1.0 - Omr - Omm - OmL - Oms  # identically 0 once k=0 (identity, not a test)
 
     return Omr, Omm, OmL, Oms, Omk
 
 
 # =============================================================================
-#  COSMOLOGICAL PARAMETERS  (Planck 2018, TT,TE,EE+lowE, Table 2)
+#  COSMOLOGICAL PARAMETERS  -- ECF background, internal closure A-7
+#  (Omega_i = omega_i / h^2 with Planck 2018 physical densities and h = 0.7304)
+#  [07/10/2026, decision A: the PIT caption describes "the ECF model"; the
+#   former Planck-h values 0.315 / 9.0e-5 are HISTORICAL here. The F1 copy of
+#   this script keeps the Planck convention, stated in the F1 caption
+#   (DEC-A7-POST-05, 22/09/2026).]
 # =============================================================================
-Om0       = 0.315    # Omega_matter,0    (baryons + CDM)
-Or0       = 9.0e-5   # Omega_radiation,0 (photons + massless neutrinos)
+Om0       = 0.14237 / 0.7304**2   # = 0.2669, Omega_matter,0 (baryons + CDM)
+Or0       = 4.1834e-5 / 0.7304**2 # = 7.8417e-5, Omega_radiation,0 (photons + massless neutrinos)
 OL0       = 1.0 - Om0 - Or0   # Omega_Lambda,0 (flat LCDM baseline)
 
 # ECF-specific parameter: spin density peak amplitude
 # Calibrated by MCMC against Planck + SH0ES + BOSS/eBOSS + KiDS-1000
 # (F1 Sec. 5, Table II; cited as Eq. 7 in PIT Letter)
 alphaspin = 0.093    # Omega_spin(a_peak) = 0.093  [dimensionless]
-zpeak     = 7500     # redshift at peak torsion density (pre-recombination)
+zpeak     = 5600     # spin sector normalisation redshift (solver anchor)
+#           [CORRECTED 05/09/2026, I82] was 7500
 
 # Compute Os0 using the corrected (non-naive) calibration formula
 Os0 = calibrate_Os0(alphaspin, zpeak, Om0, Or0, OL0)
@@ -242,7 +263,7 @@ idx_p = np.argmin(np.abs(a_check - ap))
 print(f"[SANITY] Omega_spin at z={zpeak}: {Oms_c[idx_p]:.4f}  "
       f"(target alpha_spin = {alphaspin})")
 print(f"[SANITY] Omega_k max deviation:   {np.abs(Omk_c).max():.2e}  "
-      f"(TIP requires Omega_k = 0 throughout)")
+      f"(closure identity: Omega_k = 0 once k=0, to machine precision)")
 print(f"[SANITY] Os0 (corrected) = {Os0:.4e}   "
       f"Os0 (naive) = {alphaspin * Or0 * ap**2:.4e}  "
       f"(ratio = {Os0 / (alphaspin * Or0 * ap**2):.2f})")
@@ -278,11 +299,16 @@ ax1.plot(a_check, Oms_c, color=Cs,          lw=2.5,
 # Shaded area under the torsion curve to make the transient phase visible
 ax1.fill_between(a_check, 0, Oms_c, color=Cs, alpha=0.18)
 
-# Vertical dotted line at the torsion peak (z = 7500)
+# Vertical dotted line at the spin normalisation redshift (z = 5600)
 ax1.axvline(ap, color='gray', ls=':', lw=1.0, alpha=0.7)
 
 # Floating labels for era identification (avoids legend clutter)
 fs_ann = 7 if PAPER == "PIT" else 8
+# [06/09/2026] Label added -- the line existed but carried no value,
+# leaving the anchor invisible on the figure itself even though the
+# whole calibration hinges on it (I82, z_ref=5600 vs the older z=7500).
+ax1.text(ap, 1.095, rf'$z={zpeak:.0f}$', fontsize=fs_ann, ha='center',
+         va='top', color='gray', style='italic')
 ax1.text(3.0e-6, 0.52,  'Torsion',   color='#c0392b', fontsize=fs_ann,
          ha='center', fontweight='bold')
 ax1.text(1.0e-4, 0.82,  'Radiation', color='#d35400', fontsize=fs_ann,
@@ -304,20 +330,26 @@ ax1.grid(True, which='both', ls=':', lw=0.5, alpha=0.5)
 
 # Cosmological era annotations at the top of the panel
 fs_era = 6 if PAPER == "PIT" else 7
+# [18/08/2026 audit] Epoch markers corrected. BBN was placed at a = 2e-4,
+# whereas T ~ 1 MeV corresponds to a = 2.4e-10 -- six orders earlier, i.e.
+# outside this panel. LSS and EQ were also misplaced AND in the wrong order:
+# matter-radiation equality (a = 2.9e-4) precedes recombination (a = 9.0e-4),
+# not the reverse. BBN is dropped rather than relabelled: it falls off the
+# plotted range, and showing it inside the panel is what made the spin sector
+# appear subdominant at nucleosynthesis (see F1 Sec. 2, corrected 18/08/2026).
 for xa, label in [(3e-6,  'Bounce'),
-                  (2e-4,  'BBN'),
-                  (6e-4,  'LSS'),
-                  (2e-3,  'EQ'),
+                  (2.9e-4, 'EQ'),
+                  (9.0e-4, 'LSS'),
                   (3e-1,  'Today')]:
     ax1.text(xa, 1.04, label, fontsize=fs_era, ha='center',
              color='#555555', style='italic')
 
-# ── Bottom panel: TIP numerical verification (Omega_k = 0) ───────────────
+# ── Bottom panel: Omega_k, identically zero once k = 0 (closure identity) ─
 ax2 = plt.subplot(gs[1])
 
 ax2.plot(a_check, Omk_c, color=Ck, lw=1.8,
          label=r'$\Omega_k$ Curvature')
-# Reference line at Omega_k = 0: the TIP invariant
+# Reference line at Omega_k = 0 (the postulated exact spatial flatness)
 ax2.axhline(0.0, color='black', ls='-', lw=0.8, alpha=0.4)
 
 ax2.set_xscale('log')
@@ -347,28 +379,6 @@ ax2top.set_xticklabels(zlabels,
 # =============================================================================
 #  SAVE
 # =============================================================================
-import os as _os
-_SCRIPT_DIR = _os.path.dirname(_os.path.abspath(__file__))
-
-def _find_figs_dir(start):
-    """Remonte l'arborescence pour trouver figures_output/."""
-    d = start
-    for _ in range(5):
-        candidate = _os.path.join(d, "figures_output")
-        if _os.path.isdir(candidate):
-            return candidate
-        parent = _os.path.dirname(d)
-        if parent == d:
-            break
-        d = parent
-    # Not found: create it next to script
-    fallback = _os.path.join(_os.path.dirname(_SCRIPT_DIR), "figures_output")
-    _os.makedirs(fallback, exist_ok=True)
-    return fallback
-
-_FIGS_DIR = _find_figs_dir(_SCRIPT_DIR)
-outfile_abs = _os.path.normpath(_os.path.join(_FIGS_DIR, outfile))
-plt.savefig(outfile_abs, dpi=300, bbox_inches='tight')
-print(f"[OK] Figure saved -> {outfile_abs}")
+plt.savefig(outfile, dpi=300, bbox_inches='tight')
+print(f"[OK] Figure saved → {outfile}")
 plt.close()
-

@@ -38,7 +38,8 @@ crystallisation at T ~ 150 GeV, coupling constant kappa^2 = 2.0766e-43 m/J.
     NO Newtonian 1/r^2 — only velocity kick delta_v = 4*pi*G*mu*v_s*gamma_s
   - Helical J_5 current (ECF-specific; absent in GUT strings)
   - Interaction: reconnects (never merges with 0D)
-  - Kill-switch: LISA (2037) GW burst f ~ 50 mHz, torsion tail tau_T ~ 1e6 s
+  - No LISA kill-switch for this sector (18/10/2026): the f ~ 50 mHz burst belongs
+    to Macro-Knot mergers, without a separable torsion tail (tau_T ~ 1e6 s withdrawn)
   - Visualisation: gas colour-coded by distance to string (coolwarm_r)
 
 2D Chiral Wall (pi_0):
@@ -97,8 +98,8 @@ OUTPUT PATH RESOLUTION
 CANONICAL PARAMETERS (Foundation II, not fit to data)
 -------------------------------------------------------
   kappa^2      = 2.0766e-43  m/J          [8*pi*G/c^4, CODATA 2018]
-  w0           = -0.904                    [PIT geometric derivation]
-  wa           = -0.153                    [PIT geometric derivation]
+  w0           = -0.904                    [adopted calibration point, F1; PO-F1-W0]
+  wa           = -0.153                    [adopted calibration point, F1; PO-F1-W0]
   M_micro      = 6e24 kg = c^3/(G*H_EW)   [T_EW = 150 GeV]
   mu_1D        ~ 1e14 kg/m                 [eta_EW^2]
   sigma_2D     ~ 1e49 kg/m^2              [eta_EW^4/(hbar*c)]
@@ -340,8 +341,8 @@ mass_tx=ax1.text(0.55,0.10,
     r'1 Mpc  → $\sim10^6\,M_\odot$'+'\n'
     r'$\xi_{\rm KZ}\!\sim\!60$ Mpc → $\sim3\times10^7\,M_\odot$'+'\n\n'
     r'Baryonic wake: $\sim10^5\,M_\odot$/kpc (Lyman-$\alpha$)'+'\n'
-    'Kill-switch [LISA 2037]:\n'
-    r'GW burst $f\!\sim\!50$ mHz, tail $\tau_T\!\sim\!10^6$ s',
+    'No LISA kill-switch here:\n'
+    r'the $f\!\sim\!50$ mHz burst is a Macro-Knot channel',
     transform=ax1.transAxes,fontsize=9.5,color=C_TEXT,va='bottom',alpha=0,
     bbox=dict(boxstyle='round,pad=0.4',fc='#EEF2FF',ec=C_BLUE,alpha=0))
 

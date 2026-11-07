@@ -26,7 +26,7 @@ def main():
     # =========================================================================
     G = 6.67430e-11        # Gravitational constant (m^3 kg^-1 s^-2)
     c = 299792458.0        # Speed of light (m/s)
-    M_knot = 1e24          # Mass of ECF Micro-Knot (kg) - Planetary mass
+    M_knot = 3.74e24       # Mass of ECF Micro-Knot (kg) - canonical horizon mass (Foundation II)
     D_S_kpc = 8.0          # Distance to Source Star (Galactic Bulge) in kpc
     v_perp_km_s = 220.0    # Transverse velocity of the galactic halo (km/s)
     

@@ -1,0 +1,70 @@
+diff --git a/DarkAges/common.py b/DarkAges/common.py
+index cfe4b62..2bd5748 100644
+--- a/DarkAges/common.py
++++ b/DarkAges/common.py
+@@ -9,7 +9,7 @@ Collection of functions needed to calculate the energy deposition.
+ from __future__ import absolute_import, division, print_function
+ from builtins import range
+ 
+-from scipy.integrate import trapz
++from scipy.integrate import trapezoid as trapz  # ECF patch: scipy >= 1.14
+ from scipy.interpolate import interp1d
+ import os
+ import sys
+diff --git a/DarkAges/evaporator.py b/DarkAges/evaporator.py
+index e2355ac..178e5c0 100644
+--- a/DarkAges/evaporator.py
++++ b/DarkAges/evaporator.py
+@@ -34,7 +34,7 @@ import numpy as np
+ from .common import time_at_z, logConversion, H, nan_clean
+ from .__init__ import DarkAgesError, get_redshift
+ from scipy.integrate import odeint as solve_ode
+-from scipy.integrate import trapz
++from scipy.integrate import trapezoid as trapz  # ECF patch: scipy >= 1.14
+ 
+ #particle_dict has structure 'particle_name':[mass,spin_label,spin_orientations, flavorfactor, antifactor, colorfactor, sigmoid_factor]
+ particle_dict = {'gamma': [0,'1',2,1,1,1,0],
+diff --git a/DarkAges/model.py b/DarkAges/model.py
+index 5dc92a1..bf569a2 100644
+--- a/DarkAges/model.py
++++ b/DarkAges/model.py
+@@ -84,7 +84,7 @@ class model(object):
+ 			and :math:`f(z_\mathrm{dep})` in the second column.
+ 		"""
+ 
+-		if not isinstance(transfer_instance, transfer):
++		if type(transfer_instance).__name__ != "transfer":  # ECF patch: dill class identity
+ 			raise DarkAgesError('You did not include a proper instance of the class "transfer"')
+ 		else:
+ 			red = transfer_instance.z_deposited
+diff --git a/DarkAges/transfer.py b/DarkAges/transfer.py
+index 33c0208..4f569c1 100644
+--- a/DarkAges/transfer.py
++++ b/DarkAges/transfer.py
+@@ -82,7 +82,7 @@ def transfer_dump(transfer_instance, outfile):
+ 		Filename (absolute or relative) under which the transfer instance should be stored
+ 	"""
+ 
+-	if not isinstance(transfer_instance, transfer):
++	if type(transfer_instance).__name__ != "transfer":  # ECF patch: dill class identity
+ 		from .__init__ import DarkAgesError
+ 		raise DarkAgesError('You did not include a proper instance of the class "transfer"')
+ 	with open(outfile, 'wb') as f_dump:
+@@ -105,7 +105,7 @@ def transfer_load(infile):
+ 	"""
+ 
+ 	loaded_transfer = dill.load(open(infile, 'rb'))
+-	if not isinstance(loaded_transfer, transfer):
++	if type(loaded_transfer).__name__ != "transfer":  # ECF patch: dill class identity under Python 3.11
+ 		from .__init__ import DarkAgesError
+ 		raise DarkAgesError('The file {0} does not provide a proper instance of the class "transfer"'.format(infile))
+ 	else:
+@@ -116,7 +116,7 @@ def transfer_combine(*transfer_instances):
+ 		raise DarkAgesError('The method "transfer_combine" expects at least one positional argument')
+ 	first_time_in_loop = True
+ 	for single_transfer in transfer_instances:
+-		if not isinstance(single_transfer,transfer):
++		if type(single_transfer).__name__ != "transfer":  # ECF patch: dill class identity
+ 			raise DarkAgesError('You did not include a proper instance of the class "transfer"')
+ 		if first_time_in_loop:
+ 			first_time_in_loop = False

@@ -1,3 +1,8 @@
+# WITHDRAWN 23/10/2026 -- this figure is no longer used in Foundation II.
+# Anchor values do not match measurements (UHZ-1 drawn at 1e6 Msun vs ~4e7; MoM-z14 has no
+# measured black-hole mass; GN-z11 value not as published) and the curve is interpolated
+# through invented assembly points (z = 5.5, 3) that contradict quasars measured at z = 7.5.
+# Kept only for traceability. See DECISIONS_ARBITRAGES_02-10.md, entry LRD-FIGURES.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -63,5 +68,5 @@ ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1.01, 0.5)
 
 plt.tight_layout()
 out='fig_MacroKnot_LRD_SMBH_time.py'
-plt.savefig('fig_MacroKnot_LRD_SMBH_time.png', dpi=220, bbox_inches='tight', facecolor=fig.get_facecolor())
+plt.savefig('fig_MacroKnot_LRD_SMBH_time.png', dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
 plt.close(fig)

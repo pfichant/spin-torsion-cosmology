@@ -70,7 +70,7 @@ def main():
     ax.text(1e-4, 1e-4, "Antimatter\nvanishes", color='#B22222', ha='center', fontweight='bold')
 
 
-    # 3. THE ZOOM INSET (La Loupe)
+    # 3. THE ZOOM INSET
     # ----------------------------
     # Position: x, y, width, height (relative to axes)
     # Placed in the gray zone, looking at the yellow/gray transition

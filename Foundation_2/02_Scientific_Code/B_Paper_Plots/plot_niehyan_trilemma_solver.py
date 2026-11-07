@@ -4,12 +4,38 @@
 SUPPLEMENTARY MATERIAL FOR "FOUNDATION II: THE CHIRAL UNIVERSE"
 =========================================================================================
 Title: Exploring the DESI BAO Tension via Axion Geometric Optimization
+
+⚠️ AUDIT NOTE (23/08/2026) -- READ BEFORE QUOTING ANY NUMBER FROM THIS SCRIPT.
+
+  [D3, 22/09/2026] The numbers quoted below (+7.04 %, 4429.7 Mpc) are those of
+  the Omega_m = 0.315 run. With Omega_m = omega_m/h^2 (A-7, h = 0.730) the run
+  gives t0(w=-1) = 13.335 Gyr and, at the forced 13.5 Gyr target, D_M = 4355.8 Mpc,
+  drift +1.46 % -- relative to the script's own w = -1 reference, not to data.
+  The former "SUCCESS / TENSION ALERT" threshold verdict was removed (D3-71).
+
+  1. IT RAISES AN ALERT THAT THE PAPER DOES NOT DISCUSS.
+     The run ends with "TENSION ALERT: Drift is +7.04%. Might conflict with
+     high-z BAO." ⚠️ Neither that drift nor the 4429.7 Mpc distance appears
+     anywhere in Foundation II. (The string "7.04" IS in the paper, but as
+     part of an arXiv identifier -- not as this quantity.)
+
+  2. ⇒ WHAT THAT MEANS: this is an EXPLORATORY optimisation, and its own
+     verdict is a warning, not a result. It belongs to the same open problem
+     the paper does track -- PO-F2-5, the H0-age-BAO-theta* quadrilemma,
+     which Foundation II states is NOT resolved. Reading the alert as a
+     failure of the framework would be wrong; reading it as a validated
+     result would be equally wrong.
+
+  3. IT DRAWS BUT SAVES NOTHING. No savefig, no plt.show(): run inside the
+     pipeline it produces no file. The printed summary is its only output,
+     which is why the numbers above are quoted here in the header.
 Author: Pascal Fichant
 Target Journal: Physical Review D (PRD)
 
 THEORETICAL CONTEXT:
 We formulate the H0-Age-BAO trilemma as a forced inverse problem. 
-We know the Universe must be ~13.5 Gyr old to accommodate early JWST galaxies and 
+[19/10/2026] 13.5 Gyr is a historical exploratory target, not an ECF value: the corpus gives t0 = 13.33 Gyr for w = -1 and 13.19 Gyr at the calibrated (w0, wa) = (-0.904, -0.153) point (F1). This script is not cited by any paper.]
+The original hypothesis was that the Universe must be ~13.5 Gyr old to accommodate early JWST galaxies and 
 local stellar populations, while H0 remains anchored at 73 km/s/Mpc. 
 Because modifying the late-time expansion history invariably affects the comoving 
 distance, a perfect 0.00% BAO drift is mathematically incompatible with a 13.5 Gyr age.
@@ -34,7 +60,10 @@ warnings.filterwarnings("ignore")
 # 1. PARAMÈTRES COSMOLOGIQUES DE BASE
 # ====================================================================
 H0 = 73.0
-Omega_m0 = 0.315
+# [D3, 22/09/2026 -- DEC-A7-POST-05] ECF background at the script's own H0 = 73.0
+# (kept; "H0 remains anchored at 73"): Omega_m = omega_m/h^2 with h = 0.730
+# (A-7 rule; 0.26716). Was 0.315 (Planck-h value).
+Omega_m0 = (0.02237 + 0.1200)/(H0/100.0)**2
 Omega_de0 = 1.0 - Omega_m0
 c_km_s = 299792.458
 z_bao_target = 1.5
@@ -63,7 +92,7 @@ def compute_comoving_distance(w_func, z_target):
     integral, _ = quad(lambda z: 1.0 / E_z(z, w_func), 0, z_target)
     return (c_km_s / H0) * integral
 
-# --- Référentiel LCDM (w=-1) ---
+# --- LCDM reference (w=-1) ---
 def w_lcdm(z): return -1.0
 age_lcdm = compute_cosmic_age(w_lcdm)
 dm_lcdm = compute_comoving_distance(w_lcdm, z_bao_target)
@@ -87,10 +116,10 @@ def objective_function(params):
     age = compute_cosmic_age(w_test)
     dm = compute_comoving_distance(w_test, z_bao_target)
     
-    # MODE FORCÉ : Pénalité colossale (x1000) si l'âge n'est pas EXACTEMENT 13.5
+    # FORCED MODE: huge penalty (x1000) if the age is not EXACTLY 13.5
     age_penalty = ((age - TARGET_AGE) ** 2) * 1000.0
     
-    # On laisse l'algorithme trouver le BAO minimum possible naturellement
+    # The optimiser is left to find the lowest achievable BAO deviation
     bao_penalty = (((dm - dm_lcdm) / dm_lcdm) * 100) ** 2
     
     return age_penalty + bao_penalty 
@@ -100,7 +129,7 @@ print("RUNNING GLOBAL GENETIC ALGORITHM (FORCED MODE)...")
 print(f"Targeting strictly Age = {TARGET_AGE} Gyr to evaluate absolute BAO minimum drift.")
 print("Scanning parameter space. Please wait ~5 seconds...")
 
-# Limites physiques élargies pour laisser l'algorithme respirer
+# Physical bounds widened, to give the optimiser room
 bounds = [(-4.0, 0.0), (0.0, 4.0)]
 
 # Solveur global
@@ -132,10 +161,16 @@ print(f"\n    -> Achieved Cosmic Age t0 : {age_ecks:.3f} Gyr  <-- TARGET FORCED"
 print(f"    -> Resulting BAO Distance : {dm_ecks:.1f} Mpc  <-- Minimal Drift: {delta_dm_ecks:+.3f}%")
 
 print("-" * 65)
-if abs(delta_dm_ecks) <= 2.5:
-    print(f">>> SUCCESS: Drift is {delta_dm_ecks:+.2f}%. Fully compatible with DESI (2024) tensions! <<<")
-else:
-    print(f">>> TENSION ALERT: Drift is {delta_dm_ecks:+.2f}%. Might conflict with high-z BAO. <<<")
+# [D3, 22/09/2026 -- DEC-A7-POST-02/05] The verdict was a hard-coded threshold
+# ("SUCCESS ... Fully compatible with DESI (2024)" if |drift| <= 2.5 %). After A-7
+# the drift falls to +1.46 % and that branch fired, but the drift is measured
+# against this script's own w = -1 reference at the same H0 and Omega_m, which
+# is itself disfavoured by BAO after A-7 (Delta chi2_BAO = +13.1 with the
+# eBOSS DR16 consensus target 30.21 +/- 0.79, DEC-A7-POST-02, provenance memo and
+# observational-closure memo of 22/09/2026).
+# No data enter here, so no compatibility verdict is printed.
+print(f">>> Drift vs the w = -1 reference (same H0, Omega_m): {delta_dm_ecks:+.2f}%."
+      f" Not a comparison with BAO/DESI data (see header). <<<")
 print("=" * 65)
 
 # ====================================================================

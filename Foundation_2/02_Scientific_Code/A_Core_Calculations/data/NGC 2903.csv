@@ -1,3 +1,6 @@
+# NGC 2903 -- SPARC (Lelli+2016), Rotmod_LTG
+# Vbar = sqrt(Vgas^2 + 0.5*Vdisk^2 + 0.7*Vbul^2)
+# M/L identical to plot_sparc175_mosaic.py -- do not diverge
 Radius,Vobs,Verr,Vbar
 0.32,44.0,8.0,139.87986381177242
 0.64,64.0,8.0,144.38413676716706

@@ -27,6 +27,16 @@ Usage:
   Requires: numpy, matplotlib
 """
 
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -69,11 +79,11 @@ f_GA_plus  = f_KZ_best * (L_GA_chord + sigma_arr * sig_GA_mpc) / L_GA_chord
 f_GA_minus = f_KZ_best * (L_GA_chord - sigma_arr * sig_GA_mpc) / L_GA_chord
 
 # ─── Colors & style ─────────────────────────────────────────────────────────
-panel_bg = '#111820'
-dark_bg  = '#0d1117'
-sky_bg   = '#050a12'
-text_col = '#e8e8e8'
-grid_col = '#2a3a4a'
+panel_bg = 'white'
+dark_bg  = 'white'
+sky_bg   = 'white'
+text_col = '#222222'
+grid_col = '#cccccc'
 c_br     = '#4da6ff'   # Big Ring: blue
 c_ga     = '#ffd700'   # Giant Arc: gold
 c_lcdm   = '#ff4444'   # ΛCDM limit: red
@@ -108,7 +118,7 @@ ax1.set_title("Giant Arc — TVR Projection", color=text_col, fontsize=12, pad=8
 ax1.tick_params(colors=text_col)
 for sp in ax1.spines.values(): sp.set_color(grid_col)
 ax1.grid(color=grid_col, alpha=0.5, linewidth=0.7)
-ax1.legend(fontsize=8.5, facecolor='#1a2a3a', labelcolor=text_col,
+ax1.legend(fontsize=8.5, facecolor='white', labelcolor=text_col,
             framealpha=0.85, loc='lower right')
 ax1.set_xlim(0, 90)
 ax1.set_ylim(0, 2250)
@@ -145,7 +155,7 @@ ax2.grid(color=grid_col, alpha=0.5, linewidth=0.7)
 handles, labels = ax2.get_legend_handles_labels()
 ax2.legend(handles=handles + [patch1, patch2, patch3],
             labels=labels  + ['< 1σ zone', '1–2σ zone', '> 2σ zone'],
-            fontsize=8.5, facecolor='#1a2a3a', labelcolor=text_col,
+            fontsize=8.5, facecolor='white', labelcolor=text_col,
             framealpha=0.85, loc='upper right')
 ax2.set_xlim(0, 5)
 ax2.set_ylim(3, 5)
@@ -158,7 +168,7 @@ ax3.set_facecolor(sky_bg)
 rng = np.random.default_rng(42)
 sx, sy = rng.uniform(-22, 22, 400), rng.uniform(-22, 22, 400)
 sm = rng.uniform(0.3, 1.4, 400)
-ax3.scatter(sx, sy, s=sm, color='white', alpha=0.5, zorder=1)
+ax3.scatter(sx, sy, s=sm, color='#999999', alpha=0.5, zorder=1)
 
 # ΛCDM homogeneity limit (red dashed circle)
 ax3.add_patch(Circle((0, 0), theta_homo/2, fill=False,
@@ -188,7 +198,7 @@ ax3.plot(0, 0, '+', ms=14, color=c_br, lw=2.0, zorder=6)
 # Info box
 ax3.text(-20, 19, f'$z = 0.802$\n$D_A = {D_A:.0f}$ Mpc',
           color=text_col, fontsize=9,
-          bbox=dict(facecolor='#1a2a3a', edgecolor=grid_col, alpha=0.85, pad=4))
+          bbox=dict(facecolor='white', edgecolor=grid_col, alpha=0.85, pad=4))
 
 # Legend patches
 leg_br  = Patch(edgecolor=c_br,   facecolor='none', lw=2.5,
@@ -198,7 +208,7 @@ leg_ga  = Patch(edgecolor=c_ga,   facecolor='none', lw=2.5,
 leg_lim = Patch(edgecolor=c_lcdm, facecolor='none', lw=1.5, ls='--',
                  label=f'LCDM limit ({lim_homo:.0f} Mpc)')
 ax3.legend(handles=[leg_br, leg_ga, leg_lim],
-            fontsize=8, facecolor='#1a2a3a', labelcolor=text_col,
+            fontsize=8, facecolor='white', labelcolor=text_col,
             framealpha=0.85, loc='lower right')
 
 ax3.set_xlim(-22, 22); ax3.set_ylim(-22, 22)
@@ -220,7 +230,7 @@ for ax in [ax1, ax2, ax3]:
     ax.xaxis.label.set_color(text_col)
     ax.yaxis.label.set_color(text_col)
 
-plt.savefig("fig_tvr_megastructures.png", dpi=200,
+plt.savefig("fig_tvr_megastructures.png", dpi=300,
              bbox_inches='tight', facecolor=fig.get_facecolor())
 plt.close()
 print("\nSaved: fig_tvr_megastructures.png")

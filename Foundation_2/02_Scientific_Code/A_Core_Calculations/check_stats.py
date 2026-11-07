@@ -1,48 +1,45 @@
-
-#!/usr/bin/env python3
-"""
-check_stats.py
-ECF Foundation II — Pascal Fichant, May 2026
-
-Purpose:
-    Calculates the true global weighted reduced chi-squared for the ECF 
-    torsion-halo fits over the 175 galaxies of the SPARC database.
-    This script appropriately weights each galaxy by its degrees of freedom 
-    (number of data points - 2 parameters) to prevent low-quality data 
-    from skewing the unweighted mean.
-"""
-
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+import os
+import sys
+#check_stats.py
 import pandas as pd
 
-# Load the recently generated fit results
-# Ensure this script is run from the same directory containing the 'output' folder
-import os as _os
-_HERE = _os.path.dirname(_os.path.abspath(__file__))
-import os as _os2
+# Load the results just generated
+# ⚠️ CHAIN POSITION (documented 23/08/2026). This script READS the reference
+# fit; it does not produce it. Without the CSV it used to die on a raw
+# FileNotFoundError, which reads like a broken repository -- it is not: the
+# file is written by fit_sparc175.py, which must run first.
+CSV = "output/sparc175_fit_results.csv"
+if not os.path.exists(CSV):
+    sys.exit(f"[STOP] {CSV} not found.\n"
+             "       Run fit_sparc175.py first -- it produces the reference fit\n"
+             "       (171 galaxies after the nu >= 3 cut, median chi2_red 0.802).\n"
+             "       The whole pipeline in the right order: "
+             "python3 run_all_simulations_F2.py")
 
-def _find_found_dir(start):
-    d = start
-    for _ in range(5):
-        if _os2.path.isdir(_os2.path.join(d, "data")) and _os2.path.isdir(_os2.path.join(d, "output")):
-            return d
-        parent = _os2.path.dirname(d)
-        if parent == d: break
-        d = parent
-    return _os2.path.dirname(_os2.path.abspath(__file__))
+df = pd.read_csv(CSV).dropna()
 
-_FOUNDATION2_DIR2 = _find_found_dir(_os2.path.dirname(_os2.path.abspath(__file__)))
-_CSV = _os2.path.join(_FOUNDATION2_DIR2, "output", "sparc175_fit_results.csv")
-df = pd.read_csv(_CSV).dropna()
+# ⚠️ CORRECTED 23/08/2026: the denominators below were HARD-CODED to 175.
+# Since the nu >= 3 cut (minimum 5 points per rotation curve) the reference
+# fit contains 171 galaxies, so the script was printing "x / 175" over a
+# 171-row table. Now taken from len(df), which follows the CSV.
 
-# Calculate the true global chi-squared, weighted by degrees of freedom (N - 2)
-degrees_of_freedom = df["n_points"] - 2
-chi2_global = (df["chi2_ecf"] * degrees_of_freedom).sum() / degrees_of_freedom.sum()
+# Global chi2, weighted by the degrees of freedom
+chi2_global = (df["chi2_ecf"] * (df["n_points"] - 2)).sum() / (df["n_points"] - 2).sum()
 
-print("\n=== SPARC STATISTICAL DIAGNOSTIC ===")
-print(f"Global weighted chi2  : {chi2_global:.3f}")
-print(f"Median chi2           : {df['chi2_ecf'].median():.3f}")
-print(f"Mean chi2 (unweighted): {df['chi2_ecf'].mean():.3f}")
-print("-" * 36)
-print(f"Excellent fits (chi2 < 2) : {(df['chi2_ecf'] < 2).sum()} / 175")
-print(f"Outliers / Poor fits (chi2 > 5) : {(df['chi2_ecf'] > 5).sum()} / 175")
+print("\n=== DIAGNOSTIC STATISTIQUE SPARC ===")
+print(f"chi2_global pondéré : {chi2_global:.3f}")
+print(f"chi2 médian         : {df['chi2_ecf'].median():.3f}")
+print(f"chi2 moyen (simple) : {df['chi2_ecf'].mean():.3f}")
+print(f"Galaxies excellentes (chi2 < 2) : {(df['chi2_ecf'] < 2).sum()} / {len(df)}")
+print(f"Galaxies problématiques (chi2 > 5): {(df['chi2_ecf'] > 5).sum()} / {len(df)}")
 print("====================================\n")

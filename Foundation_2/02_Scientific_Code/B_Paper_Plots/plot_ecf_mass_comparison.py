@@ -10,22 +10,22 @@ Output         : Fig1_ECF_Mass_Comparison.png
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- 1. PARAMETERS (Derived from SPARC Data - v1.0.3) ---
+# --- 1. PARAMETERS (emcee chain on the SPARC rotation curve; SPARC table1 baryons -- 22/09/2026) ---
 M_sun = 1.989e30        
 kpc_to_m = 3.086e19     
 g_cm3_to_kg_m3 = 1000.0 
 
 # ECF Model (Best Fit parameters for NGC 6503 - Table 4)
 # --- CORRECTION v1.0.3 ---
-log_rho0 = -23.25                      
-rho0 = (10**log_rho0) * g_cm3_to_kg_m3 
-Rs_kpc = 1.70                          
+log_rho0 = -23.2517   # best fit, mcmc_ngc6503_sparc.py (31 SPARC points)
+rho0 = (10**log_rho0) * g_cm3_to_kg_m3
+Rs_kpc = 1.7038       # kpc, same chain                          
 Rs = Rs_kpc * kpc_to_m                 
 
 # Baryons (Observed Data approximation)
-M_baryon_total_Msun = 6.4e9            
-M_b_tot = M_baryon_total_Msun * M_sun  
-Rd_kpc = 2.0  # Rayon d'échelle du disque baryonique (approx)
+M_baryon_total_Msun = 8.742e9  # stars + gas, SPARC table1 (0.5*L[3.6] + 1.33*M_HI); 6.4e9 was stars only
+M_b_tot = M_baryon_total_Msun * M_sun
+Rd_kpc = 2.16  # Rayon d'échelle du disque (R_disk, SPARC table1)
 
 # --- 2. FUNCTIONS ---
 def mass_halo_ecf(r_kpc):

@@ -126,8 +126,17 @@ def main():
               fontsize=11, style='italic')
 
     # Label for the Axis
-    ax.text(0.1, 0, 1.5, "Preferred Direction\n(Axis of Evil)", 
-            color='#FF4444', ha='center', fontsize=10, fontweight='bold')
+    # [CORRECTED 08/09/2026] Was ax.text(0.1, 0, 1.5, ...) in 3D data
+    # coordinates with ha='center': it landed centred on the red axis itself,
+    # which is drawn at zorder=100 and hid the text. Moved to 2D axes
+    # coordinates, offset to the left of the axis, with a small connector.
+    ax.text2D(0.285, 0.845, "Preferred Direction\n(Axis of Evil)",
+              transform=ax.transAxes, color='#FF4444', ha='center',
+              va='center', fontsize=10, fontweight='bold')
+    ax.annotate("", xy=(0.487, 0.838), xytext=(0.400, 0.845),
+                xycoords=ax.transAxes, textcoords=ax.transAxes,
+                arrowprops=dict(arrowstyle='-', color='#FF4444',
+                                lw=1.0, alpha=0.8))
 
     # View Angle (Top-down oblique to show the spiral)
     ax.view_init(elev=28, azim=45)

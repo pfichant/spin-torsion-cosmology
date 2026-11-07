@@ -48,11 +48,11 @@ def main():
     rect = patches.Rectangle((-1.4, -1.7), 2.8, 0.35, linewidth=1, edgecolor='gray', facecolor='white', alpha=0.9)
     ax1.add_patch(rect)
     
-    # Red Dot - CORRECTION ICI (ajout du r)
+    # Red dot -- fixed here (raw string added)
     ax1.scatter(-1.2, -1.53, c='red', s=60, edgecolors='none')
     ax1.text(-1.1, -1.58, r"Hot Spot ($\Delta T > 0$)", fontsize=10, va='center')
     
-    # Blue Dot - CORRECTION ICI (ajout du r)
+    # Blue dot -- fixed here (raw string added)
     ax1.scatter(0.1, -1.53, c='blue', s=60, edgecolors='none')
     ax1.text(0.2, -1.58, r"Cold Spot ($\Delta T < 0$)", fontsize=10, va='center')
 

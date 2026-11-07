@@ -1,3 +1,6 @@
+# NGC 5055 -- SPARC (Lelli+2016), Rotmod_LTG
+# Vbar = sqrt(Vgas^2 + 0.5*Vdisk^2 + 0.7*Vbul^2)
+# M/L identical to plot_sparc175_mosaic.py -- do not diverge
 Radius,Vobs,Verr,Vbar
 0.72,125.0,17.6,142.48485954654973
 1.43,162.0,8.5,169.83829618198598

@@ -37,5 +37,5 @@ leg = [
 ax.legend(handles=leg, fontsize=8.5, loc='upper center',
           bbox_to_anchor=(0.5, -0.16), ncol=2, framealpha=0.95)
 fig.subplots_adjust(bottom=0.25)
-fig.savefig('Fig_RhoDEAbsolute.png', dpi=200, bbox_inches='tight')
+fig.savefig('Fig_RhoDEAbsolute.png', dpi=300, bbox_inches='tight', facecolor='white')
 print("Saved: Fig_RhoDEAbsolute.png")

@@ -1,9 +1,19 @@
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 # ==========================================
-# 1. Configuration de la figure (Mode Sombre)
+# 1. Figure setup (dark mode)
 # ==========================================
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6), facecolor='#0d1117')
 fig.subplots_adjust(wspace=0.1)
@@ -22,19 +32,19 @@ ax1.set_title("Standard Baryonic (Keplerian Falloff)", color='#7ec8e3', fontsize
 ax2.set_title("ECF Torsion Halo (Flat Rotation Curve)", color='#e8a07e', fontsize=12)
 
 # ==========================================
-# 2. Génération des étoiles (Structure Spirale)
+# 2. Star generation (spiral structure)
 # ==========================================
 N = 600
-# Distribution radiale (évite le centre exact)
+# Radial distribution (avoids the exact centre)
 r = np.random.uniform(0.05, 1.0, N)**0.6 * 10
 r = np.maximum(r, 0.8)
 
-# Création de deux bras spiraux initiaux
+# Create two initial spiral arms
 theta_offset = np.where(np.random.rand(N) > 0.5, 0, np.pi)
-# Le facteur 1.2 courbe les bras initialement
+# The 1.2 factor sets the initial arm curvature
 theta0 = theta_offset + (r * 1.2) + np.random.uniform(-0.25, 0.25, N)
 
-# Initialisation des nuages de points
+# Initialise the scatter plots
 scat1 = ax1.scatter([], [], s=4, c='#7ec8e3', alpha=0.8) # Newton en bleu
 scat2 = ax2.scatter([], [], s=4, c='#e8a07e', alpha=0.8) # ECF en orange
 
@@ -44,7 +54,7 @@ def init():
     return scat1, scat2
 
 # ==========================================
-# 3. Le Moteur Temporel (Mise à jour des frames)
+# 3. Time engine (frame updates)
 # ==========================================
 def update(frame):
     t = frame / 10.0

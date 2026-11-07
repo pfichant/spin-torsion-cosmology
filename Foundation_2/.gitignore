@@ -1,0 +1,2 @@
+# Reference outputs of the CMB seeds reproduction package: kept despite the root rule "*.log"
+!02_Scientific_Code/CMB_Seeds_REPRO/reference/*.log

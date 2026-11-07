@@ -17,7 +17,7 @@ DESCRIPTION:
     Panel B : Baryonic Tully-Fisher Relation (BTFR) log-log.
 
 INPUT:
-    output/sparc175_fit_results.csv  (from generate_sparc175_mosaic.py)
+    output/sparc175_fit_results.csv  (reference, from fit_sparc175.py)
     Columns required: galaxy, chi2_ecf, chi2_newton, v_inf_kms, n_points
 
 OUTPUT:
@@ -35,6 +35,7 @@ REFERENCES:
 """
 
 import sys
+import os
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -61,14 +62,42 @@ def load_data(csv_path):
         print("[INFO] Loaded real data: {} galaxies from {}".format(len(df), csv_path))
         v = df["v_inf_kms"].values
         return df["chi2_ecf"].values, df["chi2_newton"].values, v, K_BTFR*v**4, True
-    print("[WARN] {} not found -- dev-mode simulation".format(csv_path))
+    # [AJOUTE 16/09/2026 — C-FIX-05] Garde-fou fail-closed.
+    #
+    # Avant : l'absence du CSV reel declenchait SILENCIEUSEMENT une simulation,
+    # sur un simple [WARN]. Un run de publication pouvait donc produire une
+    # figure d'apparence normale a partir de donnees fabriquees.
+    #
+    # Desormais le mode par defaut EXIGE les donnees reelles. La simulation
+    # reste disponible, mais seulement sur opt-in explicite.
+    _dev = ("--dev-simulated" in sys.argv) or (
+        os.environ.get("ECF_DEV_SIMULATED", "").strip() == "1")
+    if not _dev:
+        raise FileNotFoundError(
+            "\n"
+            "  DONNEES SPARC REELLES ABSENTES : {}\n"
+            "\n"
+            "  Le mode publication exige le fichier de resultats reel.\n"
+            "  Arret volontaire : aucune donnee simulee ne sera substituee.\n"
+            "\n"
+            "  Pour un run de developpement sur donnees simulees, relancer avec\n"
+            "      --dev-simulated            (ou ECF_DEV_SIMULATED=1)\n"
+            "  Les sorties porteront alors un marquage explicite.\n".format(csv_path))
+    print("[SIMULATED / DEVELOPMENT -- NOT PUBLICATION DATA] {} absent ;"
+          " simulation autorisee par opt-in explicite.".format(csv_path))
     np.random.seed(SEED)
     n    = 175
     good = np.clip(np.random.lognormal(np.log(0.70), 0.30, 125), 0.12, 1.99)
     mid  = np.random.uniform(2.0, 4.9, 27)
     bad  = np.clip(np.random.lognormal(np.log(12.0), 0.55, 23), 5.1, 50.0)
     c    = np.concatenate([good, mid, bad])
-    c    = c * (0.796 / np.median(c))
+    # ⚠️ TARGET UPDATED 23/08/2026: was 0.796, the median BEFORE the nu >= 3
+    # cut. The reference fit now excludes the four galaxies with only four
+    # valid points, giving 0.802 over 171 galaxies. This dev-mode simulation
+    # rescales its fake sample onto the published median, so the target has to
+    # follow -- otherwise the placeholder figure shows a value the paper no
+    # longer quotes.
+    c    = c * (0.802 / np.median(c))
     cn   = np.clip(np.random.lognormal(np.log(300), 0.8, n), 10, 5000)
     v    = np.random.uniform(40, 380, n)
     return c, cn, v, K_BTFR*v**4, False
@@ -97,7 +126,7 @@ def plot_comparison():
     ax1  = fig.add_subplot(gs[0])
     bins = np.linspace(0, 12, 40)
     ax1.hist(chi2_ecf, bins=bins, color=C_ECF, alpha=0.75,
-             edgecolor="white", lw=0.4, label="ECF Torsion Halo", zorder=3)
+             edgecolor="white", lw=0.4, label="ECF halo (adopted pseudo-isothermal, PO-ECF-HALO)", zorder=3)
     ax1.hist(chi2_newton[chi2_newton <= 12], bins=bins,
              color=C_NEWTON, alpha=0.45, edgecolor="white", lw=0.4,
              label="Pure Newtonian (baryons only)", zorder=2)

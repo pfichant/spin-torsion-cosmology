@@ -6,9 +6,23 @@ FILENAME       : fetch_sparc_data.py
 DESCRIPTION    : Downloads official SPARC rotation curves (Reliable Mirror).
                  Computes Vbar and saves to CSV.
 TARGETS        : 10 Representative Galaxies (Clean Sample).
+STATUS         : ⚠️ EXPLORATORY -- companion of verify_galaxies_from_csv.py.
+                 Both belong to the pilot stage on 10 galaxies, superseded by
+                 the full 175-galaxy fit (fit_sparc175.py), which is what
+                 Foundation II quotes. Kept for transparency.
 =============================================================================
 """
 
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import os
 import requests
 import zipfile
@@ -17,7 +31,7 @@ import pandas as pd
 import numpy as np
 
 # --- CONFIGURATION ---
-# URL stable (Zenodo) pour éviter les blocages serveurs
+# Stable Zenodo URL, to avoid server-side blocking
 SPARC_ZIP_URL = "https://zenodo.org/records/16284118/files/Rotmod_LTG.zip"
 OUTPUT_DIR = "data"
 
@@ -34,7 +48,7 @@ ML_BULGE = 0.7
 def fetch_and_process_sparc():
     print(f"[INFO] Connexion au serveur de données ({SPARC_ZIP_URL})...")
     
-    # Header pour éviter le blocage 403/10061
+    # Header set to avoid a 403/10061 block
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     
     try:
@@ -64,7 +78,7 @@ def fetch_and_process_sparc():
                 except:
                     continue
 
-            # Calcul V_bar
+            # Compute V_bar
             v_gas_sq = np.abs(df['Vgas']) * df['Vgas']
             v_disk_sq = df['Vdisk']**2 * ML_DISK
             v_bulge_sq = df['Vbulge']**2 * ML_BULGE

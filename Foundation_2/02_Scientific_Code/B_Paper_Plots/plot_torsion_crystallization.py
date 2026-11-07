@@ -5,6 +5,7 @@ Script : plot_torsion_crystallization.py
 Description : Generates a visual representation of the topological phase transition
               from a continuous ECF spin-fluid to discrete micro-knots.
 """
+# Last modified: 30/08/2026, 12:24 (Paris time)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -62,7 +63,7 @@ def generate_phase_transition_plot():
     ax1.add_artist(con)
     
     # Add temperature text above the arrow
-    fig.text(0.5, 0.53, "Cooling\n" + r"$T_{EW} \approx 150$ GeV", ha='center', va='bottom', fontsize=12, fontweight='bold', color='darkred')
+    fig.text(0.5, 0.53, "Cooling\n" + r"$T_{EW} \approx 159$ GeV", ha='center', va='bottom', fontsize=12, fontweight='bold', color='darkred')
     fig.text(0.5, 0.45, "Kibble-Zurek\nMechanism", ha='center', va='top', fontsize=10, style='italic')
 
     plt.tight_layout(rect=[0, 0.0, 1, 0.92])

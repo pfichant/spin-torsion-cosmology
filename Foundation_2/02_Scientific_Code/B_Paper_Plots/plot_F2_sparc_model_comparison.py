@@ -40,7 +40,7 @@ KEY DISTINCTION (ECF)
 ECF achieves chi2_med = 0.80, comparable to the best cored profiles,
 while using the SAME number of free parameters as NFW (2 per galaxy):
 rho_0 (central density) and R_s (scale radius).
-The ECF Micro-Knot candidate mass M_micro = 6e24 kg is a parameter-free
+The ECF Micro-Knot candidate mass M_micro = 3.74e24 kg is a parameter-free
 prediction of the ECKS electroweak bounce; it is NOT a free parameter.
 This contrasts with:
   - NFW: halo mass M_200 or concentration c is a free parameter
@@ -86,7 +86,9 @@ AUTHOR
 """
 
 import os
+import sys
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -145,7 +147,7 @@ models = {
     'ECF\n(this work)': {
         'med': 0.80, 'mean': 0.94, 'std': 0.18,
         'n_free': 2, 'global_DM': r'$M_{\mu K}$ predicted',
-        'color': '#1144AA', 'ref': 'F2 v15',
+        'color': '#1144AA', 'ref': 'Foundation II',
     },
 }
 
@@ -168,11 +170,57 @@ def generate_chi2_distribution(med, mean, std, n=175, seed=None):
                          constant_values=mean)
     return samples[:n]
 
+ECF_KEY = 'ECF\n(this work)'
+ECF_CSV = os.path.join('output', 'sparc175_fit_results.csv')
+
+
+def load_ecf_chi2(path=ECF_CSV):
+    """Read the REAL per-galaxy chi2 produced by fit_sparc175.py.
+
+    Audit of 24/08/2026: the ECF entry above used to carry mean = 0.94 +/- 0.18,
+    a hardcoded legacy figure that no calculation on the current data
+    reproduces (the weighted mean is 4.8, the plain mean 3.5, the median 0.802).
+    It was withdrawn from Foundation II, so the diamond drawn from it would
+    have contradicted the text. The ECF distribution is now read from the file
+    the pipeline actually writes.
+
+    The three other models stay synthetic: their per-galaxy chi2 live in the
+    Li+2020 and McGaugh+2016 supplementary catalogues, which are not part of
+    this repository. The caption must say so.
+    """
+    if not os.path.exists(path):
+        return None
+    d = pd.read_csv(path)
+    col = 'chi2_ecf' if 'chi2_ecf' in d.columns else 'chi2_red'
+    return d[col].to_numpy(dtype=float)
+
+
 model_names = list(models.keys())
 model_data  = {}
+ecf_real = load_ecf_chi2()
+
 for i, (name, props) in enumerate(models.items()):
-    model_data[name] = generate_chi2_distribution(
-        props['med'], props['mean'], props['std'], seed=i*42)
+    if name == ECF_KEY and ecf_real is not None:
+        model_data[name] = ecf_real
+        # The summary panel must show what is plotted, not the legacy numbers.
+        props['med'] = float(np.median(ecf_real))
+        props['mean'] = float(np.mean(ecf_real))
+        props['std'] = float(np.std(ecf_real, ddof=1))
+        props['ref'] = 'Foundation II (measured)'
+        print(f"[DATA] ECF distribution read from {ECF_CSV}: "
+              f"{len(ecf_real)} galaxies, median {props['med']:.3f}, "
+              f"mean {props['mean']:.3f}")
+    else:
+        model_data[name] = generate_chi2_distribution(
+            props['med'], props['mean'], props['std'], seed=i*42)
+        if name == ECF_KEY:
+            # RULE 23 -- the worst of the four cases: the figure would not be
+            # EMPTY but FALSE. The script used to warn, plot anyway and exit 0;
+            # a terminal warning does not survive an automated chain.
+            print(f"[ERROR] {ECF_CSV} not found -- the ECF curve would be "
+                  f"SYNTHETIC and its mean a legacy value, while the caption "
+                  f"says 'Foundation II (measured)'. Run fit_sparc175.py first.")
+            sys.exit(1)
 
 # ── Figure: 3 panels ──────────────────────────────────────────────────────────
 fig = plt.figure(figsize=(18, 7.5), facecolor='white')
@@ -191,7 +239,7 @@ violin_parts = ax0.violinplot(
     [model_data[n] for n in model_names],
     positions=positions,
     widths=0.6,
-    showmedians=True,
+    showmedians=False,   # see note below: one median bar only
     showextrema=False,
 )
 
@@ -202,8 +250,9 @@ for i, (pc, name) in enumerate(zip(violin_parts['bodies'], model_names)):
     pc.set_edgecolor(models[name]['color'])
     pc.set_linewidth(1.5)
 
-violin_parts['cmedians'].set_color('#111111')
-violin_parts['cmedians'].set_linewidth(2.5)
+# 'cmedians' no longer exists: showmedians is off, the median is drawn once
+# by the explicit loop below (published value for the redrawn models,
+# measured value for ECF).
 
 # Strip plot (jitter)
 for i, name in enumerate(model_names):
@@ -213,14 +262,15 @@ for i, name in enumerate(model_names):
                 c=models[name]['color'], s=8, alpha=0.30,
                 edgecolors='none', zorder=3)
 
-# Mean markers
-for i, name in enumerate(model_names):
-    ax0.scatter(positions[i], models[name]['mean'],
-                marker='D', s=60, color='white',
-                edgecolors=models[name]['color'],
-                linewidths=2.0, zorder=6,
-                label=f"{name.replace(chr(10), ' ')}: "
-                      fr"$\bar\chi^2={models[name]['mean']:.2f}$")
+# Mean markers withdrawn (audit 24/08/2026).
+# Only the ECF distribution is measured; the other three are synthetic draws
+# from published summary statistics, clipped to [0.1, 8] and therefore
+# tail-free by construction. Their means are not comparable to a real mean
+# computed over a distribution that keeps its outliers (up to chi2 = 83).
+# Plotting both on the same axis made ECF look worst for a reason that is an
+# artefact of the drawing, not a property of the model. The median is the
+# robust statistic quoted throughout Foundation II, and the only one that can
+# be compared here.
 
 # Median markers
 for i, name in enumerate(model_names):
@@ -236,7 +286,7 @@ ax0.set_xticks(positions)
 ax0.set_xticklabels([n.replace('\n', '\n') for n in model_names], fontsize=10)
 ax0.set_ylabel(r'Reduced $\tilde\chi^2$ per galaxy', fontsize=12)
 ax0.set_title('(a) $\\tilde\\chi^2$ distribution\n'
-              r'SPARC-175  (synthetic; see caption)',
+              r'ECF measured; others redrawn (see caption)',
               fontsize=12, fontweight='bold')
 ax0.set_ylim(0, 5.5)
 ax0.tick_params(which='both', direction='in', top=True, right=True)
@@ -252,9 +302,6 @@ from matplotlib.lines import Line2D
 leg_elements = [
     Line2D([0], [0], color='#111111', lw=2.5,
            label='Horizontal bar = median'),
-    Line2D([0], [0], marker='D', color='w', markerfacecolor='w',
-           markeredgecolor='#555555', markersize=7, lw=0,
-           label='Diamond = weighted mean'),
     Line2D([0], [0], color='#444488', lw=1.5, ls='--',
            label=r'$\tilde\chi^2=1$'),
 ]
@@ -286,7 +333,7 @@ ax1.text(4.5, 52, '50th pct.', fontsize=8, color='#666666', ha='right')
 ax1.set_xlabel(r'$\tilde\chi^2_\nu$', fontsize=13)
 ax1.set_ylabel('Fraction of galaxies  [%]', fontsize=12)
 ax1.set_title('(b) Cumulative distribution\n'
-              r'SPARC-175  (synthetic; see caption)',
+              r'ECF measured; others redrawn (see caption)',
               fontsize=12, fontweight='bold')
 ax1.set_xlim(0, 5)
 ax1.set_ylim(0, 100)
@@ -303,7 +350,7 @@ ax2.set_facecolor('white')
 ax2.axis('off')
 
 col_labels = ['Model', r'$\tilde\chi^2_{\rm med}$',
-              r'$\bar\chi^2_\nu\pm\sigma$',
+              'Distribution',
               'Free\npar.', 'Global DM param', 'Ref.']
 
 row_data = []
@@ -311,7 +358,8 @@ for name, props in models.items():
     row_data.append([
         name.replace('\n', '\n'),
         f"{props['med']:.2f}",
-        f"{props['mean']:.2f} ± {props['std']:.2f}",
+        ("measured" if props.get('ref', '').endswith('(measured)')
+         else "synthetic"),
         str(props['n_free']),
         props['global_DM'],
         props['ref'],
@@ -359,13 +407,12 @@ for j in range(len(col_labels)):
     cell.set_edgecolor('#1144AA')
 
 ax2.set_title('(c) Model comparison summary\n'
-              '(175 SPARC galaxies, 2 per-galaxy free params)',
+              '(2 per-galaxy free parameters; ECF on 171 fitted galaxies)',
               fontsize=12, fontweight='bold')
 
 # Note boxes
 ax2.text(0.50, 0.12,
-    r'$\tilde\chi^2_{\rm med}$: median (robust, 152 high-quality gal.)   '
-    r'$\bar\chi^2_\nu$: weighted mean (all 175 gal.)',
+    r'Median bars: measured (ECF) / published (others).',
     transform=ax2.transAxes, fontsize=8, color='#333333',
     ha='center', va='center',
     bbox=dict(boxstyle='round,pad=0.3', fc='#F0F4FF',
@@ -383,9 +430,10 @@ ax2.text(0.50, 0.04,
 fig.suptitle(
     r'Figure M3 — SPARC-175: ECF vs NFW / DC14 / MOND  $\tilde\chi^2$ Comparison'
     '\n'
-    r'ECF: $\tilde\chi^2_{\rm med}=0.80$, $\bar\chi^2_\nu=0.94\pm0.18$, '
+    fr"ECF: $\tilde\chi^2_{{\rm med}}={models[ECF_KEY]['med']:.2f}$ "
+    fr"over {len(model_data[ECF_KEY])} galaxies (measured), "
     '0 global free parameters  |  '
-    '[Distributions synthetic — see caption for data sources]',
+    'NFW / DC14 / MOND redrawn from published statistics',
     fontsize=11, fontweight='bold', color='#111111', y=1.02)
 
 out = os.path.join(FIGS, 'Fig_SPARC_Model_Comparison.png')

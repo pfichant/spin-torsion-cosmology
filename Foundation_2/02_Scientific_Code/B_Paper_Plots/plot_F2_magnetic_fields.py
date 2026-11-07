@@ -18,8 +18,12 @@ Chern-Simons coupling L_CS ~ kappa^2 * s0 * J5 (Carroll, Field & Jackiw
 
   0D Micro-Knot   (pi_2): dipolar B ~ r^{-3}
     - Origin: axial current J5 of extremal Kerr winding N=1
-    - Surface field: ~10^15-10^20 T at r_s = 1.5 mm (T~150 GeV)
-    - Today (cosmological dilution a^{-2}): ~10^{-13}-10^{-8} G at r > r_s
+    - Surface field: ~10^15-10^20 T at r_s = 5.56 mm (T_c = 159 GeV)
+    - Today (flux freezing, B ~ a^{-2}): DILUTION = (a_EW/a_0)^2 = 2.4e-31
+      [computed 15/10/2026, see DILUTION below], giving 2.4e-12 - 2.4e-7 G at r_s.
+      (The former provisional DILUTION = 1e-28 gave 1e-9 - 1e-4 G; the range
+      10^{-13}-10^{-8} quoted in earlier text was in tesla, not gauss:
+      audit v2, P1-022 / A-12.)
     - Profile: B(r) = B0_micro * (r_s / r)^3
 
   1D Torsion String (pi_1): solenoidal + helical along axis
@@ -49,21 +53,25 @@ torsion-CS coupling constant kappa^2 * s0. The ranges quoted reflect
 the uncertainty in s0; the PROFILES (radial dependences) are
 model-independent consequences of the defect topology.
 
-A factor-of-10^28 cosmological dilution (a_EW/a_0)^2 is applied to all
-surface/formation-epoch fields to obtain today's values.
+The cosmological dilution (a_EW/a_0)^2 = 2.4e-31 (computed 15/10/2026) is
+applied to the 0D surface field. The 1D, 2D and 3D 'today' amplitudes are
+hard-coded; they assume the former, undocumented factor 1e-28 and would be
+~400 times lower with the computed one. They are provisional.
 
 CANONICAL VALUES (Foundation II, Table tab:ecf_defect_summary)
 ---------------------------------------------------------------
   kappa^2 = 2.0766e-43 m/J
-  r_s (Micro-Knot) = 1.5e-3 m (Schwarzschild radius)
+  r_s (Micro-Knot) = 5.56e-3 m (Schwarzschild radius = c/H, exact)
   r_core (String)  = 1e-18 m  (electroweak coherence)
   delta_w (Wall)   = 1e-18 m  (electroweak coherence)
   xi_KZ            ~ 60 Mpc   (Kibble-Zurek scale)
-  M_micro          = 6e24 kg  = c^3 / (G * H_EW)
+  M_micro          = 3.74e24 kg = c^3 / (2 G H_EW)   [+/- 0.05e24]
 
 OBSERVATIONAL PREDICTIONS
 --------------------------
-  0D: contributes to intergalactic magnetic background; negligible alone
+  0D: none -- negligible alone and collectively (~1e-65 to 1e-60 G at the
+      mean spacing d ~ 0.056 pc; corrected 18/10/2026, was 'contributes to
+      intergalactic magnetic background')
   1D: Faraday rotation along filaments; LOFAR, MeerKAT
   2D: Faraday rotation gradient ACROSS void edges -> SKA
       preferred chirality (B flips sign at wall) -> discriminable
@@ -90,6 +98,7 @@ AUTHOR
   Contact: p.fichant.research@gmail.com
   GitHub:  github.com/pfichant/spin-torsion-cosmology
 """
+# Last modified: 15/10/2026 (Paris time) -- F2-A6, computed dilution factor
 
 import os
 import numpy as np
@@ -145,18 +154,29 @@ r_m = r_pc * pc_to_m                 # metres
 # ── Conversion: Gauss ──────────────────────────────────────────────────────────
 # All fields in Gauss (CGS); 1 T = 1e4 G
 
-# Cosmological dilution factor applied to all fields
-# (a_EW / a_0)^2 ~ (T_0 / T_EW)^2 ~ (2.7K / 1.5e15 K)^2 ~ 3.24e-31
-# but accounting for entropy reheating: dilution ~ 1e-28 (representative value)
-DILUTION = 1e-28
+# Cosmological dilution of a frozen-in magnetic field: B ~ a^{-2}.
+# [15/10/2026, F2-A6] Computed with entropy conservation (g_s a^3 T^3 = const):
+#   a_EW/a_0 = (g_s0 / g_s(T_c))^{1/3} * T_0 / T_c
+#            = (3.909 / 106.75)^{1/3} * (2.3487e-13 GeV) / (159 GeV) = 4.9e-16
+#   (a_EW/a_0)^2 = 2.4e-31   (2.2e-30 without the g_s factor).
+# The former value 1e-28 was undocumented (audit v2, P1-022 / A-12), ~400 times
+# too large; the former comment "(2.7 K / 1.5e15 K)^2 ~ 3.24e-31" was also off:
+# that ratio squared is 3.24e-30.
+_T0_GeV, _Tc_GeV, _gs0, _gsc = 2.7255 * 8.617333e-14, 159.0, 3.909, 106.75
+DILUTION = ((_gs0 / _gsc)**(1/3) * _T0_GeV / _Tc_GeV)**2   # = 2.41e-31
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 0D Micro-Knot: B(r) = B0_micro * (r_s / r)^3   [dipolar]
 # ─────────────────────────────────────────────────────────────────────────────
-r_s_m = 1.5e-3          # Schwarzschild radius (m)
+# [27/08/2026] Value revised: the horizon mass is c^3/(2GH), not c^3/(GH),
+# and T_c = 159 +/- 1 GeV (lattice, D'Onofrio+2014) rather than an unsourced
+# epoch. See Scripts_F2/calculate_microknot_mass.py.
+# NB: r_s and M_micro were mutually inconsistent before this date
+# (1.5 mm implies 1.0e24 kg, not 6e24). They now satisfy r_s = 2GM/c^2 = c/H.
+r_s_m = 5.56e-3         # Schwarzschild radius (m)
 r_s_pc = r_s_m / pc_to_m
 
-# Surface field range at T~150 GeV (s0 uncertainty): 10^15 - 10^20 T
+# Surface field range at T~159 GeV (s0 uncertainty): 10^15 - 10^20 T
 B_micro_surface_lo = 1e15 * 1e4 * DILUTION   # Gauss today, lower s0
 B_micro_surface_hi = 1e20 * 1e4 * DILUTION   # Gauss today, upper s0
 
@@ -204,11 +224,12 @@ B_wall_hi = np.maximum(B_wall_hi, 1e-20)
 B_fluid_lo = 1e-17 * np.ones_like(r_pc)
 B_fluid_hi = 1e-12 * np.ones_like(r_pc)
 
-# ── Reference: observed IGMF constraints ───────────────────────────────────────
-# CMB upper bound: B < 10^-9 G (Planck 2016)
-# Blazar cascade lower bound: B > 10^-16 G (Neronov & Vovk 2010)
-B_obs_upper = 1e-9
-B_obs_lower = 1e-16
+# ── Reference: allowed IGMF range (observational constraints) ───────────────────────────────────────
+# 22/10/2026 : bornes actuelles, comme dans le texte de F2 :
+# CMB upper bound: B < 4.4e-9 G (Planck 2015 XIX)
+# Blazar cascade lower bound: B > 3e-16 G (Neronov & Vovk 2010)
+B_obs_upper = 4.4e-9
+B_obs_lower = 3e-16
 
 # ── Observational scales ───────────────────────────────────────────────────────
 r_AU = 1.0 / 206265.0   # 1 AU in parsecs
@@ -237,8 +258,8 @@ ax.set_title('ECF magnetic field profiles\n(today, z = 0)', fontsize=13,
 
 # Observational bounds
 ax.axhspan(B_obs_lower, B_obs_upper, alpha=0.10, color='#888888',
-           label='Observed IGMF range\n' +
-                 r'$10^{-16}$–$10^{-9}$ G (blazar + CMB)',
+           label='Allowed IGMF range\n' +
+                 r'$3\times10^{-16}$–$4.4\times10^{-9}$ G (blazar + CMB)',
            zorder=1)
 ax.axhline(B_obs_upper, color='#555555', lw=1.2, ls='--', alpha=0.6)
 ax.axhline(B_obs_lower, color='#555555', lw=1.0, ls=':', alpha=0.5)
@@ -275,7 +296,7 @@ for rval, label in [(r_AU, '1 AU'), (r_pc_1, '1 pc'),
             rotation=90, va='bottom')
 
 # Profile labels
-ax.text(2e-8, 3e-7,  r'0D Micro-Knot' '\n' r'dipolar $\propto r^{-3}$',
+ax.text(3e-1, 1e0,  r'0D Micro-Knot (dipolar $\propto r^{-3}$): below plotted range' '\n' r'($<10^{-30}$ G for $r>10^{-10}$ pc)',
         fontsize=9, color=C_MICRO, fontweight='bold', ha='center')
 ax.text(3e2,  2e-10,
         r'1D Torsion String' '\n' r'solenoidal + helical',
@@ -294,7 +315,7 @@ legend_elements = [
     Line2D([0], [0], color='#555555', lw=1.2, ls='--',
            label=r'Dashed = upper $s_0$ bound'),
     mpatches.Patch(facecolor='#888888', alpha=0.2,
-                   label=r'Observed IGMF $10^{-16}$–$10^{-9}$ G'),
+                   label=r'Allowed IGMF $3\times10^{-16}$–$4.4\times10^{-9}$ G'),
 ]
 ax.legend(handles=legend_elements, loc='lower left', fontsize=9,
           framealpha=0.88, facecolor='#F4F6FF', edgecolor='#334488')
@@ -313,15 +334,15 @@ ax2.axis('off')
 table_data = [
     ['Level', 'Field type', 'Profile', r'$B_0$ today [G]', 'Observable'],
     ['0D\nMicro-Knot', 'Dipolar\n(q=+/-1, pres.)', r'$r^{-3}$',
-     '1e-13 to 1e-8 G', 'IGMF\nbackground'],
-    ['1D\nT. String', 'Solenoidal\n+ helical $J_5$', r'$e^{-r/r_c}$+const',
-     '1e-9 to 1e-6 G', 'Faraday\nfilaments'],
+     '2e-12 to 2e-7 G', 'none\n(negligible)'],
+    ['1D\nT. String*', 'Solenoidal\n+ helical $J_5$', r'$e^{-r/r_c}$+const',
+     '1e-9 to 1e-6 G\n(prov.)', 'Faraday\nfilaments'],
     ['2D\nChiral Wall', 'Tangential\n(dtheta=pi, flips)',
      r'$e^{-r/r_w}$',
-     '1e-10 to 1e-6 G', 'SKA void\nedges'],
+     '1e-10 to 1e-6 G\n(prov.)', 'SKA void\nedges'],
     ['3D\nT. Fluid', 'Isotropic SCMB\n(H!=0, global)',
      'constant',
-     '1e-17 to 1e-12 G', r'SKA $>$100 Mpc'],
+     '1e-17 to 1e-12 G\n(prov.)', r'SKA $>$100 Mpc'],
 ]
 
 colors_col = ['#E8EDF8'] + [
@@ -372,7 +393,7 @@ ax2.set_title('ECF magnetic field summary\n(all four defect levels)',
 # Note boxes below table
 ax2.text(0.50, 0.07,
     r'$\kappa^2 = 2.0766\times10^{-43}$ m J$^{-1}$   |   '
-    r'Dilution: $(a_{\rm EW}/a_0)^2\sim10^{-28}$   |   '
+    r'Dilution: $(a_{\rm EW}/a_0)^2\simeq2.4\times10^{-31}$ (0D; 1D–3D prov.)   |   '
     r'$s_0$ unknown (range shown)',
     transform=ax2.transAxes, fontsize=8, color='#444444',
     ha='center', va='center',
@@ -381,7 +402,8 @@ ax2.text(0.50, 0.07,
 
 ax2.text(0.50, 0.02,
     'Referee note: IGMF amplitudes depend on s0 (unknown); '
-    r'radial profiles are model-independent.',
+    r'radial profiles are model-independent.'
+    '\n*1D row: semi-topological, dynamical stability not established (open, PO-F2-8).',
     transform=ax2.transAxes, fontsize=7.5, color='#AA2222',
     ha='center', va='center',
     bbox=dict(boxstyle='round,pad=0.3', fc='#FFF0F0', ec='#CC2222',

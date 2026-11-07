@@ -3,7 +3,7 @@
 import os
 
 # --- FICHIER 1 : COURBES DE ROTATION (SPARC) ---
-# Ajout: Lien direct Case Western + Citation Lelli 2016
+# Added: direct Case Western link + Lelli 2016 citation
 csv_s1 = """# Dataset: Galaxy NGC 6503 Rotation Curve (Hybrid: SPARC Obs + ECF Model)
 # Source Description: Observational data retrieved from SPARC database (Lelli et al. 2016).
 # Source URL: http://astroweb.case.edu/SPARC/
@@ -37,7 +37,7 @@ Radius_kpc,V_obs,V_err,V_Newton,V_ECF,Chi2_Resid
 22.50,115.8,8.2,28.4,116.1,0.001"""
 
 # --- FICHIER 2 : BARYOGENÈSE (Simulation) ---
-# Ajout: Lien PDG pour la valeur de référence
+# Added: PDG link for the reference value
 csv_s2 = """# Dataset: Chiral Baryogenesis Simulation Output (v1.1)
 # Description: Evolution of baryon asymmetry through the Torsion Gap (Stiff Fluid w=1 -> Radiation w=1/3).
 # Validation Reference: Particle Data Group (PDG), Big Bang Nucleosynthesis Review.
@@ -57,12 +57,14 @@ Time_s,Temp_GeV,Matter_Density_nB,Antimatter_Density_nB_bar,Asymmetry_Ratio
 1.0e-34,3.2e14,3.2e31,0.0,Inf"""
 
 # --- FICHIER 3 : AXE DU MAL (CMB) ---
-# Ajout: Lien NASA Lambda + Citation Planck 2018
-csv_s3 = """# Dataset: CMB Low-Multipole Alignment ("Axis of Evil")
-# Source Description: Planck 2018 Legacy Release (Commander Likelihood), Low-l Power Spectrum.
-# Source URL: https://lambda.gsfc.nasa.gov/product/planck/current/
-# Citation: Planck Collaboration (2020). A&A, 641, A7. DOI:10.1051/0004-6361/201935201
-# Note: l=2,3 phases are from observation; l>3 are randomized for isotropic contrast.
+# [22/09/2026, decision N-6] Planck provenance header REMOVED: these numbers
+# come from no data (hard-coded values; no Planck file, a_lm computation or
+# extraction note exists in the corpus).
+csv_s3 = """# Dataset: ILLUSTRATIVE low-multipole phase alignment ("Axis of Evil" schematic)
+# Status: ILLUSTRATIVE VALUES ONLY -- the phases are not measured values and are
+#         not derived from Planck or any other data set.
+# Use: input of the illustrative Fig. 3 of Foundation II (plot_ecf_axis_of_evil_cmb.py).
+# Note: the 'Significance' column is illustrative as well.
 # Columns: Multipole (l), Mode (m), Amplitude (uK), Phase (rad), Significance
 Multipole_l,Mode_m,Amplitude_uK,Phase_Alignment_rad,Significance
 2,0,42.5,1.00,3.5sigma (Aligned)

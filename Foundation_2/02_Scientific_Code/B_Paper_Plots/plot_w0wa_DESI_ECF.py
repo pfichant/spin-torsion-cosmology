@@ -25,7 +25,7 @@ ax.plot(-1.0, 0.0, 's', color='black',  ms=10, zorder=6)
 ax.plot(-0.904, -0.153, '*', color='crimson', ms=18, zorder=7)
 ax.annotate(r'$\Lambda$CDM', xy=(-1.0, 0.0), xytext=(-1.28, 0.28), fontsize=9.5,
             color='black', arrowprops=dict(arrowstyle='->', color='black', lw=0.9))
-ax.annotate(r'ECF $(w_0, w_a)=(-0.904,-0.153)$' + '\n' + r'\textit{a priori prediction}',
+ax.annotate(r'ECF $(w_0, w_a)=(-0.904,-0.153)$' + '\n' + r'calibrated point (not independent of DESI)',
             xy=(-0.904, -0.153), xytext=(-0.65, 0.15),
             fontsize=9.5, color='crimson',
             arrowprops=dict(arrowstyle='->', color='crimson', lw=0.9))
@@ -42,9 +42,14 @@ leg = [
     mpatches.Patch(fc='royalblue', alpha=0.55, ec='royalblue',
                    label='DESI DR2 (68%, 95% C.L.)'),
     plt.Line2D([], [], marker='s', color='w', mfc='black', ms=9,
-               label=r'$\Lambda$CDM: $5.1\sigma$ DR1 / $4.9\sigma$ DR2'),
+               # [CORRIGE 15/09/2026] La legende annoncait « 4.9 sigma DR2 ». Ce chiffre
+# n'apparait pas dans arXiv:2503.14738, qui donne 3.1 sigma pour DESI
+# BAO + CMB et 2.8-4.2 sigma selon l'echantillon de supernovae. Le 4.9
+# etait une distance calculee en interne, jamais publiee par DESI --
+# corrigee dans le texte le 13/09, mais pas dans cette figure.
+                   label=r'$\Lambda$CDM: $3.1\sigma$ (DR2 BAO+CMB)'),
     plt.Line2D([], [], marker='*', color='w', mfc='crimson', ms=14,
-               label=r'ECF prediction (a priori, 0 free param.)'),
+               label=r'ECF calibrated point ($w_a$ via $\xi$; not independent of DESI)'),
 ]
 ax.legend(handles=leg, fontsize=8.8, loc='upper center',
           bbox_to_anchor=(0.5, -0.12), ncol=2, framealpha=0.95)
@@ -53,5 +58,5 @@ fig.text(0.5, 0.01,
          "Distances from DESI published central values with diagonal errors only"
          " — see Foundation II §DESI scope note for full methodology.",
          ha='center', fontsize=7, style='italic', color='gray')
-fig.savefig('Fig_w0wa_DESI_ECF.png', dpi=200, bbox_inches='tight')
+fig.savefig('Fig_w0wa_DESI_ECF.png', dpi=300, bbox_inches='tight', facecolor='white')
 print("Saved: Fig_w0wa_DESI_ECF.png")

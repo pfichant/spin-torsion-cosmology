@@ -22,41 +22,41 @@ def main():
     
     # ---------------------------------------------------
     # 1. PARAMÈTRES DE TEMPS (Échelle Logarithmique en secondes)
-    # On modélise de 10^-45 s à 10^-30 s
+    # Modelled from 10^-45 s to 10^-30 s
     # ---------------------------------------------------
     t_log = np.linspace(-44, -30, 1000)
     t = 10**t_log
     
     # ---------------------------------------------------
     # 2. MODÈLE STANDARD (Lambda-CDM + Inflaton)
-    # - Avant 10^-36s : Radiation a ~ t^(1/2) -> Accélération négative
-    # - 10^-36s à 10^-32s : Inflation a ~ e^(Ht) -> Accélération positive massive et constante
-    # - Après 10^-32s : Radiation a ~ t^(1/2) -> Accélération négative
+    # - Before 10^-36 s: radiation, a ~ t^(1/2) -> negative acceleration
+    # - 10^-36 s to 10^-32 s: inflation, a ~ e^(Ht) -> large positive constante
+    # - After 10^-32 s: radiation, a ~ t^(1/2) -> negative acceleration
     # ---------------------------------------------------
     accel_standard = np.zeros_like(t)
     
-    # Masques temporels pour le modèle standard
+    # Time masks for the standard model
     mask_pre_inf = t < 10**-36
     mask_inf = (t >= 10**-36) & (t <= 10**-32)
     mask_post_inf = t > 10**-32
     
-    # Valeurs conceptuelles normalisées pour la visualisation
+    # Normalised illustrative values, for display only
     accel_standard[mask_pre_inf] = -1e5 
-    # Le plateau d'inflation standard (constant)
+    # The standard inflation plateau (constant)
     accel_standard[mask_inf] = 1e12 
     accel_standard[mask_post_inf] = -1e4 
     
     # ---------------------------------------------------
     # 3. MODÈLE ECF (Big Spin Bounce)
-    # L'accélération dépend du terme (rho - rho^2/rho_c)
+    # The acceleration follows the (rho - rho^2/rho_c) term
     # - Maximum absolu au rebond (t ~ 10^-43)
-    # - Chute drastique avec la dilution a^-6
-    # - Devient négative (décélération) naturellement (Stiff era)
+    # - Steep fall-off with the a^-6 dilution
+    # - Turns negative (deceleration) naturally (stiff era)
     # ---------------------------------------------------
     t_cartan = 10**-41  # Fin de la domination du spin
     
-    # Formule conceptuelle de l'accélération du rebond ECF (pic gaussien décroissant)
-    # qui passe en décélération naturelle
+    # Conceptual form of the ECF bounce acceleration (decaying Gaussian peak)
+    # which then decelerates naturally
     accel_ecf = 5e13 * np.exp(- (t / (10**-43))**0.5 ) - 2e5
     
     # ---------------------------------------------------
@@ -64,41 +64,41 @@ def main():
     # ---------------------------------------------------
     fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
     
-    # Tracé des accélérations
+    # Plot the accelerations
     ax.plot(t, accel_standard, label=r'Standard Inflation ($\Lambda$CDM + Inflaton)', 
              color='blue', linestyle='--', linewidth=2.5)
     
     ax.plot(t, accel_ecf, label=r'ECF Natural Bounce (Spin-Torsion)', 
              color='red', linewidth=3)
     
-    # Ligne Zéro (Frontière entre Accélération et Décélération)
+    # Zero line (boundary between acceleration and deceleration)
     ax.axhline(0, color='black', linewidth=1.2, linestyle='-')
     
-    # Recherche mathématique du point exact où l'ECF croise la ligne zéro
+    # Solve for the exact point where the ECF curve crosses zero
     zero_cross_idx = np.where(accel_ecf < 0)[0][0]
     t_zero_cross = t[zero_cross_idx]
 
-    # Mise en évidence de la sortie gracieuse de l'ECF
+    # Highlight the graceful exit of the ECF
     ax.annotate('ECF Natural Graceful Exit', 
                 xy=(t_zero_cross, 0),          # Pointe EXACTEMENT sur le croisement zéro
                 xytext=(10**-38, 1e7),         # Texte placé au-dessus et à droite
                 arrowprops=dict(facecolor='red', shrink=0.05, width=1.5, headwidth=8),
                 fontsize=11, color='red', fontweight='bold')
     
-    # Mise en évidence de la fin de l'inflation standard
+    # Highlight the end of standard inflation
     ax.annotate('Standard Reheating Exit\n(Abrupt Drop)', 
                 xy=(10**-32, 1e12),            # Pointe EXACTEMENT sur la chute de l'inflaton
                 xytext=(10**-31, 1e9),         # Texte placé en dessous et à droite
                 arrowprops=dict(facecolor='blue', shrink=0.05, width=1.5, headwidth=8),
                 fontsize=11, color='blue', fontweight='bold')
 
-    # Lignes temporelles importantes
+    # Key time markers
     ax.axvline(10**-41, color='grey', linestyle=':', alpha=0.7)
     ax.text(10**-41, 1e11, ' Cartan Time\n (ECF Stiff Era Starts)', color='grey', fontsize=9, rotation=90, verticalalignment='center')
 
-    # Formatage des axes
+    # Axis formatting
     ax.set_xscale('log')
-    # Échelle asymétrique pseudo-log pour montrer le positif extrême et le négatif
+    # Asymmetric pseudo-log scale, to show both the extreme positive and the negative
     ax.set_yscale('symlog', linthresh=1e6) 
     
     ax.set_xlim(10**-44, 10**-30)

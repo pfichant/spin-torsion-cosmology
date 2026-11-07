@@ -1,0 +1,13 @@
+f = 0 best fit: chi2 = 582.64 (plik_lite 613 bins + priors), tau = 0.0564, A_planck = 1.0005, {'omega_b': np.float64(0.022308231014601505), 'omega_cdm': np.float64(0.12055671906008168), 'H0': np.float64(67.57986676088642), 'ln10A': np.float64(3.049475537161106), 'n_s': np.float64(0.9618555720695129), 'z_reio': np.float64(7.903258482365735)}
+Eddington, hard spectrum (DarkAges disk f(z))
+   f=1.0e-10: dchi2=-0.11 (tau=0.0564, z_reio=7.85)  f=1.0e-09: dchi2=-0.19 (tau=0.0563, z_reio=7.23)  f=2.0e-09: dchi2=0.43 (tau=0.0561, z_reio=6.64)  f=3.0e-09: dchi2=1.84 (tau=0.0570, z_reio=6.22)  f=4.0e-09: dchi2=4.08 (tau=0.0592, z_reio=6.00)  f=6.0e-09: dchi2=11.76 (tau=0.0669, z_reio=6.00)  f=1.0e-08: dchi2=37.24 (tau=0.0800, z_reio=5.99)
+   f_95 = 3.91e-09  ->  n_95 = 1.30e-03 Mpc^-3
+Eddington, soft spectrum (on-the-spot f_eff = 1)
+   f=1.0e-11: dchi2=0.00 (tau=0.0564, z_reio=7.82)  f=1.0e-10: dchi2=-0.16 (tau=0.0565, z_reio=7.25)  f=2.0e-10: dchi2=-0.31 (tau=0.0565, z_reio=6.66)  f=3.0e-10: dchi2=-0.35 (tau=0.0582, z_reio=6.27)  f=4.0e-10: dchi2=-0.09 (tau=0.0607, z_reio=6.00)  f=6.0e-10: dchi2=2.48 (tau=0.0694, z_reio=6.00)  f=1.0e-09: dchi2=13.99 (tau=0.0852, z_reio=5.99)
+   f_95 = 6.83e-10  ->  n_95 = 2.27e-04 Mpc^-3
+Disk recipe Poulin, capped (DarkAges disk f(z))
+   f=1.0e-08: dchi2=-0.22 (tau=0.0563, z_reio=7.89)  f=5.0e-08: dchi2=-0.04 (tau=0.0561, z_reio=7.51)  f=1.0e-07: dchi2=1.16 (tau=0.0559, z_reio=7.07)  f=1.5e-07: dchi2=3.32 (tau=0.0556, z_reio=6.67)  f=2.0e-07: dchi2=6.37 (tau=0.0555, z_reio=6.30)  f=3.0e-07: dchi2=14.91 (tau=0.0586, z_reio=6.00)  f=1.0e-06: dchi2=134.34 (tau=0.0484, z_reio=7.10)
+   f_95 = 1.60e-07  ->  n_95 = 5.33e-02 Mpc^-3
+Spherical recipe AHK, capped (DarkAges sph f(z))
+   f=1.0e-07: dchi2=-0.20 (tau=0.0563, z_reio=7.90)  f=5.0e-07: dchi2=-0.68 (tau=0.0559, z_reio=7.86)  f=1.0e-06: dchi2=-0.50 (tau=0.0555, z_reio=7.82)  f=1.5e-06: dchi2=0.30 (tau=0.0551, z_reio=7.78)  f=2.0e-06: dchi2=1.59 (tau=0.0548, z_reio=7.75)  f=3.0e-06: dchi2=5.40 (tau=0.0541, z_reio=7.68)  f=1.0e-05: dchi2=55.69 (tau=0.0507, z_reio=7.34)
+   f_95 = 2.68e-06  ->  n_95 = 8.93e-01 Mpc^-3

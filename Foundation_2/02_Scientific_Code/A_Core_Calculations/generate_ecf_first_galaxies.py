@@ -11,13 +11,27 @@ Description :
     temporelle (Dark Ages, Toile Cosmique, Aube Cosmique).
 =============================================================================
 """
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import os
 
 # ================= CONFIGURATION =================
-OUTPUT_DIR = "ecf_first_galaxies_frames"
+# ⭐ Intermediate animation frames go under _generated/ (convention of
+# 24/08/2026): everything below that folder is REGENERABLE and is
+# excluded from the archive and from the repository. The deliverable
+# is the assembled animation, not these frames.
+OUTPUT_DIR = os.path.join("_generated", "ecf_first_galaxies_frames")
 N_FRAMES = int(os.environ.get('ECF_N_FRAMES', '20'))   # Full run: set ECF_N_FRAMES=100
 IMG_SIZE = 800       
 GRID_SIZE = 400      
@@ -30,7 +44,7 @@ if not os.path.exists(OUTPUT_DIR):
 
 print(f"Génération de {N_FRAMES} images dans ./{OUTPUT_DIR}/...")
 
-# Coordonnées et masses des 5 nœuds topologiques invisibles
+# Coordinates and masses of the five invisible topological knots
 np.random.seed(42)
 knots_x = np.array([0.2, -0.5, 0.6, -0.3, 0.0])
 knots_y = np.array([0.3, 0.1, -0.4, -0.6, 0.8])
@@ -48,7 +62,7 @@ for i in range(N_FRAMES):
     progress = i / (N_FRAMES - 1)
     current_time_myr = TIME_START_MYR + progress * (TIME_END_MYR - TIME_START_MYR)
     
-    # --- DÉTERMINATION DU COMMENTAIRE DYNAMIQUE (LA PHASE) ---
+    # --- DYNAMIC CAPTION (THE PHASE) ---
     if current_time_myr < 250.0:
         phase_title = "Phase 1: The Dark Ages"
         phase_desc = "Diffuse primordial gas permeates the expanding universe."
@@ -62,7 +76,7 @@ for i in range(N_FRAMES):
         phase_desc = "Gas ignites at knot centers. First galaxies form rapidly (JWST era)."
         desc_color = "cyan"
     
-    # Calcul de la carte de densité du gaz
+    # Compute the gas density map
     base_noise = np.random.normal(0, 0.05 * (1 - progress), (GRID_SIZE, GRID_SIZE))
     density_map = np.zeros((GRID_SIZE, GRID_SIZE)) + base_noise
     
@@ -75,7 +89,7 @@ for i in range(N_FRAMES):
         intensity = knots_mass[k] * (0.1 + progress**3 * 2.5)
         density_map += intensity * np.exp(-r2 / (2 * sigma**2))
         
-        # Formation des filaments
+        # Filament formation
         for j in range(k + 1, len(knots_x)):
             line_dx = knots_x[j] - knots_x[k]
             line_dy = knots_y[j] - knots_y[k]
@@ -107,7 +121,7 @@ for i in range(N_FRAMES):
     ax.text(-0.95, 0.90, "ECF Model: First Galaxies Formation", color='lightblue', fontsize=12, fontweight='bold', zorder=4)
     ax.text(-0.95, -0.95, f"Frame: {i+1}/{N_FRAMES}", color='gray', fontsize=10, zorder=4)
     
-    # --- COMMENTAIRE DYNAMIQUE (En bas à droite) ---
+    # --- DYNAMIC CAPTION (lower right) ---
     ax.text(0.95, -0.85, phase_title, color=desc_color, fontsize=12, fontweight='bold', ha='right', zorder=4)
     ax.text(0.95, -0.92, phase_desc, color='white', fontsize=10, ha='right', zorder=4)
 

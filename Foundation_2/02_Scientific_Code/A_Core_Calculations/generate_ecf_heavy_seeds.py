@@ -15,6 +15,10 @@ Description :
 """
 
 import numpy as np
+
+# [AJOUT 12/09/2026] Graine fixee : ce script utilisait np.random sans
+# graine, produisant une figure differente a chaque execution.
+np.random.seed(42)
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 

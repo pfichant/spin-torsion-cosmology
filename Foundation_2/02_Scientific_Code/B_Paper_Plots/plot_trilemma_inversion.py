@@ -11,6 +11,7 @@ DESCRIPTION:
 This script uses a Global Genetic Algorithm to solve the H0-Age-BAO trilemma by 
 shifting the Axion quintessence recovery peak to z=0.63. This test aims to reduce 
 the BAO drift while maintaining a 13.5 Gyr cosmic age.
+[19/10/2026] 13.5 Gyr is a historical exploratory target, not an ECF value: the corpus gives t0 = 13.33 Gyr for w = -1 and 13.19 Gyr at the calibrated (w0, wa) = (-0.904, -0.153) point (F1). This script is not cited by any paper.
 =========================================================================================
 """
 
@@ -26,7 +27,10 @@ warnings.filterwarnings("ignore")
 # 1. PARAMÈTRES COSMOLOGIQUES
 # ====================================================================
 H0 = 73.0
-Omega_m0 = 0.315
+# [D3, 22/09/2026 -- DEC-A7-POST-05] ECF background at the script's own H0 = 73.0
+# (kept; "H0 anchored at 73"): Omega_m = omega_m/h^2 with h = H0/100 = 0.730
+# (A-7 rule; 0.26716, vs 0.26687 at h = 0.7304). Was 0.315 (Planck-h value).
+Omega_m0 = (0.02237 + 0.1200)/(H0/100.0)**2
 Omega_de0 = 1.0 - Omega_m0
 c_km_s = 299792.458
 z_bao_target = 1.5
@@ -56,11 +60,11 @@ age_lcdm = compute_cosmic_age(w_lcdm)
 dm_lcdm = compute_comoving_distance(w_lcdm, z_bao_target)
 
 # ====================================================================
-# 3. ALGORITHME GÉNÉTIQUE (Peak à z=0.63)
+# 3. GENETIC ALGORITHM (peak at z=0.63)
 # ====================================================================
 def create_axion_w(A, B):
     def w_func(z):
-        # Paramètres ajustés : Maxi à z=0.63
+        # Tuned parameters: maximum at z=0.63
         phantom_dip = A * np.exp(- (z / 0.5)**2)
         quintessence_bump = B * np.exp(- ((z - 0.63) / 0.3)**2)
         return -1.0 + phantom_dip + quintessence_bump
@@ -71,7 +75,7 @@ def objective_function(params):
     age = compute_cosmic_age(w_test)
     dm = compute_comoving_distance(w_test, z_bao_target)
     
-    # On force l'âge à 13.5, on minimise le BAO
+    # Age forced to 13.5; the BAO deviation is minimised
     age_penalty = ((age - TARGET_AGE) ** 2) * 1000.0
     bao_penalty = (((dm - dm_lcdm) / dm_lcdm) * 100) ** 2
     return age_penalty + bao_penalty 

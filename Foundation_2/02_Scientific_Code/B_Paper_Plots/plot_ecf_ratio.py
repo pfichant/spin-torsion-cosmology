@@ -1,113 +1,72 @@
+"""
+(02/10/2026, Corpus) -- replaces the former plot_ecf_ratio.py (promoted 07/10/2026).
+Fig_ECF_Ratio_Evolution: ratio rho_tau / rho_m as a function of redshift z, ECF background w = -1.
+Convention A-7: h_ECF = 0.7304, omega_m = 0.02237 + 0.12 -> Omega_m = omega_m/h^2.
+With w = -1 the torsion (dark-energy) density is constant: rho_tau/rho_m = (Omega_tau/Omega_m)(1+z)^-3.
+Omega_tau = 1 - Omega_m - Omega_r - Omega_spin,0 (flat closure). Radiation/spin are negligible at z <= 3.
+Second curve: dynamical dark energy, CPL w(a)=w0+wa(1-a) with the calibrated (w0,wa)=(-0.904,-0.153) (F1, DESI-calibrated),
+rho_DE(z)/rho_DE,0 = (1+z)^(3(1+w0+wa)) exp(-3 wa z/(1+z)). SAME Omega_m and flat closure at z=0: NOT refitted
+(a self-consistent dynamical background would re-derive Omega_m; open point PO-F2-5 / PO-F3-9). Indicative.
+"""
 import numpy as np
+import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# =============================================================================
-# ECF FRAMEWORK: THERMODYNAMIC EVOLUTION OF THE COSMIC MASS RATIO (ZONED)
-# =============================================================================
+h = 0.7304
+Om = (0.02237 + 0.12) / h**2
+omega_g, Neff = 2.4728e-5, 3.046
+Or = omega_g * (1 + 7/8 * (4/11)**(4/3) * Neff) / h**2
+Os = 0.093 * Or / (1 + 5600)**2
+Ot = 1 - Om - Or - Os
 
-# --- 1. Constants and Time Array (in SECONDS) ---
-sec_per_year = 3.154e7
-t_start_sec = 1e-11 # Topological Freeze-Out (Electroweak)
-t_end_sec = 13.4e9 * sec_per_year # ECF Present Epoch (13.4 Gyr)
+from scipy.optimize import brentq
+w0, wa = -0.904, -0.153
+z = np.linspace(0, 3, 600)
+R = (Ot / Om) * (1 + z)**-3
+fde = lambda z: (1 + z)**(3*(1 + w0 + wa)) * np.exp(-3*wa*z/(1 + z))
+Rd = lambda z: (Ot / Om) * fde(z) * (1 + z)**-3
+z_cross = (Ot / Om)**(1/3) - 1
+z_cross_d = brentq(lambda x: Rd(x) - 1, 0, 2)
+print(f"CPL: R(0)={Rd(0):.3f}  z(R=1)={z_cross_d:.3f}  R_cpl/R_w-1 at z=0.5,1,2,3: {[round(Rd(x)/((Ot/Om)*(1+x)**-3),3) for x in (0.5,1,2,3)]}")
+print(f"Omega_m={Om:.4f} Omega_r={Or:.4e} Omega_spin0={Os:.3e} Omega_tau={Ot:.4f}")
+print(f"R(0)={Ot/Om:.3f}  z(R=1)={z_cross:.3f}")
 
-# Logarithmic time array strictly originating at the freeze-out event
-t_sec = np.logspace(np.log10(t_start_sec), np.log10(t_end_sec), 3000)
-log_t = np.log10(t_sec)
+# --- 1-sigma band: propagation of the inputs of Omega_m = (omega_b+omega_c)/h^2 (independent Gaussians, Monte-Carlo) ---
+# omega_b = 0.02237 +/- 0.00015, omega_c = 0.1200 +/- 0.0012 (Planck 2018); H0 = 73.04 +/- 1.04 (SH0ES 2021, F1).
+# (w0, wa) are the optimisation minimum of F1: no posterior uncertainty is attached to them (F1 l.1083), so none is propagated.
+rng = np.random.default_rng(20261002)
+N = 200000
+hh = rng.normal(0.7304, 0.0104, N); wb = rng.normal(0.02237, 0.00015, N); wc = rng.normal(0.1200, 0.0012, N)
+Om_s = (wb + wc) / hh**2
+Ot_s = 1 - Om_s - Or - Os
+def band(zz, dyn):
+    out = []
+    for x in zz:
+        r = (Ot_s / Om_s) * (1 + x)**-3 * (fde(x) if dyn else 1.0)
+        out.append(np.percentile(r, [15.865, 84.135]))
+    return np.array(out)
+zb = np.linspace(0, 3, 61)
+B0 = band(zb, False); B1 = band(zb, True)
+print(f"Omega_m = {Om:.4f} +/- {Om_s.std():.4f} (MC);  R(0) = {Ot/Om:.3f}  [{B0[0,0]:.3f}, {B0[0,1]:.3f}]  (-{100*(1-B0[0,0]/(Ot/Om)):.1f}% / +{100*(B0[0,1]/(Ot/Om)-1):.1f}%)")
+zc_s = (Ot_s / Om_s)**(1/3) - 1
+print(f"z(R=1), w=-1: {z_cross:.3f}  68% interval [{np.percentile(zc_s,15.865):.3f}, {np.percentile(zc_s,84.135):.3f}]")
+lin = (Om_s.std()/Om)/(1-Om)
+print(f"linear check on R(0): {100*lin:.2f}%")
 
-# Sigmoid function for smooth phenomenological phase transitions
-def sigmoid(x, x0, k):
-    return 1 / (1 + np.exp(-k * (x - x0)))
-
-# --- 2. Phenomenological Evolution Model ---
-log_t_primordial = 0.0 # Annihilation peak around 1 second (log10(1)=0)
-
-# Dark Matter (DM) Evolution:
-M_DM = 5.0 - 0.5 * sigmoid(log_t, log_t_primordial, 2.0) - 0.05 * sigmoid(log_t, 16.0, 1.5)
-
-# Baryonic Matter (BM) Evolution:
-drop_prim_bm = 1.0 - (4.5 / 5.4) # approx 16.67%
-drop_sec_bm = 0.03
-M_BM = 1.0 - drop_prim_bm * sigmoid(log_t, log_t_primordial, 2.0) - drop_sec_bm * sigmoid(log_t, 16.0, 1.5)
-
-# Cosmic Mass Ratio R(t)
-Ratio = M_DM / M_BM
-
-# --- 3. Plotting the Data ---
-fig, ax1 = plt.subplots(figsize=(12, 7))
-
-color_dm = '#1f77b4' # Blue
-color_bm = '#d62728' # Red
-color_ratio = '#2ca02c' # Green
-
-# Left Y-axis (Masses)
-ax1.set_xlabel('Cosmic Time (Seconds) - Log Scale', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Relative Mass (Fraction of initial baryonic mass)', fontsize=12, fontweight='bold')
-ax1.set_xscale('log')
-ax1.set_xlim(left=t_start_sec, right=t_end_sec) 
-
-# =============================================================================
-# --- ADDING BACKGROUND ZONES (COSMIC ERAS) ---
-# =============================================================================
-t_1_sec = 1.0 # 1 second
-t_cmb_sec = 365000 * sec_per_year # Recombination Epoch
-
-# Zone 1: Primordial Annihilation Epoch (Hot & Dense)
-ax1.axvspan(t_start_sec, t_1_sec, color='orange', alpha=0.15)
-ax1.text(np.sqrt(t_start_sec * t_1_sec), 5.3, 'Primordial Annihilation\nEpoch (PTA)', 
-         color='darkorange', fontsize=10, ha='center', va='center', fontweight='bold',
-         bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=2))
-
-# Zone 2: Cosmic Expansion & Cooling (Dark Ages / Flat ratio)
-ax1.axvspan(t_1_sec, t_cmb_sec, color='cyan', alpha=0.1)
-ax1.text(np.sqrt(t_1_sec * t_cmb_sec), 5.3, 'Cosmic Expansion\n& Cooling', 
-         color='teal', fontsize=10, ha='center', va='center', fontweight='bold',
-         bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=2))
-
-# Zone 3: Structure Formation & Secular Annihilation
-ax1.axvspan(t_cmb_sec, t_end_sec, color='purple', alpha=0.1)
-ax1.text(np.sqrt(t_cmb_sec * t_end_sec), 5.3, 'Structure Formation\n& Secular Annihilation', 
-         color='purple', fontsize=10, ha='center', va='center', fontweight='bold',
-         bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=2))
-# =============================================================================
-
-# Plotting the mass curves
-line1 = ax1.plot(t_sec, M_DM, color=color_dm, linewidth=2.5, label='Topological Dark Matter ($M_{DM}$)')
-line2 = ax1.plot(t_sec, M_BM, color=color_bm, linewidth=2.5, label='Baryonic Matter ($M_{BM}$)')
-ax1.set_ylim(0, 5.5)
-
-# Right Y-axis (Ratio)
-ax2 = ax1.twinx()
-ax2.set_ylabel('Mass Ratio ($R = M_{DM}/M_{BM}$)', color=color_ratio, fontsize=12, fontweight='bold')
-line3 = ax2.plot(t_sec, Ratio, color=color_ratio, linewidth=4.0, linestyle='-', label='Evolution Ratio $R(t)$')
-ax2.tick_params(axis='y', labelcolor=color_ratio)
-ax2.set_ylim(4.5, 5.8)
-
-# --- 4. Annotating Key Epochs ---
-# A. Topological Freeze-Out (Electroweak)
-ax2.axvline(x=t_start_sec, color='black', linestyle='--', linewidth=1.5)
-ax2.scatter(t_start_sec, 5.0, color=color_ratio, s=80, zorder=5)
-ax2.text(t_start_sec * 3, 4.6, ' Topological Freeze-Out\n ($t=10^{-11}$ s)\n Ratio = 5.0', fontsize=10)
-
-# B. Recombination (CMB)
-ax2.axvline(x=t_cmb_sec, color='black', linestyle='--', linewidth=1.5)
-ax2.scatter(t_cmb_sec, 5.4, color=color_ratio, s=80, zorder=5)
-ax2.text(t_cmb_sec * 2, 4.9, ' Recombination (CMB)\n ($t=365,000$ yr)\n Ratio = 5.4', fontsize=10)
-
-# C. Present Epoch
-r_now = Ratio[-1]
-ax2.axvline(x=t_end_sec, color='black', linestyle='--', linewidth=1.5)
-ax2.scatter(t_end_sec, r_now, color=color_ratio, s=80, zorder=5)
-# Moved label slightly to fit within the boundaries
-ax2.text(t_end_sec * 0.0001, r_now + 0.1, f' Present Epoch\n ($t=13.4$ Gyr)\n Ratio $\\approx$ {r_now:.2f}', fontsize=10, fontweight='bold')
-
-# Legends
-lines = line1 + line2 + line3
-labels = [l.get_label() for l in lines]
-ax1.legend(lines, labels, loc='center left', fontsize=11, framealpha=0.9)
-
-plt.title('Secular Thermodynamic Evolution of Cosmic Masses with Era Zoning (ECF)', fontsize=14, fontweight='bold')
-plt.tight_layout()
-
-# Save for LaTeX compilation (PDF is required for high quality vector graphics)
-plt.savefig('Fig_ECF_Ratio_Evolution.png', dpi=300, bbox_inches='tight')
-# plt.show()
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(z, R, lw=2.5, color="#2ca02c", label=r"$\rho_\tau/\rho_m$ (ECF, $w=-1$)")
+ax.plot(z, Rd(z), lw=2.2, ls="--", color="#d62728", label=rf"$\rho_\tau/\rho_m$ (dynamical DE, CPL $w_0={w0}$, $w_a={wa}$; indicative)")
+ax.scatter([z_cross_d], [1], color="#d62728", zorder=5)
+ax.fill_between(zb, B0[:,0], B0[:,1], color="#2ca02c", alpha=0.20, lw=0, label=r"$1\sigma$ from $\omega_b,\omega_c,H_0$ (inputs of $\Omega_m$)")
+ax.fill_between(zb, B1[:,0], B1[:,1], color="#d62728", alpha=0.15, lw=0)
+ax.axhline(1, ls="--", color="k", lw=1)
+ax.axvline(z_cross, ls=":", color="gray")
+ax.scatter([z_cross], [1], color="k", zorder=5)
+ax.annotate(rf"$w=-1$ : $\rho_\tau=\rho_m$ at $z={z_cross:.2f}$", (z_cross, 1), (0.75, 1.9))
+ax.annotate(rf"CPL : $\rho_\tau=\rho_m$ at $z={z_cross_d:.2f}$", (z_cross_d, 1), (0.75, 1.35), color="#d62728")
+ax.scatter([0], [Ot/Om], color="#2ca02c", zorder=5)
+ax.annotate(rf"$z=0$ : {Ot/Om:.2f}", (0, Ot/Om), (0.12, Ot/Om*0.72))
+ax.set_ylim(0.04, 5); ax.set_yscale("log"); ax.set_xlabel("Redshift $z$"); ax.set_ylabel(r"$\rho_\tau/\rho_m$")
+ax.set_title(r"ECF dark-sector to matter density ratio ($\Omega_m=\omega_m/h^2$, A-7)")
+ax.legend(loc="lower left", fontsize=8); ax.grid(alpha=.3, which="both")
+plt.savefig("Fig_ECF_Ratio_Evolution.png", dpi=300, bbox_inches="tight")

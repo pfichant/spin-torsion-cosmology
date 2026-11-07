@@ -1,11 +1,42 @@
+# Last modified: 30/08/2026, 12:24 (Paris time)
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
 # =============================================================================
-# ECF FRAMEWORK: UNIVERSAL GRB LIGHT CURVE ANALYZER
+# GRB LIGHT CURVE ANALYZER -- RUNS ON MOCK DATA
 # =============================================================================
-# This script reads observational data from a .csv file and fits it against 
+# ⚠️ STATUS, set after the audit of 22/08/2026. The chi2 values this script
+# prints (ECF ~1.4 against Standard ~276) are NOT quoted in Foundation II,
+# and must not be read as an observational result. The reason is stated by
+# the paper itself: its GRB curves are "not based on proprietary or archival
+# GRB data" -- they are generated with a fixed seed.
+#
+# ⭐ The script agrees: when the CSV is missing it prints
+# "Please run generate_mock_grb_data.py first" -- the word is MOCK.
+#
+# ⚠️ CHAIN POSITION (documented 23/08/2026). This script READS the CSV; it
+# does not create it. The chain is:
+#   generate_mock_grb_data.py  (seed 42, 80 points, noise 0.05)  -- WRITES
+#   analyse_grb_lightcurve.py  (this file)                       -- READS
+# ⭐ A third script, simulate_ecf_grb2025_lightcurve.py, does BOTH in memory
+# with its own settings. UPDATE (30/08/2026): that script has no fixed seed
+# and is NOT reproducible run-to-run -- five consecutive runs gave chi2_nu
+# = 2.26, 1.57, 1.85, 2.15, 2.01. Read as "order 1-2", not a specific value;
+# the ~1.43 here (fixed seed 42) IS reproducible.
+# The two are NOT in conflict: same model, same formula (dof = len(t) - 3 in
+# both, verified), but DIFFERENT DRAWS. The collapsar baseline chi2 ~ 275.6 is
+# identical in both, which is what confirms the models agree.
+#
+# ⇒ What the ratio measures is that the topological-annihilation profile fits
+#   the SIMULATED curve better than a collapsar profile does. That is a
+#   statement about the two functional forms, not about a real burst. A real
+#   test needs archival data, which this repository does not contain.
+# =============================================================================
+# Fits the ECF Topological Annihilation model against the Standard Collapsar
+# model on the MOCK light curve supplied in data/ (not an observed burst).
+# =============================================================================
+# This script reads (MOCK, seed 42) data from a .csv file and fits it against 
 # the ECF Topological Annihilation model and the Standard Collapsar Model.
 # =============================================================================
 
@@ -48,13 +79,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(current_dir, '..', 'data')
 csv_filepath = os.path.join(data_dir, FILENAME)
 
-print(f"Loading observational data from {csv_filepath}...")
+print(f"Loading MOCK data (generate_mock_grb_data.py, seed 42) from {csv_filepath}...")
 if not os.path.exists(csv_filepath):
     print(f"ERROR: The file {FILENAME} was not found in the {data_dir} directory.")
     print("Please run 'generate_mock_grb_data.py' first or provide the CSV file.")
     exit()
 
-# Chargement des données (en ignorant la première ligne d'en-tête)
+# Load the data (skipping the header line)
 data = np.loadtxt(csv_filepath, delimiter=',', skiprows=1)
 t_obs = data[:, 0]
 flux_obs = data[:, 1]
@@ -90,12 +121,12 @@ label_ecf = f'ECF Topological Theory [$\\chi^2_\\nu = {chi2_nu_ecf:.2f}$]'
 ax.plot(t, flux_std, label=label_std, color='#1f77b4', linestyle='--', alpha=0.8, linewidth=2)
 ax.plot(t, flux_ecf, label=label_ecf, color='#d62728', linewidth=1.8, alpha=0.9)
 
-# Tracer les données lues depuis le CSV
+# Plot the data read from the CSV
 ax.errorbar(t_obs, flux_obs, yerr=flux_err, fmt='o', color='black', 
             markersize=4, capsize=2, elinewidth=1, alpha=0.75, 
-            label=f'Observational Data ({csv_filepath})')
+            label='Synthetic mock data (ECF-generated, seed 42)')   # [02/10/2026] was "Observational Data (<path>)": data are mock (see header) and the label leaked a local file path
 
-# Esthétique (Zones et Textes)
+# Styling (shaded regions and labels)
 ax.axvspan(0, 2.1, color='gray', alpha=0.08)
 ax.text(1.05, 1.25, 'Phase 1: Inspiral\n(Periodic Precursors)', ha='center', va='bottom', fontsize=10, fontweight='bold')
 ax.axvspan(2.1, 9.3, color='orange', alpha=0.08)

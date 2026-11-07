@@ -25,7 +25,7 @@ def main():
     # 1. TIME PARAMETERS
     # Logarithmic scale from 10^-44 s to 10^-30 s
     # ---------------------------------------------------
-    t_log = np.linspace(-44, -30, 1000)
+    t_log = np.linspace(-47, -30, 1000)  # [08/10/2026: was -44, Cartan time moved to 1e-44 s]
     t = 10**t_log
 
     # ---------------------------------------------------
@@ -66,7 +66,7 @@ def main():
     a_ecf = np.zeros_like(t)
     
     # Cartan time (end of the bounce geometric impulse)
-    t_cartan = 10**-41
+    t_cartan = 10**-44  # [08/10/2026: was 1e-41 s, withdrawn in F2 (rho = rho_c at ~1e-44 s)]
 
     # Backward calculation from the same final size a_final:
     # From t_cartan to the end, the universe is in the Stiff phase (w=1).
@@ -97,7 +97,7 @@ def main():
 
     # Annotations: Cartan Time (ECF)
     ax.axvline(t_cartan, color='red', linestyle=':', alpha=0.5)
-    ax.text(10**-41.2, 1e15, ' Cartan Time ($10^{-41}$ s)\n ECF Reaches Macro Scale', 
+    ax.text(t_cartan*10**-0.45, 1e15, ' Cartan Time ($\\sim10^{-44}$ s)\n ECF Reaches Macro Scale', 
             color='red', fontsize=10, rotation=90, verticalalignment='center')
 
     # Annotations: Standard Inflation Period
@@ -108,7 +108,7 @@ def main():
     # Log-Log axis formatting
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlim(10**-44, 10**-30)
+    ax.set_xlim(10**-47, 10**-30)
 
     # Titles and labels
     ax.set_xlabel('Cosmic Time (Seconds after Singularity/Bounce)', fontsize=12, fontweight='bold')

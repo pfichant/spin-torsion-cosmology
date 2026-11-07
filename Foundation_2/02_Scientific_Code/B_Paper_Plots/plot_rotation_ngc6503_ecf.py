@@ -5,7 +5,7 @@ r"""
 Project:       Foundation II: The Chiral Universe
 Script:        plot_rotation_ngc6503_ecf.py
 Author:        Pascal Fichant
-Date:          February 2026 (v1.0.3 - Final)
+Date:          February 2026 (v1.0.3) ; SPARC data 22/09/2026 (audit v2) ; integrated 06/10/2026 (FIG-NGC6503-02)
 Description:   Compares ECF Torsion-based rotation curves with SPARC data.
                Calculates Reduced Chi-Squared statistic.
 Output:        Fig1_NGC6503_ECF_Rotation.png
@@ -16,21 +16,26 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import sys
 
 # Nom du fichier de sortie
 OUTPUT_FILE = "Fig1_NGC6503_ECF_Rotation.png"
-DATA_FILE = "Data_S1_NGC6503_ECF.csv"
+DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "NGC 6503.csv")  # audit v2 22/09 : vrai fichier SPARC (Data_S1 n'est pas SPARC) ; FIG-NGC6503-02 (06/10/2026) : chemin du corpus Scripts_F2/data/
 
 def main():
     # 1. Load Data
     if not os.path.exists(DATA_FILE):
         print(f"[ERROR] Data file {DATA_FILE} not found.")
-        return
+        # RULE 23 (25/08/2026) -- a plot script that produces a DEGRADED
+        # figure, or none at all, must exit with a non-zero code. Exiting 0
+        # lies to every automated chain: that is how Figure 29 of F2 shipped
+        # with ten "File Not Found" panels.
+        sys.exit(1)
 
-    # Utilisation de comment='#' pour sauter les en-têtes texte
+    # comment='#' to skip the textual headers
     df = pd.read_csv(DATA_FILE, comment='#')
     
-    # Extraction des colonnes (Noms harmonisés avec Data_S1)
+    # Extract the columns (names harmonised with Data_S1)
     cols = df.columns
     col_r = 'Radius_kpc' if 'Radius_kpc' in cols else 'Radius'
     col_vobs = 'V_obs' if 'V_obs' in cols else 'Vobs'
@@ -42,9 +47,9 @@ def main():
     v_err = df[col_verr].values
     v_newt = df[col_vnewt].values
 
-    # 2. ECF Model Definition (Mise à jour v1.0.3)
+    # 2. ECF model definition (updated in v1.0.3)
     # ============================================
-    # Alignement avec Table 4 et Section 3.4
+    # Aligned with Table 4 and Section 3.4
     Rs_best = 1.70            # kpc
     V_inf_best = 114.0        # km/s
     
@@ -53,7 +58,7 @@ def main():
         term = np.zeros_like(radius_kpc)
         mask = radius_kpc > 0
         x = radius_kpc[mask] / Rs_best
-        # Formule du potentiel ECF (dérivée de la force)
+        # ECF potential (derived from the force)
         term[mask] = (1.0 / x) * np.arctan(x)
         v_sq = V_inf_best**2 * (1 - term)
         return np.sqrt(np.abs(v_sq))
@@ -89,14 +94,15 @@ def main():
     plt.grid(True, linestyle=':', alpha=0.6)
     plt.legend(fontsize=12, loc='lower right')
     
-    # 5. Annotation Box (Utilisation de raw strings r"" pour le LaTeX)
+    # 5. Annotation box (raw strings r"" for the LaTeX)
     stats_text = (f"Fit Quality:\n"
                   r"$\chi^2_\nu$ = " + f"{chi2_red:.2f}\n"
                   fr"$R_s = {Rs_best}$ kpc" "\n"
                   fr"$V_\infty = {V_inf_best}$ km/s")
     
     props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='red')
-    plt.text(0.02, 0.95, stats_text, transform=plt.gca().transAxes, fontsize=12,
+    # audit v2 (22/09) : encadré déplacé, il masquait deux points SPARC
+    plt.text(0.40, 0.45, stats_text, transform=plt.gca().transAxes, fontsize=12,
              verticalalignment='top', bbox=props)
 
     plt.tight_layout()

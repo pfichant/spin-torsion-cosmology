@@ -22,6 +22,17 @@ Author  : Pascal Fichant (ECF programme)
 Licence : CC-BY 4.0
 GitHub  : github.com/pfichant/spin-torsion-cosmology
 """
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+# Last modified: 30/08/2026, 12:24 (Paris time)
 
 import os
 import numpy as np
@@ -32,6 +43,76 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+# --- canonical values: IMPORTED, not restated ------------------------------
+# [28/08/2026] These five labels carried the state of the corpus BEFORE the
+# corrections of 26-28/08: M = 6e24 kg, mu_1D = 1e14 kg/m (a GUT-scale value),
+# sigma_2D = 1e49 kg/m2, and (w0, wa) without error bars. The figure documented
+# an earlier set of choices than the text it illustrates.
+# The mass is now imported; the tensions are computed from the electroweak VEV,
+# which is the scale settled on 27/08. A label that does not follow the
+# calculation is a label that will eventually contradict it.
+import importlib.util as _ilu
+import os as _os
+
+_ROOT = _os.path.dirname(_os.path.abspath(__file__))
+# [CORRIGE 15/09/2026] Meme repli que plot_F2_microknot_press.py : chercher
+# l'original dans A_Core_Calculations avant le dossier courant, pour que la
+# copie de calculate_microknot_mass.py dans B_Paper_Plots devienne inutile.
+_candidat_A = _os.path.join(_os.path.dirname(_ROOT), "A_Core_Calculations",
+                            "calculate_microknot_mass.py")
+if _os.path.exists(_candidat_A):
+    _ROOT = _os.path.dirname(_candidat_A)
+_spec = _ilu.spec_from_file_location(
+    "microknot_mass", _os.path.join(_ROOT, "calculate_microknot_mass.py"))
+_mk = _ilu.module_from_spec(_spec)
+try:
+    _spec.loader.exec_module(_mk)
+except SystemExit:
+    pass
+
+_C, _G, _HBAR = 2.99792458e8, 6.67430e-11, 1.054572e-34
+_GEV_J, _M_PL = 1.602177e-10, 1.220890e19
+ETA_EW = 246.22                                    # GeV, electroweak VEV (PDG)
+
+M_MICRO = _mk.horizon_mass(_mk.hubble_rate(_mk.T_C))          # kg
+MU_1D = (ETA_EW * _GEV_J) ** 2 / (_HBAR * _C ** 3)            # kg/m
+SIGMA_2D = (ETA_EW * _GEV_J) ** 3 / (_HBAR * _C) ** 2 / _C ** 2   # kg/m2
+GMU = (ETA_EW / _M_PL) ** 2                                   # dimensionless
+DELTA_CONE = 8.0 * 3.14159265 * GMU                           # rad
+
+def stamp(fig, y=0.004):
+    """
+    Print the generating script's name on the figure itself.
+
+    A caption can be separated from its figure -- copied into a slide, a
+    referee report, a talk. The provenance then travels with the text and not
+    with the image. Stamping the filename onto the canvas keeps the two
+    together, and costs one line of grey text.
+    """
+    fig.text(0.995, y, _os.path.basename(__file__), ha="right", va="bottom",
+             fontsize=5.5, color="#9AA3AF", family="monospace", alpha=0.85)
+
+
+def _sci(x, n=2):
+    """LaTeX scientific notation, e.g. 3.74\\times10^{24}."""
+    e = int(f"{x:e}".split("e")[1])
+    m = x / 10 ** e
+    return f"{m:.{n}f}" + r"\times10^{" + str(e) + "}"
+
+L_MASS = _sci(M_MICRO)          # 3.74e24 kg
+L_MU = _sci(MU_1D)              # kg/m
+L_SIGMA = _sci(SIGMA_2D)        # kg/m2
+L_DELTA = _sci(DELTA_CONE)      # rad
+W0, WA = -0.907, -0.153         # profile likelihood, 26/08
+SIG_MK = 2.0 * _G * M_MICRO / _C ** 2                      # Schwarzschild radius, m
+T_HAWK = 1.054572e-34 * _C ** 3 / (8 * 3.14159265 * _G * M_MICRO * 1.380649e-23)
+T_EVAP = 5120 * 3.14159265 * _G ** 2 * M_MICRO ** 3 / (1.054572e-34 * _C ** 4) / 3.155693e7
+L_RS = f"{1000*SIG_MK:.2f}"     # mm
+L_TH = f"{1000*T_HAWK:.0f}"     # mK
+L_TEV = f"{__import__('math').log10(T_EVAP):.0f}"          # exponent, yr
+SW0, SWA = 0.004, 0.007
+
 
 os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
@@ -89,6 +170,7 @@ FIGS = _find_figs_dir()
 
 def save(fig, name):
     path = os.path.join(FIGS, name)
+    stamp(fig)
     fig.savefig(path, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close(fig)
     print(f'[OK] {name}  ->  {path}')
@@ -157,14 +239,14 @@ for r_h, al in [(0.35,0.22),(0.55,0.13),(0.80,0.07)]:
 
 ax1.set_title(
     'ECF 0D Micro-Knot — Topological hedgehog & gravitational microlensing\n'
-    r'$M_{\mu K}=6\times10^{24}$ kg $= c^3/GH_{\rm EW}$  |  '
-    r'$r_s\simeq1.5$ mm  |  $r_{\rm KZ}\simeq3$ cm  |  '
-    r'$T_H=2.7$ mK $\ll T_{\rm CMB}$  |  $t_{\rm evap}>10^{83}$ yr',
+    rf'$M_{{\mu K}}={L_MASS}$ kg $= c^3/2GH_{{\rm EW}}$  |  '
+    rf'$r_s\simeq{L_RS}$ mm  |  $r_{{\rm KZ}}\simeq11$ cm  |  '
+    rf'$T_H={L_TH}$ mK $\ll T_{{\rm CMB}}$  |  $t_{{\rm evap}}\sim10^{{{L_TEV}}}$ yr',
     color=C_TEXT, fontsize=12, fontweight='bold', pad=16)
 
 h1 = mlines.Line2D([],[],color=C_NODE, marker='o', ls='None',
                    markersize=10, markeredgecolor=C_NODE_E,
-                   label=r'0D singularity ($M_{\mu K}=6\times10^{24}$ kg)')
+                   label=rf'0D singularity ($M_{{\mu K}}={L_MASS}$ kg)')
 h2 = mlines.Line2D([],[],color=C_PINK, lw=2.5,
                    label=r'$\nabla\hat{\Phi}$ (topological winding $N=1$)')
 h3 = mlines.Line2D([],[],color=C_CYAN, lw=2.0,
@@ -178,7 +260,7 @@ ax1.text2D(0.02, 0.06,
     r'Same helicity: coagulate ($N{+}N\to2N$)  |  Opp. helicity: annihilate ($N{-}N\to0$)'
     '\n'
     r'Kill-switch [Roman]: $\tau_{\rm micro}<5\times10^{-8}$ at $3\sigma$  |  '
-    r'Phoebe (Key+2026): $1.4\sigma$ from KZ peak'
+    r'Phoebe (Key+2026): $1.2\sigma$ from KZ peak'
     '\n'
     r'[ILLUSTRATIVE — Foundation II §Micro-Knots]',
     transform=ax1.transAxes, fontsize=9.5, color=C_ANNOT,
@@ -199,10 +281,10 @@ ax2.set_facecolor(BG_AX)
 # Central string
 ax2.plot(0, 0, 'o', color=C_NODE, markersize=14, zorder=10, lw=0)
 ax2.annotate(
-    '1D Torsion String\n'
-    r'$\mu_{1D}\sim10^{14}$ kg/m  |  helical $\vec{J}_5$',
+    '1D Torsion String (open problem, PO-F2-8)\n'
+    rf'IF it exists: $\mu_{{1D}}\simeq{L_MU}$ kg/m  |  helical $\vec{{J}}_5$ (speculative)',
     xy=(0,0), xytext=(0.28, 0.70),
-    color=C_TEXT, fontsize=11, fontweight='bold',
+    color=C_TEXT, fontsize=10.5, fontweight='bold',
     arrowprops=dict(arrowstyle='->', color=C_TEXT, lw=1.5))
 
 # Conical deficit angle
@@ -212,7 +294,7 @@ theta_arc = np.linspace(-cone, cone, 200)
 r_c = 2.2
 ax2.plot(r_c*np.cos(theta_arc), r_c*np.sin(theta_arc),
          color=C_FIL, lw=2.5, ls='--', alpha=0.95,
-         label=r'Conical space ($\delta=8\pi G\mu_{1D}/c^2$; physical: $\sim10^{-6}$ rad)')
+         label=rf'Conical space ($\delta=8\pi G\mu_{{1D}}/c^2\simeq{L_DELTA}$ rad)')
 wedge = mpatches.Wedge((0,0), r_c,
                         90-np.degrees(cone), 90+np.degrees(cone),
                         color=C_FIL, alpha=0.12)
@@ -259,10 +341,11 @@ for sp in ax2.spines.values():
 
 ax2.set_title(
     'ECF 1D Torsion String — Conical deficit angle & baryonic wake\n'
-    r'$\pi_1(\mathcal{M})\neq0$  |  $\delta=8\pi G\mu_{1D}/c^2\sim10^{-6}$ rad  |  '
-    r'$\delta v=4\pi G\mu_{1D}v_s\gamma_s$  |  '
-    r'Reconnects (no merge/annihilate)  |  Helical $\vec{J}_5$',
-    color=C_TEXT, fontsize=12, fontweight='bold', pad=14)
+    r'[OPEN PROBLEM, PO-F2-8 — no Lagrangian foundation established, I66/I70]'
+    '\n'
+    rf'IF it exists: $\delta\simeq{L_DELTA}$ rad  |  '
+    r'$\delta v=4\pi G\mu_{1D}v_s\gamma_s$  |  Helical $\vec{J}_5$ (speculative)',
+    color=C_TEXT, fontsize=11.5, fontweight='bold', pad=14)
 
 ax2.legend(loc='upper left', fontsize=10.5, **LEGEND_KW)
 
@@ -273,9 +356,15 @@ ax2.text(0.02, 0.05,
     r'$M(1\,{\rm Mpc})\sim10^6\,M_\odot$  |  '
     r'$\xi_{\rm KZ}\sim50$--$80$ Mpc (segment length)'
     '\n'
-    r'Kill-switch [LISA]: GW burst $f\sim50$ mHz + torsion tail $\tau_T\sim10^6$ s'
+    r'No LISA kill-switch for this sector: the $f\sim50$ mHz burst belongs to Macro-Knot mergers, without a separable tail (18/10/2026)'
     '\n'
-    r'[ILLUSTRATIVE — Foundation II §Torsion Strings; deficit exaggerated]',
+    r'[ILLUSTRATIVE ONLY -- this whole figure assumes the 1D sector exists, which'
+    '\n'
+    r'is NOT established (I66: $S^\mu$ real, no internal phase for a quantised'
+    '\n'
+    r'string; I70: semi-topological candidate at best, PO-F2-8 open). Deficit'
+    '\n'
+    r'angle also visually exaggerated for legibility.]',
     transform=ax2.transAxes, fontsize=9.5, color=C_ANNOT,
     va='bottom', bbox=ANNOT_BOX)
 
@@ -327,7 +416,7 @@ for _ in range(22):
 
 ax3.set_title(
     'ECF 2D Chiral Wall — Topological repulsion & cosmic void formation\n'
-    r'$\pi_0(\mathcal{M})\neq0$  |  $\sigma_{2D}\sim10^{49}$ kg/m$^2$  |  '
+    rf'$\pi_0(\mathcal{{M}})\neq0$  |  $\sigma_{{2D}}\simeq{L_SIGMA}$ kg/m$^2$  |  '
     r'$\delta_w\sim10^{-18}$ m  |  $R_w\sim\xi_{\rm KZ}\sim60$ Mpc  |  '
     r'$\beta_{\rm ECF}=0.35^\circ$ (birefringence)',
     color=C_TEXT, fontsize=12, fontweight='bold', pad=16)
@@ -348,7 +437,7 @@ ax3.text2D(0.02, 0.06,
     r'Dual void mechanism: Wall creates sharp boundary  +  3D fluid sustains expansion'
     '\n'
     r'Kill-switch [LiteBIRD]: $\beta<0.1^\circ$ at $3\sigma$  |  '
-    r'Planck PR4: $0.32^\circ\pm0.11^\circ$  |  ACT DR6: $0.215^\circ\pm0.074^\circ$'
+    r'Planck PR4: $0.30^\circ\pm0.11^\circ$  |  ACT DR6: $0.215^\circ\pm0.074^\circ$'  # [15/10/2026] was 0.32 (no such PR4 value)
     '\n'
     r'[ILLUSTRATIVE — Foundation II §Chiral Walls]',
     transform=ax3.transAxes, fontsize=9.5, color=C_ANNOT,
@@ -401,7 +490,7 @@ ax4b.set_facecolor(BG_AX)
 for sp in ax4b.spines.values():
     sp.set_color('#AABBDD')
 
-w0, wa = -0.904, -0.153
+w0, wa = W0, WA
 z_arr = np.linspace(0, 3.5, 400)
 a_arr = 1/(1+z_arr)
 w_ecf  = w0 + wa*(1-a_arr)
@@ -435,9 +524,9 @@ ax4b.legend(fontsize=9.5, **LEGEND_KW)
 ax4b.grid(True, color='#DDDDF0', alpha=0.60, ls=':')
 
 ax4b.text(0.04, 0.06,
-    r'$P_{\rm tors}=-\frac{1}{4}\kappa^2\langle S^2\rangle_{\rm vol}$'
-    '\n' r'$\langle S^2\rangle_{\rm vol}^{(0)}\simeq3.88\times10^{-39}$ kg$^2$m/s$^2$'
-    '\n' r'$P_{\rm tors}^{(0)}\simeq-2\times10^{-82}$ Pa  |  $\kappa^2=2.0766\times10^{-43}$ m J$^{-1}$'
+    r'$P_{\rm tors}=-\frac{1}{4}\kappa\langle S^2\rangle_{\rm vol}$  |  $\kappa=8\pi G/c^4$'
+    '\n' r'Normalisation of $\langle S^2\rangle_{\rm vol}$ not established (PO-ECF-SPIN-NORM)'
+    '\n' r'Condensate scale: $\frac{1}{4}m_T^2 s_0^2=|\Omega_\tau|\rho_{\rm crit}$'
     '\n' r'Not a topological defect — volume-filling condensate  |  $f_{\rm fluid}\sim0.73$'
     '\n[Diagonal errors — full covariance: Foundation III]',
     transform=ax4b.transAxes, fontsize=9.5, color=C_ANNOT,
@@ -501,33 +590,42 @@ for xn,yn,zn in nodes:
 
 ax5.set_title(
     'ECF Hierarchical Topological Architecture — Unified dark sector\n'
-    r'0D Micro/Macro-Knots ($\pi_2$) $\oplus$ 1D Torsion Strings ($\pi_1$) $\oplus$ '
-    r'2D Chiral Walls ($\pi_0$) $\oplus$ 3D Torsion Fluid  —  [ILLUSTRATIVE]',
-    color=C_TEXT, fontsize=12, fontweight='bold', pad=16)
+    r'0D Micro/Macro-Knots ($\pi_2$, established) $\oplus$ '
+    r'1D Torsion Strings ($\pi_1$, OPEN PROBLEM, PO-F2-8) $\oplus$ '
+    r'2D Chiral Walls ($\pi_0$, established) $\oplus$ 3D Torsion Fluid  —  [ILLUSTRATIVE]',
+    color=C_TEXT, fontsize=11, fontweight='bold', pad=16)
 
 h0D = mlines.Line2D([],[],color=C_NODE, marker='o', ls='None',
                     markersize=9, markeredgecolor=C_NODE_E,
-                    label=r'0D Micro/Macro-Knot ($\pi_2$, hedgehog; $M_{\mu K}=6\times10^{24}$ kg)')
+                    label=rf'0D Micro/Macro-Knot ($\pi_2$, hedgehog; $M_{{\mu K}}={L_MASS}$ kg)')
 h1D = mlines.Line2D([],[],color=C_FIL,  lw=2.6,
-                    label=r'1D Torsion String ($\pi_1$, helical; $\mu_{1D}\sim10^{14}$ kg/m)')
+                    label=rf'1D Torsion String (OPEN, PO-F2-8; IF exists: $\mu_{{1D}}\simeq{L_MU}$ kg/m)')
 h2D = mlines.Line2D([],[],color=C_WALL, lw=8, alpha=0.6,
-                    label=r'2D Chiral Wall ($\pi_0$; $\sigma_{2D}\sim10^{49}$ kg/m$^2$; $\beta=0.35^\circ$)')
+                    label=rf'2D Chiral Wall ($\pi_0$; $\sigma_{{2D}}\simeq{L_SIGMA}$ kg/m$^2$; $\beta=0.35^\circ$)')
 h3D = mlines.Line2D([],[],color=C_FLUID, lw=6, alpha=0.6,
-                    label=r'3D Torsion Fluid (condensate; $w_0=-0.904$, $w_a=-0.153$)')
+                    label=rf'3D Torsion Fluid (condensate; $w_0={W0}\pm{SW0}$, $w_a={WA}\pm{SWA}$)')
 ax5.legend(handles=[h0D,h1D,h2D,h3D], loc='upper left',
            fontsize=10.5, **LEGEND_KW)
 
 ax5.text2D(0.02, 0.04,
-    r'$\pi_2\neq\emptyset$: 0D Micro/Macro-Knots (hedgehog, coagulate/annihilate)'
+    r'$\pi_2\neq\emptyset$: 0D Micro/Macro-Knots (established, hedgehog, coagulate/annihilate)'
     '\n'
-    r'$\pi_1\neq\emptyset$: 1D Torsion Strings (conical, helical $\vec{J}_5$, reconnect)'
+    r'1D Torsion Strings: OPEN PROBLEM (PO-F2-8) -- no Lagrangian foundation (I66);'
     '\n'
-    r'$\pi_0\neq\emptyset$: 2D Chiral Walls (flat, repulsive, birefringence $\beta=0.35^\circ$)'
+    r'    semi-topological candidate at best (I70). Filaments below are drawn for'
     '\n'
-    r'No $\pi_k$: 3D Torsion Fluid (volume-filling condensate, $P<0$, DESI $4.9\sigma$ vs $\Lambda$CDM)'
+    r'    illustration only and do NOT represent an established connected network'
     '\n'
-    r'[Foundation II §Topological Zoology — ILLUSTRATIVE]',
-    transform=ax5.transAxes, fontsize=9.5, color=C_ANNOT,
+    r'    (stable multi-way junctions do not exist for the established $\mathbb{Z}_2$'
+    '\n'
+    r'    wall sector, I69 -- see the redrawn bubble-picture figure for the current view).'
+    '\n'
+    r'$\pi_0\neq\emptyset$: 2D Chiral Walls (established, closed, independent; birefringence $\beta=0.35^\circ$)'
+    '\n'
+    r'No $\pi_k$: 3D Torsion Fluid (established, volume-filling condensate, $P<0$, DESI $4.9\sigma$ vs $\Lambda$CDM)'
+    '\n'
+    r'[Foundation II §Topological Zoology — ILLUSTRATIVE, status updated 30/08/2026]',
+    transform=ax5.transAxes, fontsize=9, color=C_ANNOT,
     va='bottom', bbox=ANNOT_BOX)
 
 ax5.view_init(elev=22, azim=42)

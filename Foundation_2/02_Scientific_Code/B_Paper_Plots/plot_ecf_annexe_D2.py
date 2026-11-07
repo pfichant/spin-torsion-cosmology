@@ -9,7 +9,9 @@ Figures produites :
     fig_ECF_fmerger_vs_M.png       — f_peak vs M_tot + bandes instrumentales
     fig_ECF_Channel_Partition.png  — Partition canaux Régime I et II
     fig_KnotStar_Lx_vs_b.png       — L_X vs b, 3 sous-régimes Knot-Star
-    fig_ECF_Ringdown_Tail.png      — Ringdown GR vs queue torsion
+    fig_ECF_Ringdown_Tail.png      — Ringdown GR vs amortissement de torsion au rayon du Macro-Knot
+                                     (corrigé 18/10/2026 : R_Knot = R_max = c/H(T_GA) ≈ 4,3e8 m,
+                                     au lieu de 0,01 pc sans dérivation ; plus de queue séparée)
 
 Usage :
     python plot_ecf_annexe_D2.py [--light] [--dpi 300] [--outdir ./figs]
@@ -18,6 +20,16 @@ Dépendances : numpy, matplotlib
 Licence     : CC BY 4.0 — Pascal Fichant, 2026
 """
 
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import argparse, os, sys
 import numpy as np
 import matplotlib
@@ -45,8 +57,8 @@ C_YEL   = "#f9a825"
 C_RED   = "#c62828"
 C_TEAL  = "#00695c"
 C_PIN   = "#880e4f"
-# --light flag conservé pour compatibilité mais sans effet (toujours blanc)
-# ── Légende : fond clair pour lisibilité ──────────────────────────────────
+# --light flag kept for compatibility but has no effect (always white)
+# -- Legend: light background for readability -----------------------------
 LEGEND_KW = dict(
     facecolor='#f5f5f5',
     edgecolor='#aaaaaa',
@@ -83,20 +95,23 @@ def styled_ax(ax, fig):
 # ═══════════════════════════════════════════════════════════════════════════
 print("Fig 1 — ε_top(q, ξ_T) ...")
 q = np.linspace(0.01, 1.0, 500)
-eps_bbh = 0.054 * 4*q / (1+q)**2
+# [15/10/2026, F2-A11] eps ~ (4 eta)^2 (radiated energy scales ~ eta^2), normalised to ~5% at q=1;
+# q=0.1 gives 0.0055 vs 0.00415 in NR (Gonzalez, Sperhake & Bruegmann 2009, arXiv:0811.3952).
+# Former line: 0.054*4q/(1+q)^2 (linear in eta), 4x too high at q=0.1.
+eta_sym = q / (1+q)**2
+eps_bbh = 0.05 * (4*eta_sym)**2
 
 fig, ax = plt.subplots(figsize=(9, 5.5))
 styled_ax(ax, fig)
 cases = [(0.30, C_TEAL, "--", r"$\xi_T=0.30$  (minor merger)"),
          (1.00, C_GRN,  "-",  r"$\xi_T=1.00$  (BBH equiv.)"),
-         (1.45, C_ORA,  "-",  r"$\xi_T=1.45$  (torsion mid)"),
-         (1.85, C_PIN,  "-",  r"$\xi_T=1.85$  (torsion max)")]
+         (0.65, C_ORA,  "-",  r"$\xi_T=0.65$  (mid)")]   # [15/10/2026] xi_T in [0.3, 1.0]; 1.45 and 1.85 withdrawn
 for xi, col, ls, lbl in cases:
     ax.plot(q, eps_bbh*xi, color=col, lw=2.2, ls=ls, label=lbl)
-ax.axhspan(0.01, 0.10, alpha=0.07, color=C_PUR, label=r"ECF range $[0.01, 0.10]$")
-ax.axhline(0.054, color=C_GRN, lw=0.7, ls=":", alpha=0.6)
-ax.text(0.02, 0.056, "NR max (q=1)", color=C_GRN, fontsize=8.5)
-ax.set_xlim(0, 1); ax.set_ylim(0, 0.12)
+ax.axhline(0.05, color=C_GRN, lw=0.7, ls=":", alpha=0.6)
+ax.text(0.02, 0.0515, "BBH equal mass (~5%)", color=C_GRN, fontsize=8.5)
+ax.plot([0.1], [0.00415], marker="o", color=FG, ms=6, ls="none", label="NR, q = 0.1 (Gonzalez+2009)")
+ax.set_xlim(0, 1); ax.set_ylim(0, 0.06)
 ax.set_xlabel("Mass ratio  q = M1/M2", fontsize=12)
 ax.set_ylabel("eps_top  (GW fraction)", fontsize=12)
 ax.legend(**LEGEND_KW)
@@ -122,7 +137,9 @@ for flo, fhi, lbl, col in bands:
     ax.axhspan(flo, fhi, alpha=0.13, color=col)
     ax.text(M_Ms[-1]*0.35, (flo*fhi)**0.5, lbl, color=col,
             fontsize=9, ha="right", va="center", fontweight="bold")
-mass_cases = [(2e24/MSUN, "mu+mu", C_BLUE), (1e3, "mu+M", C_TEAL),
+# [15/10/2026, F2-A12] mu+mu = 2 x 3.74e24 kg (was 2e24 kg, superseded mass); the "mu+M" case
+# (1e3 Msun, the lower bound withdrawn on 17/09/2026; mass ratio ~1e-30, f_peak formula not applicable) is removed.
+mass_cases = [(2*3.74e24/MSUN, "mu+mu", C_BLUE),
               (2e5, "M+M",  C_ORA),  (1e6, "Mh+M", C_PIN)]
 for M, lbl, col in mass_cases:
     f = C_SI**3 / (6*np.pi*G_SI*M*MSUN)
@@ -141,7 +158,7 @@ savefig(fig, "fig_ECF_fmerger_vs_M.png")
 print("Fig 3 — Channel partition ...")
 fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
 fig.patch.set_facecolor(BG)
-# Régime I
+# Regime I
 ax = axes[0]; ax.set_facecolor(BG)
 labels_I = ["GW", "Kinetic", "EM sec."]; mids_I = [94.5, 3, 0.5]; err_I = [4.5, 2, 0.5]
 bars = ax.bar(labels_I, mids_I, color=[C_PUR, C_TEAL, C_ORA], width=0.5,
@@ -154,7 +171,7 @@ ax.set_title("Regime I — Constructive Merger\n(same helicity)", fontsize=10.5,
 for bar, v, e in zip(bars, mids_I, err_I):
     ax.text(bar.get_x()+bar.get_width()/2, v+e+2,
             f"{int(v-e)}–{int(v+e)}%", ha="center", color=FG, fontsize=9)
-# Régime II
+# Regime II
 ax2 = axes[1]; ax2.set_facecolor(BG)
 ch = ["y/X", "Plasma", "GW", "nu", "X soft"]
 micro = [50, 32.5, 3, 10, 5]; macro = [20, 10, 30, 7.5, 10]
@@ -236,8 +253,11 @@ savefig(fig, "fig_KnotStar_Lx_vs_b.png")
 print("Fig 5 — Ringdown tail ...")
 M_tot  = 2e5*MSUN
 tau_GR = G_SI*M_tot/C_SI**3
-tau_T  = 0.01*PC_M/C_SI
-t = np.logspace(np.log10(tau_GR*0.1), np.log10(tau_T*5), 800)
+# 18/10/2026: R_Knot = R_max = c/H(T_GA), H(T_GA) = 0.70 s^-1 (F2, Eq. Rmax_macro);
+# the former value R_Knot = 0.01 pc had no derivation in F2.
+R_KNOT = C_SI/0.70
+tau_T  = R_KNOT/C_SI
+t = np.logspace(np.log10(tau_GR*0.1), np.log10(tau_GR*30), 800)
 h_GR = np.exp(-t/tau_GR)
 h_T  = np.exp(-t/tau_GR) + 0.02*np.exp(-t/tau_T)
 
@@ -245,18 +265,16 @@ fig, ax = plt.subplots(figsize=(9, 5.5))
 styled_ax(ax, fig)
 ax.grid(True, which="minor", color=GR, lw=0.25, alpha=0.4)
 ax.loglog(t, h_GR, color=C_BLUE, lw=2, ls="--", label="Standard BBH ringdown")
-ax.loglog(t, h_T,  color=C_PIN,  lw=2.5, label="ECF Knot-Star (torsion tail)")
+ax.loglog(t, h_T,  color=C_PIN,  lw=2.5, label="With torsion damping, tau_T = R_max/c")
 ax.axvline(tau_GR, color=C_BLUE, lw=0.9, ls=":", alpha=0.8)
 ax.text(tau_GR*1.3, 5e-1, "tau_GR~1s", color=C_BLUE, fontsize=9)
 ax.axvline(tau_T, color=C_PIN, lw=0.9, ls=":", alpha=0.8)
-ax.text(tau_T*1.3, 5e-2, "tau_T~1e6s", color=C_PIN, fontsize=9)
-ax.axhspan(1e-3, 1e-2, alpha=0.07, color=C_PUR)
-ax.text(tau_T*2, 3e-3, "LISA floor", color=C_PUR, fontsize=8.5)
+ax.text(tau_T*1.3, 5e-2, "tau_T~1.4s", color=C_PIN, fontsize=9)
 ax.set_xlim(t[0], t[-1]); ax.set_ylim(1e-4, 2)
 ax.set_xlabel("Time  t  [s]", fontsize=12)
 ax.set_ylabel("GW amplitude h (norm.)", fontsize=12)
 ax.legend(**LEGEND_KW)
-ax.set_title("ECF Extended Ringdown: GR vs Torsion tail\nFalsifiable LISA — Appendix D.2", fontsize=11)
+ax.set_title("Torsion damping at the Macro-Knot radius: no separable tail\nAppendix D.2 (corrected 18/10/2026)", fontsize=11)
 savefig(fig, "fig_ECF_Ringdown_Tail.png")
 
 print("\nDone — 5 figures saved to", args.outdir)

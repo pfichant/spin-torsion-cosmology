@@ -17,52 +17,62 @@ OUTPUT:
 Fig_CMB_Power_Spectrum.png
 =============================================================================
 """
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib.pyplot as plt
 
 def generate_ecf_power_spectrum():
-    # 1. Génération d'un spectre de puissance Lambda-CDM synthétique réaliste
+    # 1. Generate a realistic synthetic Lambda-CDM power spectrum
     lmax = 800
     ell = np.arange(0, lmax)
     
-    # Modélisation empirique des pics acoustiques
+    # Empirical model of the acoustic peaks
     D_ell_lcdm = np.zeros(lmax)
     D_ell_lcdm[2:] = 1000 * (ell[2:] / 10)**(-0.1) # Plateau de Sachs-Wolfe
-    # Ajout du premier pic acoustique (ell ~ 220) et du deuxième (ell ~ 540)
+    # Add the first acoustic peak (ell ~ 220) and the second (ell ~ 540)
     D_ell_lcdm += 4500 * np.exp(-0.5 * ((ell - 220) / 40)**2)
     D_ell_lcdm += 2000 * np.exp(-0.5 * ((ell - 540) / 60)**2)
-    # Amortissement de Silk aux hautes fréquences
+    # Silk damping at high multipoles
     D_ell_lcdm *= np.exp(-(ell / 700)**2)
     
-    # 2. Application de la correction théorique ECF aux bas multipôles (ell < 30)
-    # La cristallisation topologique réduit la variance aléatoire globale
-    # C'est la signature de la taille limite des domaines de Kibble-Zurek
+    # 2. Apply the ECF theoretical correction at low multipoles (ell < 30)
+    # Topological crystallisation reduces the overall random variance
+    # This is the signature of the limiting Kibble-Zurek domain size
     suppression_factor = 1.0 - 0.4 * np.exp(-(ell / 15)**2)
     D_ell_ecf = D_ell_lcdm * suppression_factor
 
-    # 3. Mock des données d'observation (type Satellite Planck 2018)
-    # On choisit des points d'échantillonnage
+    # 3. Mock observational data (Planck 2018 style)
+    # Choose the sampling points
     ell_obs = np.concatenate([np.arange(2, 50, 4), np.arange(50, lmax-20, 15)])
     D_ell_obs_base = np.interp(ell_obs, ell, D_ell_ecf)
     
-    # Ajout du bruit cosmique et instrumental
+    # Add cosmic and instrumental noise
     np.random.seed(42) # Pour reproductibilité
     noise = np.random.normal(0, 0.05 * D_ell_obs_base)
-    # La variance cosmique est beaucoup plus forte aux basses fréquences
+    # Cosmic variance is much larger at low multipoles
     noise[:10] = np.random.normal(0, 0.15 * D_ell_obs_base[:10]) 
     
     D_ell_obs_noisy = D_ell_obs_base + noise
     errors = 0.05 * D_ell_obs_noisy + 50 # Barres d'erreur empiriques
 
-    # ================= CALCUL STATISTIQUE (CHI-CARRÉ) =================
-    # Calcul du chi-carré pour Lambda-CDM par rapport aux mock observations
+    # ================= STATISTICAL CALCULATION (CHI-SQUARE) ============
+    # Chi-square of Lambda-CDM against the mock observations
     chi2_lcdm = np.sum(((D_ell_obs_noisy - np.interp(ell_obs, ell, D_ell_lcdm)) / errors)**2)
     
-    # Calcul du chi-carré pour le modèle ECF
+    # Chi-square of the ECF model
     chi2_ecf = np.sum(((D_ell_obs_noisy - np.interp(ell_obs, ell, D_ell_ecf)) / errors)**2)
     
-    # Degrés de liberté (nombre de points d'observation testés dans la zone anormale ell < 50)
-    # On se concentre sur les basses fréquences pour le calcul de l'avantage ECF
+    # Degrees of freedom (observation points tested in the anomalous region ell < 50)
+    # Restricted to low multipoles, where the ECF advantage is measured
     idx_low_ell = np.where(ell_obs < 50)[0]
     dof = len(idx_low_ell)
     
@@ -81,10 +91,10 @@ def generate_ecf_power_spectrum():
     
     ax.errorbar(ell_obs, D_ell_obs_noisy, yerr=errors, fmt='k.', markersize=6, capsize=3, alpha=0.8, label='Mock Planck Observations')
     
-    # Mise en évidence de l'anomalie des basses fréquences
+    # Highlight the low-multipole anomaly
     ax.axvspan(2, 30, color='gray', alpha=0.15, label=r'Low-$\ell$ Anomaly Zone ($\ell < 30$)')
     
-    # Titre avec "raw string" (r"...") pour éviter les avertissements LaTeX dans la console
+    # Raw string (r"...") in the title, to avoid LaTeX warnings on the console
     ax.set_title(r"CMB Angular Power Spectrum: Resolving the Low-$\ell$ Tension", fontsize=16, fontweight='bold', pad=15)
     ax.set_xlabel(r"Multipole moment $\ell$ (Angular Scale)", fontsize=14)
     ax.set_ylabel(r"$\mathcal{D}_\ell = \ell(\ell+1)C_\ell / 2\pi$ [$\mu$K$^2$]", fontsize=14)
@@ -94,11 +104,11 @@ def generate_ecf_power_spectrum():
     
     ax.grid(True, which="both", ls=":", alpha=0.5)
     
-    # 1. PLACEMENT DE LA LÉGENDE (En haut à gauche)
+    # 1. LEGEND PLACEMENT (upper left)
     ax.legend(loc='upper left', fontsize=11, framealpha=0.9)
     
-    # 2. PLACEMENT DE LA BOÎTE STATISTIQUE (En haut à gauche, juste sous la légende)
-    # Utilisation de chaînes formatées "raw" (fr"...") pour LaTeX + variables Python
+    # 2. STATISTICS BOX (upper left, just below the legend)
+    # Raw f-strings (fr"...") for LaTeX together with Python variables
     textstr = (
         r"Statistical Fit (Low-$\ell$ Zone):" + "\n"
         fr"$\chi^2_{{\nu}} (\Lambda\text{{CDM}}) \approx {chi2_red_lcdm:.2f}$" + "\n"
@@ -106,7 +116,7 @@ def generate_ecf_power_spectrum():
         "ECF topology natively resolves the\nlarge-scale power deficit."
     )
     
-    # x=0.02 (2% depuis la gauche), y=0.74 (74% depuis le bas)
+    # x=0.02 (2% from the left), y=0.74 (74% from the bottom)
     ax.text(0.02, 0.74, textstr, transform=ax.transAxes, fontsize=11,
             verticalalignment='top', horizontalalignment='left',
             bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.9, edgecolor='red'))

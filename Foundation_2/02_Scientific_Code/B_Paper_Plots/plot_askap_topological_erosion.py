@@ -88,13 +88,13 @@ for k in range(int(6 * 60 / P_min) + 2):
 # ─────────────────────────────────────────────────────────────────────────────
 # STYLE
 # ─────────────────────────────────────────────────────────────────────────────
-darkbg  = '#0d1117'
-panelbg = '#111820'
-gridcol = '#2a3a4a'
-textcol = '#e8e8e8'
+darkbg  = 'white'
+panelbg = 'white'
+gridcol = '#cccccc'
+textcol = '#222222'
 red_ecf = '#e05252'
-gold    = '#ffd700'
-white   = '#ffffff'
+gold    = '#b8860b'
+white   = '#222222'
 ltblue  = '#7ecff7'
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ ax1.set_title('Full 8-day Light Curve  (320 pulses)', color=textcol, fontsize=12
 ax1.xaxis.set_major_locator(ticker.MultipleLocator(24))
 ax1.xaxis.set_minor_locator(ticker.MultipleLocator(6))
 ax1.tick_params(which='minor', colors=gridcol, length=3)
-ax1.legend(loc='upper right', fontsize=9.5, facecolor='#1a2a3a',
+ax1.legend(loc='upper right', fontsize=9.5, facecolor='white',
            labelcolor=textcol, framealpha=0.9, edgecolor=gridcol)
 
 # ── Panel B ───────────────────────────────────────────────────────────────────

@@ -48,9 +48,14 @@ LEGEND_KW = dict(
     framealpha=0.97, labelcolor=FG, fontsize=10,
 )
 
-# ── Paramètres physiques ──────────────────────────────────────────
+# -- Physical parameters -------------------------------------------
 Gamma0_micro = 5e-39
-Gamma0_macro = 1e-20
+Gamma0_macro = 2.5e-29   # CORRECTED 13/09/2026: was 1e-20, a value with no
+                         # traceable origin -- neither F2's (2.5e-26, computed
+                         # with N_macro=1e3) nor the direct calculation. The
+                         # value set here corresponds to N_macro = O(1)/halo,
+                         # the working assumption of F2 (O(1) per galactic
+                         # volume, not derived; corrected 17/10/2026).
 z_EW         = 1.5e11
 z_QCD        = 5e11
 

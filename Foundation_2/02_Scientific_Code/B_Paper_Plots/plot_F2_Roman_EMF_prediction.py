@@ -2,18 +2,18 @@
 """
 plot_F2_Roman_EMF_prediction.py
 Foundation II — Roman Space Telescope microlensing prediction
-with EMF-corrected Poisson mass distribution (lambda >= 26).
+with EMF-corrected Poisson mass distribution (lambda >= 36).
 
 Generates Fig6_Roman_PBH_Prediction.png (replaces monochromatic version).
 
-Key results (all verified 02/07/2026):
-  - M_micro = 6e24 kg (individual Micro-Knot, unchanged)
-  - lambda_EMF >= 26 (Poisson coalescence, HSC-compatible)
-  - M_typ = 26 * M_micro ~ 8e-5 Msun (typical observable mass)
-  - t_E ~ 6.8 h (vs 0.54 h monochromatic)
+Key results (re-run on a copy 22/09/2026, audit v2 lot T1; values printed by this script):
+  - M_micro = 3.74e24 kg (individual Micro-Knot, revised 27/08/2026)
+  - lambda_EMF >= 36 (Poisson coalescence, HSC-compatible; benchmark at the threshold)
+  - M_typ = 36 * M_micro = 6.77e-5 Msun (typical observable mass)
+  - t_E(M_typ) = 6.27 h (vs 1.045 h for a single knot, D_L = 4 kpc)
   - tau_micro ~ 5e-8 (unchanged, mass conservation)
-  - N_ev ~ 1300 (conservative) to 3000 (full-sweep tau)
-  - A_max ~ 15.4 (deep in detectable regime)
+  - N_ev = 1373 (conservative tau, Poisson-weighted sum); ~4100 with the pseudo-isothermal tau = 1.5e-7 (scaled, not printed) [15/10/2026: formerly ~3300 with 1.2e-7]
+  - A_max ~ 28.6 (rho = theta_*/theta_E = Rsun*D_L/(D_S*R_E) = 0.070, uniform source, u0 = 0; not computed by this script)
 """
 
 import numpy as np
@@ -30,8 +30,17 @@ Msun = 1.989e30
 Rsun = 6.957e8
 kpc_to_m = 3.0857e19
 
-M_MICRO = 6e24          # kg, individual Micro-Knot
-LAM_EMF = 26            # Poisson coalescence parameter (HSC threshold)
+# [27/08/2026] Value revised: the horizon mass is c^3/(2GH), not c^3/(GH),
+# and T_c = 159 +/- 1 GeV (lattice, D'Onofrio+2014) rather than an unsourced
+# epoch. See Scripts_F2/calculate_microknot_mass.py.
+M_MICRO = 3.74e24       # kg, individual Micro-Knot (+/- 0.05e24)
+# [27/08/2026] Recalibrated 26 -> 36. The threshold is set by the Subaru/HSC
+# exclusion curve, and it depends on M_micro: correcting the horizon mass to
+# 3.74e24 kg moves the spectrum to lower masses, where HSC is tighter. The
+# same scan that gave 25.9 with the old mass gives 35.6 with the new one --
+# a STRONGER requirement. Running the scan with 6e24 reproduces 25.9, which
+# is what validates the method.
+LAM_EMF = 36            # Poisson coalescence parameter (HSC threshold)
 D_L = 4 * kpc_to_m      # lens at midpoint
 D_S = 8 * kpc_to_m      # source at bulge
 v_rel = 220e3            # m/s
@@ -92,7 +101,10 @@ ax.text(M_MICRO / Msun * 1.3, 0.3, r'$M_{\mu K}$ (N=1)',
 M_typ_Msun = LAM_EMF * M_MICRO / Msun
 ax.axvline(M_typ_Msun, color='blue', ls='--', lw=1.5, alpha=0.7)
 ax.text(M_typ_Msun * 1.3, 0.25,
-        r'$M_{\rm typ}$' + '\n' + r'$\approx 8\times10^{-5}\,M_\odot$',
+        # [27/08/2026] Was hard-coded as 8e-5 Msun, which matched the
+        # superseded M_micro = 6e24 kg. A label that does not follow the
+        # computation is a label that will eventually contradict it.
+        r'$M_{\rm typ}$' + '\n' + r'$\approx %.1f\times10^{-5}\,M_\odot$' % (M_typ_Msun*1e5),
         fontsize=8, color='blue', va='center')
 
 ax.set_xscale('log')
@@ -179,7 +191,7 @@ ax.grid(True, alpha=0.3)
 
 plt.tight_layout(rect=[0, 0, 1, 0.93])
 outpath = 'Fig6_Roman_PBH_Prediction.png'
-plt.savefig(outpath, dpi=200, bbox_inches='tight')
+plt.savefig(outpath, dpi=300, bbox_inches='tight', facecolor='white')
 print(f"Saved: {outpath}")
 print(f"N_ev total = {N_ev_total:.0f}")
 print(f"M_typ = {LAM_EMF * M_MICRO / Msun:.2e} Msun")

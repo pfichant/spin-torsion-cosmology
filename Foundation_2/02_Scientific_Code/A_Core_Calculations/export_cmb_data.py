@@ -1,3 +1,13 @@
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 r"""
 =============================================================================
 ECF COSMOLOGICAL FRAMEWORK - FOUNDATION II (v1.0.9)
@@ -30,33 +40,33 @@ import numpy as np
 import pandas as pd
 
 def export_cmb_power_spectrum_csv():
-    # 1. Échelles angulaires (Multipôles ell)
+    # 1. Angular scales (multipoles ell)
     lmax = 800
     ell = np.arange(2, lmax)
     
-    # 2. Théorie Standard (Lambda-CDM)
+    # 2. Standard theory (Lambda-CDM)
     D_ell_lcdm = 1000 * (ell / 10)**(-0.1)
     D_ell_lcdm += 4500 * np.exp(-0.5 * ((ell - 220) / 40)**2)
     D_ell_lcdm += 2000 * np.exp(-0.5 * ((ell - 540) / 60)**2)
     D_ell_lcdm *= np.exp(-(ell / 700)**2)
     
-    # 3. Théorie ECF (Coupure Topologique issue de l'échelle Kibble-Zurek)
-    # Suppression aux grandes échelles (ell < 30) due à la limite du domaine de cohérence
+    # 3. ECF theory (topological cutoff from the Kibble-Zurek scale)
+    # Suppression at large scales (ell < 30) from the coherence-domain limince
     suppression_factor = 1.0 - 0.4 * np.exp(-(ell / 15)**2)
     D_ell_ecf = D_ell_lcdm * suppression_factor
 
-    # 4. Mock Observations (Inspirées de Planck 2018 Data Release)
+    # 4. Mock observations (modelled on the Planck 2018 data release)
     ell_obs = np.concatenate([np.arange(2, 50, 4), np.arange(50, lmax-20, 15)])
     D_ell_base = np.interp(ell_obs, ell, D_ell_ecf)
     
-    # Ajout du bruit (Variance Cosmique + Bruit instrumental)
+    # Add noise (cosmic variance + instrumental noise)
     np.random.seed(42)
     noise = np.random.normal(0, 0.05 * D_ell_base)
     noise[:10] = np.random.normal(0, 0.15 * D_ell_base[:10])
     D_ell_obs = D_ell_base + noise
     errors = 0.05 * D_ell_obs + 50
 
-    # 5. Export des Observations au format CSV
+    # 5. Export the observations to CSV
     df_obs = pd.DataFrame({
         'Multipole_ell': ell_obs,
         'D_ell_Observed_muK2': D_ell_obs,
@@ -65,7 +75,7 @@ def export_cmb_power_spectrum_csv():
     })
     df_obs.to_csv('cmb_power_spectrum_observations.csv', index=False)
     
-    # 6. Export des Courbes Théoriques (Pour comparaison directe)
+    # 6. Export the theory curves (for direct comparison)
     df_theory = pd.DataFrame({
         'Multipole_ell': ell,
         'D_ell_LambdaCDM_Theory': D_ell_lcdm,

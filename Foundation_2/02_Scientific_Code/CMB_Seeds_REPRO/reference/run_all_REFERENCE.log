@@ -1,0 +1,24 @@
+planck|edd|disk|M=10000|f_eff=0.1|z_cut=0
+   Planck-like: f_95 = 4.56e-09 (n_95 = 1.52e-02 Mpc^-3) ; S4-like: f_95 = 2.26e-09 (n_95 = 7.51e-03 Mpc^-3)
+planck|none|disk|M=100|f_eff=1.0|z_cut=0
+   Planck-like: f_95 = 3.14e-03 (n_95 = 1.05e+06 Mpc^-3) ; S4-like: f_95 = 1.80e-03 (n_95 = 5.99e+05 Mpc^-3)
+ecf|edd|disk|M=100000|f_eff=0.1|z_cut=0
+   Planck-like: f_95 = 4.49e-09 (n_95 = 1.49e-03 Mpc^-3) ; S4-like: f_95 = 2.15e-09 (n_95 = 7.17e-04 Mpc^-3)
+ecf|edd|disk|M=100000|f_eff=1.0|z_cut=0
+   Planck-like: f_95 = 4.21e-10 (n_95 = 1.40e-04 Mpc^-3) ; S4-like: f_95 = 1.84e-10 (n_95 = 6.12e-05 Mpc^-3)
+ecf|edd|disk|M=100000|f_eff=0.1|z_cut=30
+   Planck-like: f_95 = 4.38e-09 (n_95 = 1.46e-03 Mpc^-3) ; S4-like: f_95 = 2.11e-09 (n_95 = 7.02e-04 Mpc^-3)
+ecf|cap|disk|M=100000|f_eff=0.1|z_cut=0
+   Planck-like: f_95 = 2.50e-07 (n_95 = 8.33e-02 Mpc^-3) ; S4-like: f_95 = 1.36e-07 (n_95 = 4.52e-02 Mpc^-3)
+ecf|cap|disk|M=100000|f_eff=1.0|z_cut=0
+   Planck-like: f_95 = 2.50e-08 (n_95 = 8.33e-03 Mpc^-3) ; S4-like: f_95 = 1.36e-08 (n_95 = 4.52e-03 Mpc^-3)
+ecf|cap|sph|M=100000|f_eff=0.1|z_cut=0
+   Planck-like: f_95 = 3.08e-06 (n_95 = 1.03e+00 Mpc^-3) ; S4-like: f_95 = 1.73e-06 (n_95 = 5.76e-01 Mpc^-3)
+ecf|cap|sph|M=100000|f_eff=1.0|z_cut=0
+   Planck-like: f_95 = 3.08e-07 (n_95 = 1.03e-01 Mpc^-3) ; S4-like: f_95 = 1.73e-07 (n_95 = 5.75e-02 Mpc^-3)
+ecf|edd|disk|M=100000|f_eff=1.0|z_cut=0|lowE sigma_tau=0.003
+   Planck-like: f_95 = 1.25e-10 (n_95 = 4.17e-05 Mpc^-3) ; S4-like: f_95 = 1.10e-10 (n_95 = 3.67e-05 Mpc^-3)
+  $n\,f_{\rm eff}=10^{-5}$ Mpc$^{-3}$: dtau = +0.0023, x_e(100) = 3.95e-04, dEE/EE(l=10,20) = +2.2 %, +4.8 %, max residual TT = 0.03 %
+  $n\,f_{\rm eff}=10^{-4}$ Mpc$^{-3}$: dtau = +0.0164, x_e(100) = 1.32e-03, dEE/EE(l=10,20) = +43.3 %, +47.9 %, max residual TT = 0.24 %
+  $n\,f_{\rm eff}=10^{-3}$ Mpc$^{-3}$: dtau = +0.1002, x_e(100) = 6.29e-03, dEE/EE(l=10,20) = +1274.1 %, +522.4 %, max residual TT = 1.40 %
+Saved: Fig_CMB_ECF_seeds.png

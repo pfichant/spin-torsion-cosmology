@@ -37,6 +37,16 @@ def ecf_topological_grb_theory(t):
     return flux
 
 # Parameters
+# ⚠️ CHAIN POSITION, documented after the audit of 23/08/2026.
+# This script is the SOURCE of the GRB chain and the only one that WRITES:
+#   generate_mock_grb_data.py  ->  data/grb_250702B_data.csv
+#   analyse_grb_lightcurve.py  reads that CSV and reports chi2_nu ~ 1.43
+# ⭐ The seed below is what makes the published number reproducible: change it
+# and the chi2 downstream changes with it. Do not remove it.
+# ⚠️ A third script, simulate_ecf_grb2025_lightcurve.py, regenerates its own
+# realisation IN MEMORY with different settings and reports chi2_nu ~ 2.11.
+# The two figures are NOT in disagreement: they fit DIFFERENT DRAWS of the
+# same simulation. Neither is quoted in Foundation II.
 RANDOM_SEED = 42 
 T_START, T_END = 0.2, 11.5
 NUM_OBSERVATIONS = 80 

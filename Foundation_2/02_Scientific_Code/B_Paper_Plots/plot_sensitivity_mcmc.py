@@ -18,7 +18,7 @@ OUTPUT_FILE = "Fig7_ECF_Sensitivity_MCMC.png"
 
 def main():
     # 1. Generate Synthetic MCMC Chain Data
-    # Alignement STRICT avec les résultats de la Table 4 (v1.0.3)
+    # STRICT alignment with the Table 4 results (v1.0.3)
     np.random.seed(42)
     n_samples = 50000
     
@@ -26,7 +26,7 @@ def main():
     # Log(rho0) ~ -23.25, R_s ~ 1.70 kpc
     mean = [-23.25, 1.70] 
     
-    # Matrice de covariance ajustée pour Rs=1.70 (plus compacte)
+    # Covariance matrix tuned for Rs=1.70 (more compact)
     cov = [[0.05, -0.01], [-0.01, 0.04]]  
     
     data = np.random.multivariate_normal(mean, cov, n_samples).T
@@ -42,13 +42,13 @@ def main():
     ax_yhist = fig.add_subplot(gs[1:4, 3], sharey=ax_main)
     
     # 3. Main Scatter / Density Plot (2D)
-    # Pour la rapidité, on plot un subset ou un hexbin
+    # For speed, plot a subset or an hexbin
     ax_main.hexbin(x, y, gridsize=50, cmap='Blues', mincnt=1)
     
     # Contours de confiance (1-sigma, 2-sigma)
-    # Estimation KDE simplifiée pour les contours
+    # Simplified KDE estimate for the contours
     try:
-        # On prend un sous-échantillon pour le KDE car c'est lent
+        # Sub-sampled for the KDE, which is slow
         subset_size = 5000
         indices = np.random.choice(n_samples, subset_size, replace=False)
         x_sub, y_sub = x[indices], y[indices]
@@ -79,7 +79,7 @@ def main():
     ax_yhist.axhline(mean[1], color='red', linestyle='--', lw=1.5)
     ax_yhist.axis('off') 
 
-    # 5. Statistics Box (Mise à jour v1.0.3)
+    # 5. Statistics box (updated in v1.0.3)
     stats_text = (
         r"$\bf{Constraints\ (NGC\ 6503):}$" "\n"
         r"$\log(\rho_0) = -23.25 \pm 0.15$" "\n"  # Valeur corrigée

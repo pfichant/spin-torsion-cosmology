@@ -1,5 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# =============================================================================
+# ILLUSTRATIVE SKETCH -- PRODUCES NO FIGURE USED BY THE PAPER
+# =============================================================================
+# ⚠️ STATUS, established during the audit of 23/08/2026.
+#
+# This script builds a log-log sketch of a LISA-band strain spectrum, then
+# ENDS WITHOUT SAVING ANYTHING: its plt.show() is commented out and there is
+# no savefig. ⇒ Run as part of the pipeline, it consumes time and produces
+# nothing. That is why the output is written to disk below (added 23/08).
+#
+# ⚠️ ITS NUMBERS ARE ILLUSTRATIVE, NOT DERIVED. The amplitudes 1e-21 (LCDM
+# background) and 1e-20 (ECF peak), the 1 mHz peak frequency and the 0.5
+# log-width are round figures chosen to draw a readable curve. NONE of them
+# appears in Foundation II, and none is computed from the framework: the
+# peak is a hand-placed Gaussian, not a merger-rate calculation.
+#
+# ⇒ READ THIS AS A DIAGRAM OF THE IDEA -- "a topological-merger population
+#   would show up as a bump in the LISA band" -- not as a prediction. A real
+#   prediction needs the merger rate and mass function of the micro-knot
+#   population, which this script does not contain.
+# =============================================================================
 """
 =============================================================================
 Project     : Foundation II: The Chiral Universe (ECF Model)
@@ -36,4 +57,9 @@ plt.xlabel("Frequency (Hz)")
 plt.ylabel("Characteristic Strain h_c")
 plt.legend()
 plt.grid(True, which="both", ls="-", alpha=0.2)
-#plt.show()
+plt.tight_layout()
+# ⚠️ ADDED 23/08/2026: the script previously ended here with a commented-out
+# plt.show(), producing nothing at all. It now writes its sketch to disk so
+# that running it has an observable effect.
+plt.savefig("Fig_ECF_GW_Signature_sketch.png", dpi=150, bbox_inches="tight")
+print("Saved: Fig_ECF_GW_Signature_sketch.png  (illustrative sketch, not a paper figure)")

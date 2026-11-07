@@ -11,6 +11,11 @@ Output:        FigB1_Topological_Transition.png
 """
 
 import numpy as np
+
+# [AJOUT 11/09/2026] Graine fixee : ce script utilisait np.random sans
+# graine, produisant une figure differente a chaque execution. C'etait la
+# seule figure de F2 non reproductible au bit pres (35/36 l'etaient).
+np.random.seed(42)
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.cm as cm

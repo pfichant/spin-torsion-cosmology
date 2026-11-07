@@ -33,7 +33,7 @@ def generate_act2_plot():
     ax1.scatter(matter_x, matter_y, c='blue', s=15, alpha=0.6, label='Matter ($e^-$)')
     ax1.scatter(anti_x, anti_y, c='red', s=15, alpha=0.6, label='Antimatter ($e^+$)')
     
-    # Draw Merging Knots (intermediate mass)
+    # Draw coagulating Micro-Knots (intermediate mass, Micro sector only)
     knot_centers = [(3, 7), (4.5, 6.5), (7, 3), (8, 4.5)]
     for cx, cy in knot_centers:
         ax1.add_patch(Circle((cx, cy), 0.8, color='black', alpha=0.8))
@@ -44,9 +44,9 @@ def generate_act2_plot():
     ax1.annotate('', xy=(7.5, 3.8), xytext=(7, 3), arrowprops=dict(arrowstyle="->", color="black", lw=2))
     ax1.annotate('', xy=(7.5, 3.8), xytext=(8, 4.5), arrowprops=dict(arrowstyle="->", color="black", lw=2))
 
-    ax1.set_title(r"1. Hierarchical Merging ($t < 1$ s)" + "\nDense $e^+e^-$ Plasma & High Friction", fontsize=14, pad=15)
+    ax1.set_title(r"1. Micro-Knot coagulation ($t < 1$ s)" + "\nDense $e^+e^-$ Plasma & High Friction", fontsize=14, pad=15)
     # Add label for active knots manually to legend
-    ax1.scatter([], [], c='black', s=80, alpha=0.8, label='Active Merging Knots')
+    ax1.scatter([], [], c='black', s=80, alpha=0.8, label='Coagulating Micro-Knots')
     ax1.legend(loc='upper left', fontsize=10)
     ax1.axis('off')
 
@@ -69,7 +69,13 @@ def generate_act2_plot():
     micro_x, micro_y = np.random.rand(200)*10, np.random.rand(200)*10
     ax2.scatter(micro_x, micro_y, c='black', s=15, alpha=0.7, marker='.', zorder=5, label='Surviving Micro-Knots ($10^{24}$ kg)')
 
-    # Draw Frozen Macro-Knots (Terminal Mass 10^5 M_sun)
+    # [CORRIGE 17/09/2026 — H-P0-01] Les Macro-Knots ne sont PAS le produit de
+    # la coagulation montree a gauche : la coagulation de Poisson s'arrete a
+    # M_typ ~ 6.8e-5 M_sun, neuf ordres de grandeur sous 1e5 M_sun. Les
+    # Macro-Knots relevent d'un canal distinct (masse d'horizon a la Grande
+    # Annihilation). La figure les montre COEXISTANT apres le freeze-out,
+    # pas issus du panneau de gauche.
+    # Draw Frozen Macro-Knots (distinct channel, 10^5 M_sun)
     frozen_centers = [(3.75, 6.75), (7.5, 3.75)]
     for i, (cx, cy) in enumerate(frozen_centers):
         circle = Circle((cx, cy), 1.6, color='black', alpha=0.95, zorder=8)

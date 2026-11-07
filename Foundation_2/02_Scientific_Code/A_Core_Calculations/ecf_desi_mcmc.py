@@ -2,19 +2,19 @@
 """
 ecf_desi_mcmc_v2.1.py
 ===================
-Comparaison indépendante de la prédiction ECF (w0, wa) = (-0.904, -0.153)
-avec les données BAO DESI DR1 publiques (Adame et al. 2024, arXiv:2404.03002).
+Independent comparison of the calibrated ECF (w0, wa) = (-0.904, -0.153)
+against the public DESI DR1 BAO data (Adame et al. 2024, arXiv:2404.03002).
 
-Méthode :
-  - Minimisation de chi2 BAO (13 observables DESI DR1)
-  - MCMC Metropolis-Hastings sur (Omega_m, w0, wa)
-  - H0 fixé via prior gaussien (deux cas : Planck h=0.674, SH0ES h=0.730)
-  - rd déduit de Omega_m et h via la calibration Eisenstein & Hu (1998)
+Method:
+  - BAO chi2 minimisation (12 DESI DR1 observables, block reconstructed 22/09/2026)
+  - Metropolis-Hastings MCMC on (Omega_m, w0, wa)
+  - H0 fixed via a Gaussian prior (two cases: Planck h=0.674, SH0ES h=0.730)
+  - rd derived from Omega_m and h via the Eisenstein & Hu (1998) calibration
 
-Note méthodologique :
-  La matrice de covariance complète DESI n'est pas utilisée ici (erreurs
-  diagonales seulement). Ce script est une vérification de cohérence,
-  non une analyse de likelihood complète. Voir Foundation III pour la
+Methodological note:
+  The full DESI covariance matrix is not used here (diagonal errors
+  only). This script is a consistency check, not a full likelihood
+  analysis. See Foundation III for the
   comparaison rigoureuse.
 
 Auteur : Pascal Fichant (ECF programme)
@@ -26,6 +26,16 @@ Output:
 
 """
 
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 from scipy.integrate import quad
 from scipy.optimize import minimize
@@ -38,13 +48,13 @@ import time, os
 np.random.seed(42)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DONNÉES DESI DR1 (Adame et al. 2024, Table 1 + Fig. 7)
+# DESI DR1 DATA (Adame et al. 2024, Table 1 + Fig. 7)
 # ═══════════════════════════════════════════════════════════════════════════
-# BGS : DV/rd  (traceur à z_eff=0.295)
+# BGS: DV/rd  (tracer at z_eff=0.295)
 # LRG, ELG, QSO, LYA : DM/rd + DH/rd
 
 DESI_DR1 = [
-    # (nom, z_eff, type, valeur, sigma)
+    # (name, z_eff, type, value, sigma)
     ("BGS",      0.295, "DV",  7.93,  0.15),
     ("LRG1 DM",  0.510, "DM", 13.62,  0.25),
     ("LRG1 DH",  0.510, "DH", 20.98,  0.61),
@@ -54,8 +64,11 @@ DESI_DR1 = [
     ("LRG3 DH",  0.930, "DH", 17.88,  0.35),
     ("ELG2 DM",  1.317, "DM", 27.79,  0.69),
     ("ELG2 DH",  1.317, "DH", 13.82,  0.42),
-    ("QSO  DM",  1.491, "DM", 30.21,  0.79),
-    ("QSO  DH",  1.491, "DH", 13.23,  0.55),
+    # [Q2, 22/09/2026 — observational-closure memo] RECONSTRUCTED BLOCK.
+    # See plot_ecf_desi_mcmc_v3_0.py: DESI DR1 publishes DV/rd = 26.07 +/- 0.67 for the
+    # QSO tracer at z_eff = 1.491 and no DM/rd or DH/rd. The two eBOSS-type QSO rows
+    # previously carried here are WITHDRAWN (MIXED-DATA / PROVENANCE INVALID).
+    ("QSO  DV",  1.491, "DV", 26.07,  0.67),
     ("LYA  DM",  2.330, "DM", 39.71,  0.94),
     ("LYA  DH",  2.330, "DH",  8.52,  0.17),
 ]
@@ -68,14 +81,14 @@ sigma  = np.array([d[4] for d in DESI_DR1])
 N_OBS  = len(DESI_DR1)
 
 print("=" * 62)
-print("ECF DESI DR1 — COMPARAISON INDÉPENDANTE w0/wa")
+print("ECF DESI DR1 — INDEPENDENT w0/wa COMPARISON")
 print("=" * 62)
-print(f"Données : {N_OBS} observables BAO DESI DR1")
-print(f"Traceurs : BGS · LRG1-3 · ELG2 · QSO · Lyman-α\n")
+print(f"Data: {N_OBS} DESI DR1 BAO observables")
+print(f"Traceurs : BGS(DV) · LRG1-3(DM,DH) · ELG2(DM,DH) · QSO(DV) · Lyman-α(DM,DH)\n")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MODÈLE COSMOLOGIQUE CPL (flat)
+# CPL COSMOLOGICAL MODEL (flat)
 # ═══════════════════════════════════════════════════════════════════════════
 C_KMS = 299792.458  # km/s
 
@@ -87,17 +100,17 @@ def E(z, Om, w0, wa):
 
 def rd_eisenstein(Om, h):
     """
-    Rayon du son à la traîne (Mpc).
-    Approximation Eisenstein & Hu 1998, calibrée sur Planck 2018.
+    Sound horizon at the drag epoch (Mpc).
+    Eisenstein & Hu 1998 approximation, calibrated on Planck 2018.
     """
     omh2  = Om * h**2
-    obh2  = 0.02237          # Planck 2018 (fixé — peu sensible)
+    obh2  = 0.02237          # Planck 2018 (fixed — weakly sensitive)
     keq   = 7.46e-2 * omh2  # Mpc^-1
     rd    = 147.1 * (omh2 / 0.143)**(-0.25) * (obh2 / 0.0224)**(-0.12)
     return rd
 
 def model(Om, w0, wa, h):
-    """Calculer tous les observables BAO modèle."""
+    """Compute all model BAO observables."""
     rd   = rd_eisenstein(Om, h)
     DH0  = C_KMS / (h * 100.0)    # Mpc
     preds = []
@@ -136,7 +149,7 @@ for case_name, h_cen, h_sig in CASES:
     print(f"CAS : prior H0 = {case_name}  (h = {h_cen} ± {h_sig})")
     print(f"{'─'*62}")
 
-    # ── Chi2 complet avec prior gaussien sur h ──────────────────────────
+    # -- Full chi2 with a Gaussian prior on h ----------------------------
     def chi2_full(params):
         Om, w0, wa = params
         if not (0.15 < Om < 0.55): return 1e9
@@ -144,9 +157,9 @@ for case_name, h_cen, h_sig in CASES:
         if not (-4.0 < wa < 2.0):  return 1e9
         h = h_cen
         c_bao = chi2_bao(Om, w0, wa, h)
-        return c_bao  # h fixé (prior très étroit)
+        return c_bao  # h fixed (very narrow prior)
 
-    # MAP — plusieurs départs
+    # MAP -- several starting points
     starts = [
         [0.315, -1.00,  0.00],
         [0.300, -0.90, -0.15],
@@ -180,7 +193,7 @@ for case_name, h_cen, h_sig in CASES:
     print(f"  χ²/ndof = {chi2_lcdm_val:.3f} / {ndof_lcdm} = {chi2_lcdm_val/ndof_lcdm:.3f}")
 
     dchi2_cpl = best_f - chi2_lcdm_val
-    daic      = dchi2_cpl - 4   # CPL a 2 param. de plus
+    daic      = dchi2_cpl + 4   # AIC = chi2 + 2k ; CPL a 2 param. de plus -> +4  [CORRIGE 15/10/2026 : etait '- 4', signe de la penalite inverse]
     print(f"\n  Δχ²(CPL − ΛCDM) = {dchi2_cpl:+.3f}   ΔAIC = {daic:+.3f}")
 
     # Point ECF
@@ -230,14 +243,14 @@ for case_name, h_cen, h_sig in CASES:
     wa_m,  wa_e,  wa_lo,  wa_hi  = stats(wa_s)
     corr = np.corrcoef(w0_s, wa_s)[0, 1]
 
-    print(f"\n  MCMC résultats marginaux (prior {case_name}) :")
+    print(f"\n  MCMC marginal results (prior {case_name}):")
     print(f"    Ωm  = {Om_m:.4f} ± {Om_e:.4f}  [{Om_lo:.4f}, {Om_hi:.4f}]")
     print(f"    w0  = {w0_m:.4f} ± {w0_e:.4f}  [{w0_lo:.4f}, {w0_hi:.4f}]")
     print(f"    wa  = {wa_m:.4f} ± {wa_e:.4f}  [{wa_lo:.4f}, {wa_hi:.4f}]")
     print(f"    ρ(w0,wa) = {corr:.3f}")
     print(f"    w0+wa    = {w0_m+wa_m:.4f} ± {np.std(w0_s+wa_s):.4f}")
 
-    # Distance ECF dans l'espace marginalisé (diagonal, approx.)
+    # ECF distance in the marginalised space (diagonal, approximate)
     pull_w0 = (ECF_W0 - w0_m) / w0_e
     pull_wa = (ECF_WA - wa_m) / wa_e
     print(f"\n  Pull ECF vs MCMC :")
@@ -262,14 +275,14 @@ for case_name, h_cen, h_sig in CASES:
 # FIGURES
 # ═══════════════════════════════════════════════════════════════════════════
 print(f"\n{'─'*62}")
-print("Génération des figures ...")
+print("Generating figures ...")
 
 from scipy.stats import gaussian_kde
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 fig.suptitle(
-    "Comparaison DESI DR1 BAO (13 points) — CPL vs ECF vs ΛCDM\n"
-    "ECF Foundation I : w₀=−0.904, wₐ=−0.153  (prédiction a priori, PIT)",
+    "Comparaison DESI DR1 BAO (12 points, bloc reconstruit) — CPL vs ECF vs ΛCDM\n"
+    "ECF Foundation I: w₀=−0.904, wₐ=−0.153  (calibrated a priori, PIT; not ab initio, PO-F1-B)",
     fontsize=12, fontweight='bold'
 )
 
@@ -303,7 +316,7 @@ for ax_idx, (case_name, _h, _hs) in enumerate(CASES):
     except Exception as e:
         ax.scatter(w0_s[::5], wa_s[::5], s=1, c=col, alpha=0.2)
 
-    # Médiane MCMC
+    # MCMC median
     ax.scatter([r["w0_m"]], [r["wa_m"]], c=col, s=70, zorder=6, marker='*',
                label=f"MCMC {case_name}\nw₀={r['w0_m']:.3f}±{r['w0_e']:.3f}"
                      f"\nwₐ={r['wa_m']:.3f}±{r['wa_e']:.3f}")
@@ -317,7 +330,7 @@ for ax_idx, (case_name, _h, _hs) in enumerate(CASES):
     ax.scatter([-1.0], [0.0], c='k', s=60, zorder=7, marker='s',
                label="ΛCDM (w₀=−1, wₐ=0)")
 
-    # Lignes guides
+    # Guide lines
     ax.axvline(-1.0, c='k', lw=0.7, ls=':', alpha=0.4)
     ax.axhline(0.0,  c='k', lw=0.7, ls=':', alpha=0.4)
     ax.axvline(ECF_W0, c='#E55', lw=0.8, ls='--', alpha=0.5)
@@ -337,9 +350,9 @@ out1 = 'Fig_ecf_desi_mcmc_contours_v2.png'
 plt.savefig(out1, dpi=150, bbox_inches='tight')
 plt.close()
 
-# ── Figure 2 : résidus BAO ─────────────────────────────────────────────────
+# -- Figure 2: BAO residuals ----------------------------------------------
 fig2, axes2 = plt.subplots(1, 2, figsize=(15, 5), sharey=False)
-fig2.suptitle("Résidus BAO DESI DR1 — (données − modèle) / σ", fontsize=12)
+fig2.suptitle("DESI DR1 BAO residuals — (data − model) / σ", fontsize=12)
 
 for ax, (case_name, h_cen, _) in zip(axes2, CASES):
     r   = results[case_name]
@@ -365,7 +378,7 @@ for ax, (case_name, h_cen, _) in zip(axes2, CASES):
 
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=45, ha='right', fontsize=8)
-    ax.set_ylabel("(donnée − modèle) / σ", fontsize=10)
+    ax.set_ylabel("(data − model) / σ", fontsize=10)
     ax.set_title(f"Prior {case_name} (h={h_cen})\n"
                  f"χ²_ECF/ndof={r['chi2_ecf']/(N_OBS-1):.2f}  "
                  f"χ²_ΛCDM/ndof={r['chi2_lcdm']/(N_OBS-1):.2f}", fontsize=10)
@@ -383,7 +396,7 @@ plt.close()
 # RAPPORT FINAL
 # ═══════════════════════════════════════════════════════════════════════════
 print(f"\n{'='*62}")
-print("RAPPORT FINAL — COMPARAISON INDÉPENDANTE ECF vs DESI DR1")
+print("FINAL REPORT — INDEPENDENT ECF vs DESI DR1 COMPARISON")
 print(f"{'='*62}")
 print(f"\n{'─'*62}")
 print(f"{'':22s} {'Planck prior':>18s}   {'SH0ES prior':>18s}")
@@ -408,27 +421,38 @@ for label, vp, vs in rows:
     print(f"  {label:20s}  {vp:>18s}   {vs:>18s}")
 
 print(f"\n{'─'*62}")
-print("INTERPRÉTATION")
+print("INTERPRETATION")
 print(f"{'─'*62}")
 print("""
-1. DIRECTION QUALITATIVE : Les deux cas confirment que DESI DR1
-   préfère w≠−1 (ΛCDM disfavorisé). L'ECF prédit aussi w≠−1 
-   dans la bonne direction (w₀>−1, wₐ<0). ✓
+1. QUALITATIVE DIRECTION: Both cases confirm that DESI DR1
+   prefers w≠−1 (ΛCDM disfavoured). ECF also gives w≠−1
+   in the right direction (w₀>−1, wₐ<0). ✓
 
-2. BEST-FIT QUANTITATIF : Le best-fit CPL libre de DESI DR1 est
-   différent de la prédiction ECF (−0.904, −0.153).
-   Avec prior SH0ES : CPL best ≈ (−1.0, −0.6)
-   Avec prior Planck : CPL best ≈ (−0.4, −2.5)
+2. QUANTITATIVE BEST-FIT: The free CPL best-fit of DESI DR1
+   differs from the calibrated ECF (−0.904, −0.153).
+   With SH0ES prior: CPL best ≈ (−1.0, −0.6)
+   With Planck prior: CPL best ≈ (−0.4, −2.5)
 
-3. STATUT ECF : La prédiction (w₀,wₐ)=(−0.904,−0.153) était 
-   dérivée AVANT DESI (calibration PIT sur SH0ES+Planck+BOSS DR12).
-   Ce n'est PAS un fit DESI — c'est une prédiction a priori.
-   Sa cohérence avec DESI est qualitative, pas une minimisation
-   de chi2 sur les données DESI.
+3. ECF STATUS: (w0,wa)=(-0.904,-0.153) is CALIBRATED (A-9, 22/09/2026):
+   xi = 1.645 is a parameter calibrated on the DESI preference used by the
+   ECF, so as to reproduce the target value of wa; it is therefore not a
+   prediction independent of DESI.
+   [!] Wording corrected on 23/08/2026: this text used to read "derived".
+   Foundation I writes "the CALIBRATED (w0,wa)" and "remains a
+   CALIBRATION OUTPUT pending an independent derivation". The
+   calibrated/derived distinction is the one the whole corpus defends:
+   these two numbers are calibrated (wa through xi, on the DESI
+   preference used by the ECF); they do not follow from the action.
+   [!] Wording completed on 25/08/2026: the closing line still read
+   "it is an a priori prediction", contradicting the note above.
+   It is not a direct fit of the DESI BAO likelihood; it is calibrated,
+   not derived ab initio (open problem PO-F1-B).
+   Its consistency with DESI is qualitative, not a minimisation of
+   chi2 on the DESI data.
 
 4. LIMITE DE L'ANALYSE : Erreurs diagonales seulement. La matrice
-   de covariance complète DESI corrèle LRG3+ELG1 et peut modifier
-   les pulls de 10-30%. Voir Foundation III pour l'analyse complète.
+   full DESI covariance correlates LRG3+ELG1 and may shift the
+   pulls by 10-30%. See Foundation III for the complete analysis.
 """)
 print(f"Figures : Fig_ecf_desi_mcmc_contours_v2.png")
 print(f"          Fig_ecf_desi_mcmc_residuals_v2.png")

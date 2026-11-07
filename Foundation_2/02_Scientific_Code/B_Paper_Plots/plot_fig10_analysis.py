@@ -13,6 +13,14 @@ DESCRIPTION    : Statistical analysis of the ECF Torsion Halo model on a
                  3. Generates Figure 10 (a 2x5 grid of rotation curves).
                  4. Outputs the statistical summary table in LaTeX format.
 
+FAIL LOUDLY    : ⚠️ Added 25/08/2026. This script used to draw "File Not
+                 Found" in every panel and STILL EXIT 0 when data/ was empty.
+                 Foundation II therefore shipped Figure 29 with ten blank
+                 panels -- and NO check could catch it: the PNG existed,
+                 LaTeX raised nothing, pdftotext found no placeholder. A
+                 figure that exists but is empty is the most dangerous of the
+                 three kinds of hole. It now exits 1 if any panel fails.
+
 DEPENDENCIES   : numpy, pandas, matplotlib, scipy
 USAGE          : Ensure a folder named 'data' exists containing the 10 .csv files.
                  Run with: python plot_fig10_analysis.py
@@ -24,6 +32,7 @@ PROCESS:       : 1. Run generate_data_files.py (built 3 csv)
 """
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -66,6 +75,7 @@ def main():
     fig, axes = plt.subplots(2, 5, figsize=(18, 8))
     axes = axes.flatten()
     
+    failures = []      # galaxies whose panel could not be drawn -> exit != 0
     results_latex = [] # Stores rows for the LaTeX table
     chi2_sum = 0
     count = 0
@@ -76,10 +86,15 @@ def main():
         ax = axes[i]
         filename = os.path.join(DATA_DIR, f"{name}.csv")
         
-        # Handle missing files gracefully
+        # DO NOT fail "gracefully" -- see the FAIL LOUDLY note in the header.
+        # The panel still shows the message (so the cause is visible if the
+        # figure is ever opened), but the name is recorded and main() will
+        # exit non-zero at the end.
         if not os.path.exists(filename):
-            ax.text(0.5, 0.5, "File Not Found", ha='center')
+            ax.text(0.5, 0.5, "FILE NOT FOUND\n" + name,
+                    ha='center', va='center', color='red', fontweight='bold')
             print(f"[WARN] Missing file: {filename}")
+            failures.append(name)
             continue
 
         # 3. Load Data
@@ -96,6 +111,7 @@ def main():
             v_bar = df[cols.get('vbar', 'Vbar')].values
         except Exception as e:
             print(f"[FAIL] Could not read {name}: {e}")
+            failures.append(name)
             continue
 
         # 4. Model Fitting (Curve Fit)
@@ -160,6 +176,7 @@ def main():
 
         except Exception as e:
             print(f"[FAIL] Fit failed for {name}: {e}")
+            failures.append(name)
 
     # --- FINALIZE FIGURE ---
     # Hide empty axes if any
@@ -177,6 +194,13 @@ def main():
     # Save Image
     plt.savefig(OUTPUT_IMG, dpi=300)
     print(f"\n[OK] Figure saved to: {OUTPUT_IMG}")
+
+    if failures:
+        print(f"\n[ERROR] {len(failures)}/{len(TARGETS)} panel(s) could not be "
+              f"drawn: {', '.join(failures)}")
+        print("        The PNG was written anyway so the cause stays visible,")
+        print("        but it MUST NOT be shipped. Run prepare_fig10_csv.py.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

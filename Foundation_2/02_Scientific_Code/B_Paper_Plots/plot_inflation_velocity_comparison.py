@@ -1,11 +1,21 @@
+# [AJOUTE 15/09/2026] Garde UTF-8. Sans lui, un print contenant un caractere
+# non-ASCII (fleche, etoile, accent) fait planter le script sur une console
+# Windows en cp1252 : UnicodeEncodeError, code de sortie 1. Quatre scripts F2
+# ont echoue ainsi chez Pascal le 15/09 alors qu'ils tournaient sous Linux.
+import sys
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------------------------------------------------
 # 1. PARAMÈTRES DE TEMPS
-# On allonge l'intervalle de 10^-44 s jusqu'à 10^12 s (env. 30 000 ans)
+# Range extended from 10^-44 s to 10^12 s (about 30,000 years)
 # ---------------------------------------------------
-t_log = np.linspace(-44, 12, 2000)
+t_log = np.linspace(-47, 12, 2000)  # [08/10/2026: was -44, Cartan time moved to 1e-44 s]
 t = 10**t_log
 
 # ---------------------------------------------------
@@ -30,7 +40,7 @@ for i, ti in enumerate(t):
 # 3. VITESSE MODÈLE ECF (Big Spin Bounce)
 # ---------------------------------------------------
 v_ecf = np.zeros_like(t)
-t_cartan = 10**-41
+t_cartan = 10**-44  # [08/10/2026: was 1e-41 s, withdrawn in F2 (rho = rho_c at ~1e-44 s)]
 
 for i, ti in enumerate(t):
     if ti < t_cartan:
@@ -47,10 +57,10 @@ fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
 ax.plot(t, v_standard, label=r'Standard Inflation ($\dot{a}/c$)', color='blue', linestyle='--', linewidth=2.5)
 ax.plot(t, v_ecf, label=r'ECF Natural Bounce ($\dot{a}/c$)', color='red', linewidth=3)
 
-# Annotations des sommets
+# Peak annotations
 ax.scatter([t_cartan], [1e30], color='red', zorder=5)
-ax.annotate('Maximum Expansion Velocity\n(Cartan Time: $10^{-41}$ s)', 
-            xy=(t_cartan, 1e30), xytext=(10**-40, 5e31),
+ax.annotate('Maximum Expansion Velocity\n(Cartan Time: $\\sim10^{-44}$ s)', 
+            xy=(t_cartan, 1e30), xytext=(t_cartan*10**1, 5e31),
             arrowprops=dict(facecolor='red', shrink=0.05, width=1.5, headwidth=8),
             fontsize=11, color='red', fontweight='bold')
 
@@ -59,11 +69,11 @@ ax.annotate('End of Standard Inflation',
             arrowprops=dict(facecolor='blue', shrink=0.05, width=1.5, headwidth=8),
             fontsize=11, color='blue', fontweight='bold')
 
-# Ligne de la vitesse de la lumière (c = 1)
+# Speed-of-light line (c = 1)
 ax.axhline(1, color='green', linewidth=1.5, linestyle=':', label='Speed of Light ($v = c$)')
 
-# Annotations pour le passage sous c (1)
-t_cross_ecf = 10**4  # Temps de croisement ECF
+# Annotations for the crossing below c (1)
+t_cross_ecf = t_cartan * 10**45  # Temps de croisement ECF (v = 1 : (t/t_cartan)^(-2/3) = 1e-30) [08/10/2026: was 10**4 for t_cartan = 1e-41]
 t_cross_std = 10**11 # Temps de croisement Standard
 
 ax.scatter([t_cross_ecf], [1], color='red', zorder=5)
@@ -80,7 +90,7 @@ ax.annotate('Standard Drops Below $c$',
 
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_xlim(10**-44, 10**12)
+ax.set_xlim(10**-47, 10**12)
 ax.set_ylim(1e-6, 1e35)
 
 ax.set_xlabel('Cosmic Time (Seconds after Singularity/Bounce)', fontsize=12, fontweight='bold')
